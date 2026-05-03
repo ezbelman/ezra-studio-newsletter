@@ -1,13 +1,12 @@
 'use client'
 export const dynamic = 'force-dynamic'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
-export default function LoginPage() {
+function LoginForm() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const supabase     = createClient()
@@ -75,12 +74,7 @@ export default function LoginPage() {
           </p>
         )}
 
-        <Button
-          type="submit"
-          variant="primary"
-          className="w-full"
-          disabled={loading}
-        >
+        <Button type="submit" variant="primary" className="w-full" disabled={loading}>
           {loading ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>
@@ -97,5 +91,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }
