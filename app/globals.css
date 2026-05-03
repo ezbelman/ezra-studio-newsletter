@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --navy:       #001A5C;
+    --navy-deep:  #0D1B3E;
+    --navy-soft:  #0033A0;
+    --navy-muted: #1A2E6E;
+    --cyan:       #00B5E2;
+    --cyan-bright:#4DD3F0;
+    --lime:       #C8E100;
+    --ink:        #0D1B3E;
+    --ink-muted:  #6B7A9E;
+    --bg:         #F4F6FB;
+    --line:       #E0E6F5;
+  }
+
+  * {
+    @apply border-line;
+  }
+
+  body {
+    @apply bg-bg text-ink antialiased;
+    font-feature-settings: 'ss01', 'cv01';
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+/* ── Auth surface atmosphere ──────────────────────────────── */
+.auth-surface {
+  background:
+    radial-gradient(ellipse 70% 50% at 65% 10%, rgba(0, 181, 226, 0.14) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 40% at 10% 85%, rgba(200, 225, 0, 0.07) 0%, transparent 100%),
+    #0D1B3E;
+}
+
+/* dot-grid overlay */
+.auth-surface::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.auth-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Entry animations ─────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease both;
+}
+.animate-scale-in {
+  animation: scale-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Stagger delays for sequential reveal */
+.delay-0   { animation-delay: 0ms; }
+.delay-50  { animation-delay: 50ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-250 { animation-delay: 250ms; }
+.delay-300 { animation-delay: 300ms; }
+
+/* ── Noise texture overlay ────────────────────────────────── */
+.noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  }
+  .font-mono {
+    font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  }
+}
