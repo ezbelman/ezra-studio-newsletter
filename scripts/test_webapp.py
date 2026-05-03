@@ -3,9 +3,21 @@ Playwright tests for Ezra-Studio-Newsletter.
 Tests auth pages, redirects, and UI elements without requiring Supabase.
 """
 from playwright.sync_api import sync_playwright, expect
-import sys
+import sys, time, urllib.request, urllib.error
 
 BASE = "http://localhost:3000"
+
+# Wait for Next.js to compile the first page (cold start can take 30–60s)
+print("Warming up Next.js (waiting for first compile)...")
+for i in range(60):
+    try:
+        urllib.request.urlopen(f"{BASE}/login", timeout=5)
+        print(f"  Ready after ~{i*2}s")
+        break
+    except Exception:
+        time.sleep(2)
+else:
+    print("  Server did not respond in 120s — tests may fail")
 PASS = []
 FAIL = []
 
@@ -21,6 +33,7 @@ def check(name, fn):
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     page = browser.new_page()
+    page.set_default_timeout(60000)  # 60s — first loads compile fresh
 
     # ── 1. Login page loads ─────────────────────────────────────
     print("\n[Auth Pages]")
