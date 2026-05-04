@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
 import { Building2, Users, Newspaper, FileText } from 'lucide-react'
+import { CreateUserForm } from './create-user-form'
+import { CreateOrgForm } from './create-org-form'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -17,17 +18,17 @@ export default async function AdminPage() {
 
   if (!profile?.is_platform_admin) redirect('/dashboard')
 
-  const [{ data: orgs }, { count: userCount }, { count: nlCount }, { count: issueCount }] =
+  const [{ data: orgs }, { data: users }, { count: nlCount }, { count: issueCount }] =
     await Promise.all([
       supabase.from('organizations').select('id, name, slug, created_at').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('profiles').select('id, full_name, is_platform_admin, created_at').order('created_at', { ascending: false }),
       supabase.from('newsletters').select('*', { count: 'exact', head: true }),
       supabase.from('issues').select('*', { count: 'exact', head: true }),
     ])
 
   const stats = [
     { label: 'Organizations', value: orgs?.length ?? 0,  icon: Building2 },
-    { label: 'Users',         value: userCount ?? 0,     icon: Users      },
+    { label: 'Users',         value: users?.length ?? 0, icon: Users      },
     { label: 'Newsletters',   value: nlCount ?? 0,       icon: Newspaper  },
     { label: 'Issues',        value: issueCount ?? 0,    icon: FileText   },
   ]
@@ -43,10 +44,8 @@ export default async function AdminPage() {
       <div className="grid grid-cols-4 gap-4 mb-8 animate-fade-up delay-50">
         {stats.map(s => (
           <div key={s.label} className="rounded-xl border border-line bg-white p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-8 w-8 rounded-lg bg-cyan/10 flex items-center justify-center">
-                <s.icon className="h-4 w-4 text-cyan" />
-              </div>
+            <div className="h-8 w-8 rounded-lg bg-cyan/10 flex items-center justify-center mb-3">
+              <s.icon className="h-4 w-4 text-cyan" />
             </div>
             <p className="text-2xl font-display font-700 text-ink">{s.value}</p>
             <p className="text-xs text-ink-muted mt-0.5">{s.label}</p>
@@ -54,8 +53,48 @@ export default async function AdminPage() {
         ))}
       </div>
 
+      {/* Create forms */}
+      <div className="grid grid-cols-2 gap-6 mb-8 animate-fade-up delay-100">
+        <CreateUserForm />
+        <CreateOrgForm />
+      </div>
+
+      {/* Users table */}
+      <div className="animate-fade-up delay-150 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Users</h2>
+          <span className="text-xs text-ink-muted">{users?.length ?? 0} total</span>
+        </div>
+        <div className="rounded-xl border border-line bg-white overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-line bg-bg/50">
+                <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Name</th>
+                <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">User ID</th>
+                <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Admin</th>
+                <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Created</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {users?.map(u => (
+                <tr key={u.id} className="hover:bg-bg/60 transition-colors">
+                  <td className="px-5 py-3.5 font-600 text-ink">{u.full_name ?? '—'}</td>
+                  <td className="px-5 py-3.5 font-mono text-xs text-ink-muted">{u.id}</td>
+                  <td className="px-5 py-3.5">
+                    {u.is_platform_admin && (
+                      <span className="text-xs font-600 text-lime bg-lime/10 px-2 py-0.5 rounded-full">Admin</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3.5 text-ink-muted">{formatDate(u.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Orgs table */}
-      <div className="animate-fade-up delay-100">
+      <div className="animate-fade-up delay-200">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Organizations</h2>
           <span className="text-xs text-ink-muted">{orgs?.length ?? 0} total</span>
@@ -63,7 +102,7 @@ export default async function AdminPage() {
         <div className="rounded-xl border border-line bg-white overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-line">
+              <tr className="border-b border-line bg-bg/50">
                 <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Name</th>
                 <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Slug</th>
                 <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Created</th>
