@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentOrgId } from '@/lib/data/org'
 import { redirect } from 'next/navigation'
+import type { Database } from '@/lib/types/database'
+
+type OrgUpdate = Database['public']['Tables']['organizations']['Update']
 
 async function requireOwnerOrAdmin() {
   const supabase = await createClient()
@@ -31,14 +34,14 @@ export async function saveAISettings(formData: FormData) {
   const { orgId, error: authError } = await requireOwnerOrAdmin()
   if (authError || !orgId) return { error: authError ?? 'Unauthorized' }
 
-  const provider        = (formData.get('provider')         as string) || 'platform'
-  const anthropicKey    = (formData.get('anthropic_api_key') as string) || ''
-  const openaiKey       = (formData.get('openai_api_key')    as string) || ''
-  const geminiKey       = (formData.get('gemini_api_key')    as string) || ''
+  const provider     = (formData.get('provider')          as string) || 'platform'
+  const anthropicKey = (formData.get('anthropic_api_key') as string) || ''
+  const openaiKey    = (formData.get('openai_api_key')    as string) || ''
+  const geminiKey    = (formData.get('gemini_api_key')    as string) || ''
 
-  const updates: Record<string, string | null> = { ai_provider: provider }
+  // Build typed update — only overwrite a key if user typed a new one (no • mask chars)
+  const updates: OrgUpdate = { ai_provider: provider }
 
-  // A value with • in it is the masked placeholder — don't overwrite
   if (anthropicKey && !anthropicKey.includes('•')) {
     updates.anthropic_api_key = anthropicKey.trim() || null
   }
@@ -60,9 +63,13 @@ export async function clearAPIKey(provider: 'anthropic' | 'openai' | 'gemini') {
   const { orgId, error: authError } = await requireOwnerOrAdmin()
   if (authError || !orgId) return { error: authError ?? 'Unauthorized' }
 
-  const field = `${provider}_api_key`
+  const updates: OrgUpdate =
+    provider === 'anthropic' ? { anthropic_api_key: null }
+    : provider === 'openai'  ? { openai_api_key:    null }
+    :                          { gemini_api_key:     null }
+
   const admin = createAdminClient()
-  const { error } = await admin.from('organizations').update({ [field]: null }).eq('id', orgId)
+  const { error } = await admin.from('organizations').update(updates).eq('id', orgId)
   if (error) return { error: error.message }
 
   return { success: true }
