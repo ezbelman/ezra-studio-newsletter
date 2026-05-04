@@ -4,32 +4,34 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Newspaper, Users, Settings,
-  BarChart2, Mail, ChevronDown, LogOut, Shield,
+  BarChart2, Mail, ChevronDown, LogOut, Shield, Sun, Moon,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useTheme } from './theme-provider'
 
 interface SidebarProps {
-  orgName: string
-  orgSlug: string
+  orgName:      string
+  orgSlug:      string
   userFullName: string
-  isAdmin?: boolean
+  isAdmin?:     boolean
 }
 
 const navItems = [
-  { label: 'Dashboard',    href: '/dashboard',    icon: LayoutDashboard },
-  { label: 'Newsletters',  href: '/newsletters',  icon: Newspaper },
-  { label: 'Subscribers',  href: '/subscribers',  icon: Mail },
-  { label: 'Analytics',    href: '/analytics',    icon: BarChart2 },
-  { label: 'Team',         href: '/team',         icon: Users },
-  { label: 'Settings',     href: '/settings',     icon: Settings },
+  { label: 'Dashboard',   href: '/dashboard',   icon: LayoutDashboard },
+  { label: 'Newsletters', href: '/newsletters',  icon: Newspaper },
+  { label: 'Subscribers', href: '/subscribers',  icon: Mail },
+  { label: 'Analytics',   href: '/analytics',    icon: BarChart2 },
+  { label: 'Team',        href: '/team',         icon: Users },
+  { label: 'Settings',    href: '/settings',     icon: Settings },
 ]
 
 export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProps) {
-  const pathname  = usePathname()
-  const router    = useRouter()
-  const supabase  = createClient()
+  const pathname = usePathname()
+  const router   = useRouter()
+  const supabase = createClient()
+  const { theme, toggle } = useTheme()
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -79,10 +81,7 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
                   : 'text-white/50 hover:bg-white/5 hover:text-white/80 font-400'
               )}
             >
-              <Icon className={cn(
-                'h-4 w-4 shrink-0 transition-colors',
-                active ? 'text-white' : 'text-white/30'
-              )} />
+              <Icon className={cn('h-4 w-4 shrink-0 transition-colors', active ? 'text-white' : 'text-white/30')} />
               {label}
             </Link>
           )
@@ -102,18 +101,29 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
                   : 'text-white/50 hover:bg-white/5 hover:text-white/80'
               )}
             >
-              <Shield className={cn(
-                'h-4 w-4 shrink-0',
-                pathname.startsWith('/admin') ? 'text-lime' : 'text-white/30'
-              )} />
+              <Shield className={cn('h-4 w-4 shrink-0', pathname.startsWith('/admin') ? 'text-lime' : 'text-white/30')} />
               Admin
             </Link>
           </>
         )}
       </nav>
 
-      {/* User */}
+      {/* Bottom bar */}
       <div className="px-3 py-3 border-t border-white/5">
+        {/* Theme toggle */}
+        <button
+          onClick={toggle}
+          className="w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors mb-1 text-sm"
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark'
+            ? <Sun  className="h-4 w-4 shrink-0" />
+            : <Moon className="h-4 w-4 shrink-0" />
+          }
+          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </button>
+
+        {/* User */}
         <div className="flex items-center gap-2.5 rounded-md px-3 py-2">
           <div className="h-7 w-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
             <span className="text-white/80 font-600 text-xs">{getInitials(userFullName)}</span>

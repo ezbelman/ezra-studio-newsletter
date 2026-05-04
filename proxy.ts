@@ -5,7 +5,6 @@ import type { CookieOptions } from '@supabase/ssr'
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Forward pathname to server components so layouts can read it
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-pathname', pathname)
 
@@ -32,22 +31,25 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // These paths are accessible without authentication
+  // Public paths — no auth required
   const publicPaths = [
+    '/',
     '/login', '/signup', '/forgot-password', '/reset-password',
     '/api/auth/callback',
   ]
   const isPublic = publicPaths.some(p => pathname === p || pathname.startsWith(p + '/'))
 
-  // Unauthenticated users hitting protected routes → login
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    url.searchParams.set('next', pathname)
+    // Only set next param for same-origin relative paths
+    if (pathname.startsWith('/') && !pathname.startsWith('//')) {
+      url.searchParams.set('next', pathname)
+    }
     return NextResponse.redirect(url)
   }
 
-  // Authenticated users on login/signup → dashboard
+  // Authenticated users on auth pages → dashboard
   const authOnlyPaths = ['/login', '/signup']
   if (user && authOnlyPaths.includes(pathname)) {
     const url = request.nextUrl.clone()

@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss'
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
@@ -15,12 +16,16 @@ const config: Config = {
           soft:    '#1D3461',
           muted:   '#334E7B',
         },
-        cyan:  { DEFAULT: '#2563EB', bright: '#3B82F6' },
-        lime:  { DEFAULT: '#10B981' },
-        ink:   { DEFAULT: '#1E293B', muted: '#64748B' },
-        surface: '#FFFFFF',
-        bg:    '#F8FAFC',
-        line:  '#E2E8F0',
+        cyan:    { DEFAULT: '#2563EB', bright: '#3B82F6' },
+        lime:    { DEFAULT: '#10B981' },
+        // These use CSS variables so they switch automatically in dark mode
+        ink:     {
+          DEFAULT: 'rgb(var(--color-ink) / <alpha-value>)',
+          muted:   'rgb(var(--color-ink-muted) / <alpha-value>)',
+        },
+        bg:      'rgb(var(--color-bg) / <alpha-value>)',
+        line:    'rgb(var(--color-line) / <alpha-value>)',
+        surface: 'rgb(var(--color-surface) / <alpha-value>)',
       },
       fontFamily: {
         sans:    ['var(--font-inter)', 'system-ui', 'sans-serif'],

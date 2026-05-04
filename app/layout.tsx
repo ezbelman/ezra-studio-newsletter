@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+import { Toaster } from '@/components/ui/toaster'
+import { ThemeProvider } from '@/components/app/theme-provider'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,13 +27,13 @@ export const metadata: Metadata = {
   description: 'AI-powered newsletter platform for enterprise teams',
 }
 
-import { Toaster } from '@/components/ui/toaster'
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="font-sans">
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
         <Toaster />
       </body>
     </html>

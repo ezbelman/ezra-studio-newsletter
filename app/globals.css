@@ -3,66 +3,63 @@
 @tailwind utilities;
 
 @layer base {
+  /* ── Light mode tokens ──────────────────────────────────── */
   :root {
+    --color-ink:      30 41 59;       /* #1E293B */
+    --color-ink-muted: 100 116 139;   /* #64748B */
+    --color-bg:       248 250 252;    /* #F8FAFC */
+    --color-line:     226 232 240;    /* #E2E8F0 */
+    --color-surface:  255 255 255;    /* #FFFFFF */
+
+    /* Legacy CSS vars used in some raw CSS */
     --navy:       #0A2540;
     --navy-deep:  #0A2540;
     --navy-soft:  #1D3461;
     --navy-muted: #334E7B;
     --cyan:       #2563EB;
-    --cyan-bright:#3B82F6;
     --lime:       #10B981;
-    --ink:        #1E293B;
-    --ink-muted:  #64748B;
-    --bg:         #F8FAFC;
-    --line:       #E2E8F0;
   }
 
-  * {
-    @apply border-line;
+  /* ── Dark mode tokens ───────────────────────────────────── */
+  .dark {
+    --color-ink:       248 250 252;   /* #F8FAFC — nearly white */
+    --color-ink-muted: 148 163 184;   /* #94A3B8 */
+    --color-bg:        15 23 42;      /* #0F172A */
+    --color-line:      51 65 85;      /* #334155 */
+    --color-surface:   30 41 59;      /* #1E293B */
   }
+
+  * { @apply border-line; }
 
   body {
     @apply bg-bg text-ink antialiased;
     font-feature-settings: 'ss01', 'cv01';
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
-  }
+  h1, h2, h3, h4, h5, h6 { @apply font-display; }
 }
 
-/* ── Auth surface ──────────────────────────────────────────── */
-.auth-surface {
-  background: #F8FAFC;
-}
+/* ── Auth surface ────────────────────────────────────────── */
+.auth-surface { background: rgb(var(--color-bg)); }
 
-/* ── Entry animations ─────────────────────────────────────── */
+/* ── Entry animations ───────────────────────────────────── */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
 @keyframes scale-in {
   from { opacity: 0; transform: scale(0.97); }
   to   { opacity: 1; transform: scale(1); }
 }
 
-.animate-fade-up {
-  animation: fade-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.animate-fade-in {
-  animation: fade-in 0.25s ease both;
-}
-.animate-scale-in {
-  animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
+.animate-fade-up   { animation: fade-up   0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in   { animation: fade-in   0.25s ease both; }
+.animate-scale-in  { animation: scale-in  0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
-/* Stagger delays for sequential reveal */
 .delay-0   { animation-delay: 0ms; }
 .delay-50  { animation-delay: 50ms; }
 .delay-100 { animation-delay: 100ms; }
@@ -72,10 +69,6 @@
 .delay-300 { animation-delay: 300ms; }
 
 @layer utilities {
-  .font-display {
-    font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
-  }
-  .font-mono {
-    font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
-  }
+  .font-display { font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif; }
+  .font-mono    { font-family: var(--font-jetbrains), 'JetBrains Mono', monospace; }
 }
