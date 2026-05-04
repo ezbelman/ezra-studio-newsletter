@@ -48,6 +48,9 @@ export interface Database {
           primary_color: string
           accent_color: string
           anthropic_api_key: string | null
+          openai_api_key: string | null
+          gemini_api_key: string | null
+          ai_provider: string
           default_language: string
           created_at: string
           updated_at: string
@@ -61,6 +64,9 @@ export interface Database {
           primary_color?: string
           accent_color?: string
           anthropic_api_key?: string | null
+          openai_api_key?: string | null
+          gemini_api_key?: string | null
+          ai_provider?: string
           default_language?: string
         }
         Update: {
@@ -71,8 +77,43 @@ export interface Database {
           primary_color?: string
           accent_color?: string
           anthropic_api_key?: string | null
+          openai_api_key?: string | null
+          gemini_api_key?: string | null
+          ai_provider?: string
           default_language?: string
         }
+        Relationships: []
+      }
+      org_invitations: {
+        Row: {
+          id: string
+          org_id: string
+          email: string
+          role: string
+          token: string
+          invited_by: string | null
+          accepted_at: string | null
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          email: string
+          role?: string
+          invited_by?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+        }
+        Relationships: [
+          { foreignKeyName: 'org_invitations_org_id_fkey'; columns: ['org_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] }
+        ]
+      }
+      rate_limits: {
+        Row: { key: string; count: number; reset_at: string }
+        Insert: { key: string; count?: number; reset_at: string }
+        Update: { count?: number; reset_at?: string }
         Relationships: []
       }
       org_members: {
@@ -272,6 +313,10 @@ export interface Database {
       is_org_member:     { Args: { org_id: string }; Returns: boolean }
       org_role:          { Args: { org_id: string }; Returns: Role }
       is_platform_admin: { Args: Record<string, never>; Returns: boolean }
+      check_rate_limit:  {
+        Args: { p_key: string; p_max_requests: number; p_window_seconds: number }
+        Returns: { allowed: boolean; count: number; retry_after?: number }
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

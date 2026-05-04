@@ -1,74 +1,47 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useState, useTransition } from 'react'
+import { createOrganization } from './actions'
 import { slugify } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 
 export default function OnboardingPage() {
-  const router   = useRouter()
-  const supabase = createClient()
-
-  const [orgName, setOrgName] = useState('')
-  const [error,   setError]   = useState('')
-  const [loading, setLoading] = useState(false)
+  const [pending,  startTransition] = useTransition()
+  const [orgName,  setOrgName]      = useState('')
+  const [error,    setError]        = useState('')
 
   const slug = slugify(orgName)
 
-  async function handleCreate(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!orgName.trim()) return
     setError('')
-    setLoading(true)
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/login'); return }
-
-    const { data: org, error: orgErr } = await supabase
-      .from('organizations')
-      .insert({ name: orgName.trim(), slug })
-      .select('id')
-      .single()
-
-    if (orgErr) {
-      setError(orgErr.code === '23505'
-        ? 'That workspace URL is taken. Try a slightly different name.'
-        : orgErr.message
-      )
-      setLoading(false)
-      return
-    }
-
-    const { error: memberErr } = await supabase
-      .from('org_members')
-      .insert({ org_id: org.id, user_id: user.id, role: 'owner' })
-
-    if (memberErr) {
-      setError(memberErr.message)
-      setLoading(false)
-      return
-    }
-
-    router.push('/dashboard')
-    router.refresh()
+    const fd = new FormData(e.currentTarget)
+    startTransition(async () => {
+      const res = await createOrganization(fd)
+      if (res?.error) setError(res.error)
+    })
   }
 
   return (
-    <div className="bg-white rounded-xl border border-line p-8 shadow-card w-full">
+    <div className="bg-surface rounded-xl border border-line p-8 shadow-card w-full">
       <h1 className="text-ink font-display font-700 text-xl mb-1">Create your workspace</h1>
       <p className="text-ink-muted text-sm mb-7">Name your organization to get started</p>
 
-      <form onSubmit={handleCreate} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-600 text-ink-muted mb-1.5">Organization name</label>
+          <label className="block text-xs font-600 text-ink-muted mb-1.5">
+            Organization name
+          </label>
           <input
+            name="name"
             type="text"
             value={orgName}
             onChange={e => setOrgName(e.target.value)}
             required
             placeholder="Acme Corp"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
           />
           {slug && (
             <p className="text-ink-muted text-xs mt-1.5 font-mono">
@@ -87,9 +60,12 @@ export default function OnboardingPage() {
           type="submit"
           variant="primary"
           className="w-full"
-          disabled={loading || !orgName.trim()}
+          disabled={pending || !orgName.trim()}
         >
-          {loading ? 'Creating workspace…' : 'Create workspace'}
+          {pending
+            ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />Creating…</>
+            : 'Create workspace'
+          }
         </Button>
       </form>
     </div>
