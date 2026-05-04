@@ -35,41 +35,37 @@ export function LoginForm() {
   }
 
   return (
-    <div className="bg-navy-soft/20 border border-white/8 rounded p-8 backdrop-blur-sm">
-      <h1 className="text-white font-display font-700 text-xl mb-1">Welcome back</h1>
-      <p className="text-white/40 text-sm mb-8">Sign in to your workspace</p>
+    <div className="bg-white rounded-xl border border-line p-8 shadow-card">
+      <h1 className="text-ink font-display font-700 text-xl mb-1">Welcome back</h1>
+      <p className="text-ink-muted text-sm mb-7">Sign in to your workspace</p>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-700 uppercase tracking-widest text-white/40 mb-1.5">
-            Email
-          </label>
+          <label className="block text-xs font-600 text-ink-muted mb-1.5">Email</label>
           <input
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
             placeholder="you@company.com"
-            className="w-full h-10 rounded-sm border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-cyan focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-700 uppercase tracking-widest text-white/40 mb-1.5">
-            Password
-          </label>
+          <label className="block text-xs font-600 text-ink-muted mb-1.5">Password</label>
           <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
             placeholder="••••••••"
-            className="w-full h-10 rounded-sm border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-cyan focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
           />
         </div>
 
         {error && (
-          <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 rounded px-3 py-2">
+          <p className="text-red-600 text-xs bg-red-50 border border-red-100 rounded-md px-3 py-2">
             {error}
           </p>
         )}
@@ -79,13 +75,13 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <div className="flex items-center justify-between mt-6">
-        <Link href="/forgot-password" className="text-white/30 text-xs hover:text-cyan transition-colors">
+      <div className="flex items-center justify-between mt-6 pt-6 border-t border-line">
+        <Link href="/forgot-password" className="text-ink-muted text-xs hover:text-cyan transition-colors">
           Forgot password?
         </Link>
-        <p className="text-white/30 text-xs">
+        <p className="text-ink-muted text-xs">
           No account?{' '}
-          <Link href="/signup" className="text-cyan hover:text-cyan-bright transition-colors">
+          <Link href="/signup" className="text-cyan hover:text-cyan-bright transition-colors font-600">
             Create one
           </Link>
         </p>

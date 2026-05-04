@@ -1,20 +1,24 @@
 import { Suspense } from 'react'
 import { LoginForm } from './login-form'
 
-export default function LoginPage() {
+function LoginSkeleton() {
   return (
-    <Suspense fallback={<LoginFallback />}>
-      <LoginForm />
-    </Suspense>
+    <div className="bg-white rounded-xl border border-line p-8 shadow-card">
+      <div className="h-6 w-32 bg-line rounded animate-pulse mb-2" />
+      <div className="h-4 w-48 bg-line/60 rounded animate-pulse mb-7" />
+      <div className="space-y-4">
+        <div className="h-10 bg-line/40 rounded animate-pulse" />
+        <div className="h-10 bg-line/40 rounded animate-pulse" />
+        <div className="h-10 bg-cyan/20 rounded animate-pulse" />
+      </div>
+    </div>
   )
 }
 
-function LoginFallback() {
+export default function LoginPage() {
   return (
-    <div className="bg-navy-soft/20 border border-white/8 rounded p-8 backdrop-blur-sm">
-      <h1 className="text-white font-display font-700 text-xl mb-1">Welcome back</h1>
-      <p className="text-white/40 text-sm mb-8">Sign in to your workspace</p>
-      <div className="h-48" />
-    </div>
+    <Suspense fallback={<LoginSkeleton />}>
+      <LoginForm />
+    </Suspense>
   )
 }

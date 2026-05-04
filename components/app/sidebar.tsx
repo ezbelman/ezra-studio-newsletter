@@ -1,4 +1,5 @@
 'use client'
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -36,32 +37,28 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
   }
 
   return (
-    <aside className="flex h-screen w-64 flex-col fixed left-0 top-0 z-40"
-      style={{ background: 'linear-gradient(180deg, #0D1B3E 0%, #0A1530 100%)' }}>
-
-      {/* Top edge accent line */}
-      <div className="h-[2px] w-full bg-gradient-to-r from-cyan/60 via-cyan/20 to-transparent shrink-0" />
+    <aside className="flex h-screen w-64 flex-col fixed left-0 top-0 z-40 bg-[#0A2540]">
 
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5 border-b border-white/5">
-        <div className="h-8 w-8 rounded-sm bg-cyan flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(0,181,226,0.35)]">
-          <span className="text-navy-deep font-black text-xs tracking-tight">NS</span>
+        <div className="h-7 w-7 rounded bg-white/10 flex items-center justify-center shrink-0">
+          <span className="text-white font-black text-[11px] tracking-tight">NS</span>
         </div>
         <div>
-          <p className="text-white font-700 text-sm leading-none tracking-tight">Newsletter Studio</p>
-          <p className="text-white/35 text-xs mt-0.5 tracking-wide">by Ezra Studio</p>
+          <p className="text-white font-600 text-sm leading-none">Newsletter Studio</p>
+          <p className="text-white/30 text-[11px] mt-0.5">by Ezra Studio</p>
         </div>
       </div>
 
       {/* Org selector */}
       <div className="px-3 py-3 border-b border-white/5">
-        <button className="w-full flex items-center gap-3 rounded-sm px-3 py-2.5 hover:bg-white/5 transition-colors group">
-          <div className="h-7 w-7 rounded bg-cyan/15 border border-cyan/20 flex items-center justify-center shrink-0">
-            <span className="text-cyan font-800 text-xs">{getInitials(orgName)}</span>
+        <button className="w-full flex items-center gap-2.5 rounded-md px-3 py-2 hover:bg-white/5 transition-colors group">
+          <div className="h-6 w-6 rounded bg-cyan/20 flex items-center justify-center shrink-0">
+            <span className="text-cyan font-700 text-[10px]">{getInitials(orgName)}</span>
           </div>
           <div className="flex-1 text-left min-w-0">
-            <p className="text-white text-sm font-600 truncate">{orgName}</p>
-            <p className="text-white/30 text-xs truncate">{orgSlug}</p>
+            <p className="text-white/90 text-sm font-500 truncate">{orgName}</p>
+            <p className="text-white/30 text-[11px] truncate">{orgSlug}</p>
           </div>
           <ChevronDown className="h-3.5 w-3.5 text-white/20 shrink-0 group-hover:text-white/40 transition-colors" />
         </button>
@@ -76,15 +73,15 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
               key={href}
               href={href}
               className={cn(
-                'flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-all duration-150',
+                'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all duration-150',
                 active
-                  ? 'bg-gradient-to-r from-cyan/15 to-cyan/5 text-cyan font-700 border-r-2 border-cyan/50'
-                  : 'text-white/50 hover:bg-white/5 hover:text-white/80 font-500'
+                  ? 'bg-cyan text-white font-600'
+                  : 'text-white/50 hover:bg-white/5 hover:text-white/80 font-400'
               )}
             >
               <Icon className={cn(
                 'h-4 w-4 shrink-0 transition-colors',
-                active ? 'text-cyan' : 'text-white/30'
+                active ? 'text-white' : 'text-white/30'
               )} />
               {label}
             </Link>
@@ -93,23 +90,23 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
 
         {isAdmin && (
           <>
-            <div className="pt-4 pb-2 px-3">
-              <p className="text-[10px] font-700 uppercase tracking-widest text-white/20">Platform</p>
+            <div className="pt-4 pb-1.5 px-3">
+              <p className="text-[10px] font-600 uppercase tracking-widest text-white/20">Platform</p>
             </div>
             <Link
               href="/admin"
               className={cn(
-                'flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-all duration-150',
+                'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all duration-150',
                 pathname.startsWith('/admin')
-                  ? 'bg-lime/10 text-lime font-700'
+                  ? 'bg-lime/15 text-lime font-600'
                   : 'text-white/50 hover:bg-white/5 hover:text-white/80'
               )}
             >
               <Shield className={cn(
                 'h-4 w-4 shrink-0',
-                pathname.startsWith('/admin') ? 'text-lime' : 'text-lime/40'
+                pathname.startsWith('/admin') ? 'text-lime' : 'text-white/30'
               )} />
-              Admin Dashboard
+              Admin
             </Link>
           </>
         )}
@@ -117,19 +114,19 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
 
       {/* User */}
       <div className="px-3 py-3 border-t border-white/5">
-        <div className="flex items-center gap-3 rounded-sm px-3 py-2.5">
-          <div className="h-7 w-7 rounded-full bg-gradient-to-br from-cyan/20 to-navy-soft/40 border border-white/10 flex items-center justify-center shrink-0">
-            <span className="text-white/80 font-700 text-xs">{getInitials(userFullName)}</span>
+        <div className="flex items-center gap-2.5 rounded-md px-3 py-2">
+          <div className="h-7 w-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+            <span className="text-white/80 font-600 text-xs">{getInitials(userFullName)}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white/80 text-sm font-600 truncate">{userFullName}</p>
+            <p className="text-white/80 text-sm font-500 truncate">{userFullName}</p>
           </div>
           <button
             onClick={handleSignOut}
-            className="text-white/20 hover:text-white/70 transition-colors p-1"
+            className="text-white/20 hover:text-white/60 transition-colors p-1"
             title="Sign out"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

@@ -27,15 +27,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     const pathname = (await headers()).get('x-pathname') ?? ''
     if (pathname !== '/onboarding') redirect('/onboarding')
     return (
-      <div className="auth-surface min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen bg-bg flex items-center justify-center p-6">
         <div className="w-full max-w-sm animate-fade-up">
-          <div className="flex items-center gap-3 mb-10 justify-center animate-fade-up delay-0">
-            <div className="h-9 w-9 rounded-sm bg-cyan flex items-center justify-center shrink-0 shadow-[0_0_24px_rgba(0,181,226,0.4)]">
-              <span className="text-navy-deep font-black text-sm tracking-tight">NS</span>
+          <div className="flex items-center gap-2.5 mb-8 justify-center">
+            <div className="h-8 w-8 rounded-md bg-navy-deep flex items-center justify-center shrink-0">
+              <span className="text-white font-black text-xs tracking-tight">NS</span>
             </div>
             <div>
-              <p className="text-white font-700 text-base leading-none tracking-tight">Newsletter Studio</p>
-              <p className="text-white/35 text-xs mt-0.5 tracking-wide">by Ezra Studio</p>
+              <p className="text-ink font-700 text-[15px] leading-none tracking-tight">Newsletter Studio</p>
+              <p className="text-ink-muted text-xs mt-0.5">by Ezra Studio</p>
             </div>
           </div>
           <div className="animate-fade-up delay-100">
