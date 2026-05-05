@@ -52,7 +52,7 @@ export function CreateUserForm() {
           <label className="block text-xs font-600 text-ink-muted mb-1.5">Password</label>
           <input
             name="password"
-            type="text"
+            type="password"
             required
             minLength={6}
             placeholder="Temporary password"

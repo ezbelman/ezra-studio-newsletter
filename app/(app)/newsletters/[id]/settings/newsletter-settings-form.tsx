@@ -26,7 +26,7 @@ export function NewsletterSettingsForm({ newsletter }: { newsletter: Newsletter 
   const [saving,    setSaving]    = useState(false)
   const [archiving, setArchiving] = useState(false)
   const [error,     setError]     = useState('')
-  const [confirm,   setConfirm]   = useState(false)
+  const [isConfirmingArchive, setIsConfirmingArchive] = useState(false)
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -118,15 +118,15 @@ export function NewsletterSettingsForm({ newsletter }: { newsletter: Newsletter 
                 Hides this newsletter from active views. Issues are preserved.
               </p>
             </div>
-            {!confirm ? (
-              <Button variant="outline" size="sm" onClick={() => setConfirm(true)}
+            {!isConfirmingArchive ? (
+              <Button variant="outline" size="sm" onClick={() => setIsConfirmingArchive(true)}
                 className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400">
                 Archive
               </Button>
             ) : (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-ink-muted">Are you sure?</span>
-                <Button variant="outline" size="sm" onClick={() => setConfirm(false)}>Cancel</Button>
+                <Button variant="outline" size="sm" onClick={() => setIsConfirmingArchive(false)}>Cancel</Button>
                 <Button variant="primary" size="sm" disabled={archiving}
                   className="bg-red-600 hover:bg-red-700 border-red-600"
                   onClick={handleArchive}>

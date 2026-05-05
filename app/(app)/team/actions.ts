@@ -1,33 +1,9 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getCurrentOrgId } from '@/lib/data/org'
-import { redirect } from 'next/navigation'
+import { requireOwnerOrAdmin } from '@/lib/data/require-org-access'
 import { z } from 'zod'
 import type { Role } from '@/lib/types/database'
-
-async function requireOwnerOrAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const orgId = await getCurrentOrgId(supabase, user.id)
-  if (!orgId) redirect('/onboarding')
-
-  const { data: m } = await supabase
-    .from('org_members')
-    .select('role')
-    .eq('org_id', orgId)
-    .eq('user_id', user.id)
-    .single()
-
-  if (!['owner', 'admin'].includes(m?.role ?? '')) {
-    return { supabase, user, orgId: null as null, error: 'Only owners and admins can manage team.' }
-  }
-
-  return { supabase, user, orgId, error: null }
-}
 
 const InviteSchema = z.object({
   email: z.string().email(),

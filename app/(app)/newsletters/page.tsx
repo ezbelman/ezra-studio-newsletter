@@ -72,8 +72,8 @@ export default async function NewslettersPage() {
         <div className="space-y-4">
           {newsletters.map((nl, i) => {
             const issues    = nl.issues as { id: string; status: IssueStatus }[] | null ?? []
-            const published = issues.filter(i => i.status === 'published').length
-            const inProgress = issues.filter(i => ['draft','pending_approval','approved','scheduled'].includes(i.status)).length
+            const published = issues.filter(issue => issue.status === 'published').length
+            const inProgress = issues.filter(issue => ['draft','pending_approval','approved','scheduled'].includes(issue.status)).length
             const isFirst   = i === 0
 
             return (

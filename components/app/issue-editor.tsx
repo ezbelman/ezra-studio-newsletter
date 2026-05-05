@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Sparkles, Loader2, ChevronRight } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { issueStatusBadgeVariant, issueStatusLabel } from '@/lib/types/display'
-import type { IssueStatus } from '@/lib/types/database'
+import type { IssueStatus, Json } from '@/lib/types/database'
 import { toast } from '@/hooks/use-toast'
 
 interface Story {
@@ -82,7 +82,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
 
       const { error: updateError } = await supabase
         .from('issues')
-        .update({ polished_json: p as never, title: p.title ?? issue.title })
+        .update({ polished_json: p as unknown as Json, title: p.title ?? issue.title })
         .eq('id', issue.id)
 
       if (updateError) { setError(updateError.message); return }

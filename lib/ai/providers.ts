@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { CLAUDE_MODEL } from './constants'
 
 export type AIProvider = 'platform' | 'own_anthropic' | 'own_openai' | 'own_gemini'
 
@@ -26,7 +27,7 @@ export async function callAI(opts: CallOptions): Promise<string> {
 
     const anthropic = new Anthropic({ apiKey })
     const msg = await anthropic.messages.create({
-      model:      'claude-sonnet-4-6',
+      model:      CLAUDE_MODEL,
       max_tokens: maxTokens,
       system:     systemPrompt,
       messages:   [{ role: 'user', content: userMessage }],

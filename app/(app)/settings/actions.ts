@@ -1,34 +1,10 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getCurrentOrgId } from '@/lib/data/org'
-import { redirect } from 'next/navigation'
+import { requireOwnerOrAdmin } from '@/lib/data/require-org-access'
 import type { Database } from '@/lib/types/database'
 
 type OrgUpdate = Database['public']['Tables']['organizations']['Update']
-
-async function requireOwnerOrAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const orgId = await getCurrentOrgId(supabase, user.id)
-  if (!orgId) redirect('/onboarding')
-
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('role')
-    .eq('org_id', orgId)
-    .eq('user_id', user.id)
-    .single()
-
-  if (!['owner', 'admin'].includes(membership?.role ?? '')) {
-    return { orgId: null, error: 'Only org owners and admins can change settings.' }
-  }
-
-  return { orgId, error: null }
-}
 
 export async function saveAISettings(formData: FormData) {
   const { orgId, error: authError } = await requireOwnerOrAdmin()

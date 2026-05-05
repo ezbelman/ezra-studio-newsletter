@@ -1,7 +1,6 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { slugify } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 
@@ -13,10 +12,9 @@ export async function createOrganization(formData: FormData) {
   const name = ((formData.get('name') as string) ?? '').trim()
   if (!name) return { error: 'Organization name is required.' }
 
-  const slug  = slugify(name)
-  const admin = createAdminClient()
+  const slug = slugify(name)
 
-  const { data: org, error: orgErr } = await admin
+  const { data: org, error: orgErr } = await supabase
     .from('organizations')
     .insert({ name, slug })
     .select('id')
@@ -30,7 +28,7 @@ export async function createOrganization(formData: FormData) {
     }
   }
 
-  const { error: memberErr } = await admin
+  const { error: memberErr } = await supabase
     .from('org_members')
     .insert({ org_id: org.id, user_id: user.id, role: 'owner' })
 

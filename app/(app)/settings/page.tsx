@@ -38,7 +38,6 @@ export default async function SettingsPage() {
         <h1 className="text-3xl font-display font-700 text-ink leading-none">Settings</h1>
       </div>
       <SettingsForm
-        orgId={orgId}
         canEdit={canEdit}
         provider={org?.ai_provider ?? 'platform'}
         anthropicKeyMasked={maskKey(org?.anthropic_api_key)}

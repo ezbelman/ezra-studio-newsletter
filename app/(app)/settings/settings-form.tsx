@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Eye, EyeOff, Check, X, Loader2 } from 'lucide-react'
 
 interface Props {
-  orgId:              string
   canEdit:            boolean
   provider:           string
   anthropicKeyMasked: string
