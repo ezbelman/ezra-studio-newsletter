@@ -48,13 +48,15 @@ export async function adminCreateUser(formData: FormData) {
 }
 
 export async function adminCreateOrg(formData: FormData) {
-  const supabase = await assertPlatformAdmin()
+  await assertPlatformAdmin()
 
   const name   = (formData.get('name') as string).trim()
   const slug   = slugify(formData.get('slug') as string || name)
   const userId = formData.get('user_id') as string | null
 
-  const { data: org, error: orgErr } = await supabase
+  const admin = createAdminClient()
+
+  const { data: org, error: orgErr } = await admin
     .from('organizations')
     .insert({ name, slug })
     .select('id')
@@ -69,7 +71,7 @@ export async function adminCreateOrg(formData: FormData) {
   }
 
   if (userId) {
-    const { error: memberErr } = await supabase
+    const { error: memberErr } = await admin
       .from('org_members')
       .insert({ org_id: org.id, user_id: userId, role: 'owner' })
 
