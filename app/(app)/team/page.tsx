@@ -16,10 +16,11 @@ export default async function TeamPage() {
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) redirect('/onboarding')
 
-  const [{ data: members }, { data: myMembership }, { data: invitations }] = await Promise.all([
+  // Fetch members, then profiles separately to avoid relational join type issues
+  const [{ data: rawMembers }, { data: myMembership }, { data: invitations }] = await Promise.all([
     supabase
       .from('org_members')
-      .select('id, role, user_id, created_at, profiles(full_name, avatar_url)')
+      .select('id, role, user_id, created_at')
       .eq('org_id', orgId)
       .order('created_at', { ascending: true }),
     supabase
@@ -36,10 +37,26 @@ export default async function TeamPage() {
       .gt('expires_at', new Date().toISOString()),
   ])
 
-  const myRole   = myMembership?.role ?? 'viewer'
+  // Fetch profiles for all member user IDs
+  const userIds = rawMembers?.map(m => m.user_id) ?? []
+  const { data: profileRows } = userIds.length > 0
+    ? await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds)
+    : { data: [] as { id: string; full_name: string | null; avatar_url: string | null }[] }
+
+  const profileMap = new Map((profileRows ?? []).map(p => [p.id, p]))
+
+  const members = (rawMembers ?? []).map(m => ({
+    id:         m.id,
+    role:       m.role,
+    user_id:    m.user_id,
+    created_at: m.created_at,
+    profile:    profileMap.get(m.user_id) ?? null,
+  }))
+
+  const myRole    = myMembership?.role ?? 'viewer'
   const canManage = ['owner', 'admin'].includes(myRole)
 
-  const sorted = [...(members ?? [])].sort((a, b) =>
+  const sorted = [...members].sort((a, b) =>
     (ROLE_ORDER[a.role] ?? 99) - (ROLE_ORDER[b.role] ?? 99)
   )
 
@@ -57,10 +74,7 @@ export default async function TeamPage() {
           currentUserId={user.id}
           canManage={canManage}
         />
-
-        {canManage && (
-          <InviteForm />
-        )}
+        {canManage && <InviteForm />}
       </div>
     </div>
   )

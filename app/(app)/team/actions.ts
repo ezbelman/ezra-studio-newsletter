@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentOrgId } from '@/lib/data/org'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
+import type { Role } from '@/lib/types/database'
 
 async function requireOwnerOrAdmin() {
   const supabase = await createClient()
@@ -87,13 +88,13 @@ export async function changeRole(memberId: string, role: string) {
   const { orgId, error: authError } = await requireOwnerOrAdmin()
   if (authError || !orgId) return { error: authError ?? 'Unauthorized' }
 
-  const validRoles = ['owner', 'admin', 'editor', 'viewer']
-  if (!validRoles.includes(role)) return { error: 'Invalid role.' }
+  const validRoles: Role[] = ['owner', 'admin', 'editor', 'viewer']
+  if (!validRoles.includes(role as Role)) return { error: 'Invalid role.' }
 
   const admin = createAdminClient()
   const { error } = await admin
     .from('org_members')
-    .update({ role })
+    .update({ role: role as Role })
     .eq('id', memberId)
     .eq('org_id', orgId)
 

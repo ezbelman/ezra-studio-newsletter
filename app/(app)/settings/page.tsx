@@ -40,7 +40,7 @@ export default async function SettingsPage() {
       <SettingsForm
         orgId={orgId}
         canEdit={canEdit}
-        provider={(org?.ai_provider as string) ?? 'platform'}
+        provider={org?.ai_provider ?? 'platform'}
         anthropicKeyMasked={maskKey(org?.anthropic_api_key)}
         anthropicKeySet={isKeySet(org?.anthropic_api_key)}
         openaiKeyMasked={maskKey(org?.openai_api_key)}

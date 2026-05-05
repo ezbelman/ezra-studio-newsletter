@@ -22,7 +22,7 @@ interface Member {
   role: string
   user_id: string
   created_at: string
-  profiles: { full_name: string | null; avatar_url: string | null } | null
+  profile: { full_name: string | null; avatar_url: string | null } | null
 }
 
 interface Invitation {
@@ -78,7 +78,7 @@ export function MemberList({
 
       <ul className="divide-y divide-line">
         {members.map(m => {
-          const name    = m.profiles?.full_name
+          const name    = m.profile?.full_name
           const roleInfo = ROLE_LABELS[m.role] ?? ROLE_LABELS.viewer
           const isMe    = m.user_id === currentUserId
           const isOwner = m.role === 'owner'
