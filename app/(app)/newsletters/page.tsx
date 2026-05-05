@@ -27,12 +27,13 @@ export default async function NewslettersPage() {
   const isEmpty = !newsletters || newsletters.length === 0
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-bg">
+    <div className="mx-auto max-w-6xl px-8 py-8">
 
       <div className="flex items-center justify-between mb-8 animate-fade-up delay-0">
         <div>
-          <p className="text-xs font-700 uppercase tracking-widest text-ink-muted mb-1">Publications</p>
-          <h1 className="text-3xl font-display font-700 text-ink leading-none">Newsletters</h1>
+          <h1 className="text-[22px] font-display font-700 leading-tight text-ink">Newsletters</h1>
+          <p className="mt-1 text-sm text-ink-muted">Your publication channels</p>
         </div>
         {!isEmpty && (
           <Button variant="primary" asChild>
@@ -158,6 +159,7 @@ export default async function NewslettersPage() {
           </div>
         </div>
       )}
+    </div>
     </div>
   )
 }

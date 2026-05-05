@@ -32,10 +32,11 @@ export default async function SettingsPage() {
   const canEdit = ['owner', 'admin'].includes(membership?.role ?? '')
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-bg">
+    <div className="mx-auto max-w-2xl px-8 py-8">
       <div className="mb-8">
-        <p className="text-xs font-700 uppercase tracking-widest text-ink-muted mb-1">Organization</p>
-        <h1 className="text-3xl font-display font-700 text-ink leading-none">Settings</h1>
+        <h1 className="text-[22px] font-display font-700 leading-tight text-ink">Settings</h1>
+        <p className="mt-1 text-sm text-ink-muted">Manage your AI provider and organization preferences</p>
       </div>
       <SettingsForm
         canEdit={canEdit}
@@ -47,6 +48,7 @@ export default async function SettingsPage() {
         geminiKeyMasked={maskKey(org?.gemini_api_key)}
         geminiKeySet={isKeySet(org?.gemini_api_key)}
       />
+    </div>
     </div>
   )
 }

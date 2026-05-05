@@ -27,15 +27,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     const pathname = (await headers()).get('x-pathname') ?? ''
     if (pathname !== '/onboarding') redirect('/onboarding')
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#0B1120] flex items-center justify-center p-6">
         <div className="w-full max-w-sm animate-fade-up">
-          <div className="flex items-center gap-2.5 mb-8 justify-center">
-            <div className="h-8 w-8 rounded-md bg-navy-deep flex items-center justify-center shrink-0">
-              <span className="text-white font-black text-xs tracking-tight">NS</span>
+          <div className="flex items-center gap-3 mb-10 justify-center">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+              <span className="text-white font-bold text-xs tracking-tight">NS</span>
             </div>
             <div>
-              <p className="text-ink font-700 text-[15px] leading-none tracking-tight">Newsletter Studio</p>
-              <p className="text-ink-muted text-xs mt-0.5">by Ezra Studio</p>
+              <p className="text-white/90 font-semibold text-[15px] leading-none tracking-tight">Newsletter Studio</p>
+              <p className="text-white/30 text-xs mt-0.5">by Ezra Studio</p>
             </div>
           </div>
           <div className="animate-fade-up delay-100">
@@ -49,14 +49,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const org = membership.organizations as { name: string; slug: string }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-bg">
       <Sidebar
         orgName={org.name}
         orgSlug={org.slug}
-        userFullName={profile?.full_name ?? user.email ?? ''}
+        userFullName={profile?.full_name ?? ''}
+        userEmail={user.email ?? ''}
         isAdmin={profile?.is_platform_admin ?? false}
       />
-      <main className="flex-1 ml-64 min-h-screen bg-bg">
+      <main className="flex-1 min-h-screen" style={{ marginLeft: '220px' }}>
         {children}
       </main>
     </div>

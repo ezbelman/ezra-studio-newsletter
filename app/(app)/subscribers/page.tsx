@@ -20,23 +20,42 @@ export default async function SubscribersPage() {
     .eq('status', 'active')
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <p className="text-xs font-700 uppercase tracking-widest text-ink-muted mb-1">People</p>
-        <h1 className="text-3xl font-display font-700 text-ink leading-none">Subscribers</h1>
-      </div>
+    <div className="min-h-screen bg-bg">
+      <div className="mx-auto max-w-6xl px-8 py-8">
 
-      <div className="rounded-lg border border-line bg-white p-10 text-center">
-        <div className="h-14 w-14 rounded-xl bg-navy-deep/5 border border-navy/8 flex items-center justify-center mx-auto mb-5">
-          <Users className="h-6 w-6 text-navy-muted" />
+        <div className="mb-8">
+          <h1 className="text-[22px] font-display font-700 leading-tight text-ink">Subscribers</h1>
+          <p className="mt-1 text-sm text-ink-muted">Your audience across all newsletters</p>
         </div>
-        <p className="text-2xl font-display font-700 text-ink mb-1">
-          {(count ?? 0).toLocaleString()}
-        </p>
-        <p className="text-ink-muted text-sm mb-6">active subscribers</p>
-        <p className="text-xs text-ink-muted/60">
-          Full subscriber management — import, export, segments — coming soon.
-        </p>
+
+        <div className="mb-6 grid grid-cols-3 gap-4">
+          <div className="rounded-xl bg-[#0B1120] p-5 text-white">
+            <p className="mb-4 text-[11px] font-600 uppercase tracking-wider text-white/35">Active subscribers</p>
+            <p className="font-display text-4xl font-700 text-white">{(count ?? 0).toLocaleString()}</p>
+            <p className="mt-1 text-xs text-white/25">All newsletters</p>
+          </div>
+          <div className="rounded-xl border border-line bg-white p-5">
+            <p className="mb-4 text-[11px] font-600 uppercase tracking-wider text-ink-muted">Unsubscribed</p>
+            <p className="font-display text-4xl font-700 text-ink">—</p>
+            <p className="mt-1 text-xs text-ink-muted">Tracking soon</p>
+          </div>
+          <div className="rounded-xl border border-line bg-white p-5">
+            <p className="mb-4 text-[11px] font-600 uppercase tracking-wider text-ink-muted">Growth rate</p>
+            <p className="font-display text-4xl font-700 text-ink">—</p>
+            <p className="mt-1 text-xs text-ink-muted">Coming soon</p>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-xl border border-line bg-white p-12 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-line bg-bg">
+            <Users className="h-5 w-5 text-ink-muted/60" />
+          </div>
+          <p className="mb-1 text-sm font-600 text-ink">Full subscriber management coming soon</p>
+          <p className="text-xs text-ink-muted">
+            Import, export, segments, and per-newsletter breakdowns will be available in a future update.
+          </p>
+        </div>
+
       </div>
     </div>
   )

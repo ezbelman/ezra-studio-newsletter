@@ -61,20 +61,26 @@ export default async function TeamPage() {
   )
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <p className="text-xs font-700 uppercase tracking-widest text-ink-muted mb-1">Organization</p>
-        <h1 className="text-3xl font-display font-700 text-ink leading-none">Team</h1>
-      </div>
+    <div className="min-h-screen bg-bg">
+      <div className="mx-auto max-w-4xl px-8 py-8">
 
-      <div className="space-y-6">
-        <MemberList
-          members={sorted}
-          invitations={invitations ?? []}
-          currentUserId={user.id}
-          canManage={canManage}
-        />
-        {canManage && <InviteForm />}
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-[22px] font-display font-700 leading-tight text-ink">Team</h1>
+            <p className="mt-1 text-sm text-ink-muted">{sorted.length} member{sorted.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <MemberList
+            members={sorted}
+            invitations={invitations ?? []}
+            currentUserId={user.id}
+            canManage={canManage}
+          />
+          {canManage && <InviteForm />}
+        </div>
+
       </div>
     </div>
   )

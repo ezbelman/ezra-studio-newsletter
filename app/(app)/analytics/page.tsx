@@ -39,20 +39,21 @@ export default async function AnalyticsPage() {
   ]
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <p className="text-xs font-700 uppercase tracking-widest text-ink-muted mb-1">Insights</p>
-        <h1 className="text-3xl font-display font-700 text-ink leading-none">Analytics</h1>
-      </div>
+    <div className="min-h-screen bg-bg">
+      <div className="mx-auto max-w-6xl px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-[22px] font-display font-700 leading-tight text-ink">Analytics</h1>
+          <p className="mt-1 text-sm text-ink-muted">Performance across all your newsletters</p>
+        </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map(s => (
-          <div key={s.label} className="rounded-xl border border-line bg-white p-5">
-            <div className="h-8 w-8 rounded-lg bg-cyan/10 flex items-center justify-center mb-3">
-              <s.icon className="h-4 w-4 text-cyan" />
+        {stats.map((s, i) => (
+          <div key={s.label} className={i === 0 ? 'rounded-xl bg-[#0B1120] p-5 text-white' : 'rounded-xl border border-line bg-white p-5'}>
+            <div className={`flex h-8 w-8 items-center justify-center rounded-lg mb-4 ${i === 0 ? 'bg-white/[0.07]' : 'border border-line bg-bg'}`}>
+              <s.icon className={`h-4 w-4 ${i === 0 ? 'text-white/40' : 'text-ink-muted/60'}`} />
             </div>
-            <p className="text-2xl font-display font-700 text-ink">{s.value}</p>
-            <p className="text-xs text-ink-muted mt-0.5">{s.label}</p>
+            <p className={`font-display text-2xl font-700 ${i === 0 ? 'text-white' : 'text-ink'}`}>{s.value}</p>
+            <p className={`text-xs mt-1 ${i === 0 ? 'text-white/30' : 'text-ink-muted'}`}>{s.label}</p>
           </div>
         ))}
       </div>
@@ -102,6 +103,7 @@ export default async function AnalyticsPage() {
           <p className="text-sm text-ink-muted">No sends yet. Publish your first issue to see analytics here.</p>
         </div>
       )}
+      </div>
     </div>
   )
 }
