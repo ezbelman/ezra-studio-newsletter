@@ -14,25 +14,18 @@ export async function createOrganization(formData: FormData) {
 
   const slug = slugify(name)
 
-  const { data: org, error: orgErr } = await supabase
-    .from('organizations')
-    .insert({ name, slug })
-    .select('id')
-    .single()
+  const { error } = await supabase.rpc('create_organization_for_user', {
+    p_name: name,
+    p_slug: slug,
+  })
 
-  if (orgErr) {
+  if (error) {
     return {
-      error: orgErr.code === '23505'
+      error: error.code === '23505'
         ? 'That workspace URL is taken. Try a slightly different name.'
-        : orgErr.message,
+        : error.message,
     }
   }
-
-  const { error: memberErr } = await supabase
-    .from('org_members')
-    .insert({ org_id: org.id, user_id: user.id, role: 'owner' })
-
-  if (memberErr) return { error: memberErr.message }
 
   redirect('/dashboard')
 }
