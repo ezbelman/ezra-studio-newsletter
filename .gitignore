@@ -25,6 +25,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# claude code
+.claude/
+
 # typescript build artifacts
 tsconfig.tsbuildinfo
 *.tsbuildinfo
