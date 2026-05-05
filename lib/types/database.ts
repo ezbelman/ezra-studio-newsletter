@@ -317,6 +317,10 @@ export interface Database {
         Args: { p_key: string; p_max_requests: number; p_window_seconds: number }
         Returns: { allowed: boolean; count: number; retry_after?: number }
       }
+      create_organization_for_user: {
+        Args: { p_name: string; p_slug: string }
+        Returns: string
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
