@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { OrgNameEditor } from './org-name-editor'
 import {
   Plus, ArrowRight, Newspaper, Send, Users,
   Clock, Sparkles, UserPlus, Settings,
@@ -36,7 +37,7 @@ export default async function DashboardPage() {
     supabase.from('profiles').select('full_name').eq('id', user.id).single(),
     supabase
       .from('org_members')
-      .select('org_id, organizations(name)')
+      .select('org_id, role, organizations(name)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true })
       .limit(1)
@@ -45,9 +46,10 @@ export default async function DashboardPage() {
 
   if (!membershipRes.data) redirect('/onboarding')
 
-  const orgId = membershipRes.data.org_id
-  const org   = membershipRes.data.organizations as { name: string } | null
-  const name  = profileRes.data?.full_name ?? user.email ?? 'there'
+  const orgId   = membershipRes.data.org_id
+  const org     = membershipRes.data.organizations as { name: string } | null
+  const name    = profileRes.data?.full_name ?? user.email ?? 'there'
+  const canEdit = ['owner', 'admin'].includes(membershipRes.data.role)
 
   const [newslettersRes, subscribersRes, publishedRes, inProgressRes, recentRes] = await Promise.all([
     supabase.from('newsletters').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
@@ -93,9 +95,10 @@ export default async function DashboardPage() {
             <h1 className="text-[22px] font-display font-700 leading-tight text-ink">
               {greeting(name)}
             </h1>
-            <p className="mt-1 text-sm text-ink-muted">
-              {dateLabel()} · {org?.name}
-            </p>
+            <div className="mt-1 flex items-center gap-1.5 text-sm text-ink-muted">
+              <span>{dateLabel()} ·</span>
+              <OrgNameEditor orgName={org?.name ?? ''} canEdit={canEdit} />
+            </div>
           </div>
           <Button variant="primary" asChild>
             <Link href="/newsletters/new">

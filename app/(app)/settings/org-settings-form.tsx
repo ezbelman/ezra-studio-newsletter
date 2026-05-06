@@ -4,7 +4,6 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveOrgSettings } from './actions'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Check, X } from 'lucide-react'
 
 interface Props {
@@ -31,9 +30,11 @@ export function OrgSettingsForm({ canEdit, orgName, orgSlug }: Props) {
 
   if (!canEdit) {
     return (
-      <Card>
-        <CardHeader><CardTitle>Organization</CardTitle></CardHeader>
-        <CardContent>
+      <div className="rounded-xl border border-line bg-surface">
+        <div className="border-b border-line px-6 py-5">
+          <h3 className="text-base font-700 text-ink">Organization</h3>
+        </div>
+        <div className="px-6 py-5">
           <div className="flex items-center gap-3 py-1">
             <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
               <span className="text-accent font-700 text-sm">{orgName.charAt(0).toUpperCase()}</span>
@@ -44,18 +45,18 @@ export function OrgSettingsForm({ canEdit, orgName, orgSlug }: Props) {
             </div>
           </div>
           <p className="text-xs text-ink-muted mt-4">Only org owners and admins can change the organization name.</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Organization</CardTitle>
+    <div className="rounded-xl border border-line bg-surface">
+      <div className="border-b border-line px-6 py-5">
+        <h3 className="text-base font-700 text-ink">Organization</h3>
         <p className="text-xs text-ink-muted mt-1">This name appears in the sidebar and all team notifications.</p>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="px-6 py-5">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-600 text-ink-muted mb-1.5">Organization name</label>
@@ -66,13 +67,13 @@ export function OrgSettingsForm({ canEdit, orgName, orgSlug }: Props) {
               value={name}
               onChange={e => { setName(e.target.value); setResult(null) }}
               placeholder="Acme Corp"
-              className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
+              className="w-full h-10 rounded-md border border-line bg-elevated px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
             />
             <p className="text-ink-muted text-xs mt-1.5 font-mono">slug: {orgSlug}</p>
           </div>
 
           {result?.error && (
-            <p className="text-red-600 text-xs bg-red-50 border border-red-100 rounded-md px-3 py-2 flex items-start gap-2">
+            <p className="text-danger text-xs bg-danger/10 border border-danger/20 rounded-md px-3 py-2 flex items-start gap-2">
               <X className="h-3.5 w-3.5 mt-0.5 shrink-0" /> {result.error}
             </p>
           )}
@@ -88,7 +89,7 @@ export function OrgSettingsForm({ canEdit, orgName, orgSlug }: Props) {
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

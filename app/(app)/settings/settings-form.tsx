@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { saveAISettings, clearAPIKey } from './actions'
+import { useRouter } from 'next/navigation'
+import { saveAISettings } from './actions'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Eye, EyeOff, Check, X, Loader2 } from 'lucide-react'
 
 interface Props {
@@ -20,10 +20,10 @@ interface Props {
 type Provider = 'platform' | 'own_anthropic' | 'own_openai' | 'own_gemini'
 
 const PROVIDERS: { value: Provider; label: string; hint: string }[] = [
-  { value: 'platform',      label: 'Platform AI (included)',   hint: 'Rate-limited shared access. No key needed.' },
+  { value: 'platform',      label: 'Platform AI (included)',    hint: 'Rate-limited shared access. No key needed.' },
   { value: 'own_anthropic', label: 'My Claude key (Anthropic)', hint: 'Unlimited calls billed to your Anthropic account.' },
-  { value: 'own_openai',    label: 'My OpenAI key',            hint: 'Uses GPT-4o. Billed to your OpenAI account.' },
-  { value: 'own_gemini',    label: 'My Gemini key (Google)',   hint: 'Uses Gemini 1.5 Pro. Billed to your Google account.' },
+  { value: 'own_openai',    label: 'My OpenAI key',             hint: 'Uses GPT-4o. Billed to your OpenAI account.' },
+  { value: 'own_gemini',    label: 'My Gemini key (Google)',    hint: 'Uses Gemini 1.5 Pro. Billed to your Google account.' },
 ]
 
 function KeyField({
@@ -41,7 +41,7 @@ function KeyField({
       {isSet && !editing ? (
         <div className="flex items-center gap-2">
           <div className="flex-1 flex items-center gap-2 h-10 rounded-md border border-line bg-bg px-3">
-            <Check className="h-3.5 w-3.5 text-lime shrink-0" />
+            <Check className="h-3.5 w-3.5 text-success shrink-0" />
             <span className="text-sm font-mono text-ink-muted">{maskedValue}</span>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
@@ -55,7 +55,7 @@ function KeyField({
             type={show ? 'text' : 'password'}
             placeholder={placeholder}
             autoComplete="off"
-            className="w-full h-10 rounded-md border border-line bg-surface px-3 pr-10 text-sm font-mono text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+            className="w-full h-10 rounded-md border border-line bg-elevated px-3 pr-10 text-sm font-mono text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
           />
           <button
             type="button"
@@ -76,6 +76,7 @@ export function SettingsForm({
   openaiKeyMasked,    openaiKeySet,
   geminiKeyMasked,    geminiKeySet,
 }: Props) {
+  const router = useRouter()
   const [provider,    setProvider]    = useState<Provider>(initialProvider as Provider)
   const [showKeys,    setShowKeys]    = useState(false)
   const [result,      setResult]      = useState<{ error?: string; success?: boolean } | null>(null)
@@ -87,31 +88,32 @@ export function SettingsForm({
     startTransition(async () => {
       const res = await saveAISettings(fd)
       setResult(res)
+      if (res.success) router.refresh()
     })
   }
 
-  const selectedInfo = PROVIDERS.find(p => p.value === provider)
-
   if (!canEdit) {
     return (
-      <Card>
-        <CardHeader><CardTitle>AI Settings</CardTitle></CardHeader>
-        <CardContent>
+      <div className="rounded-xl border border-line bg-surface">
+        <div className="border-b border-line px-6 py-5">
+          <h3 className="text-base font-700 text-ink">AI Provider</h3>
+        </div>
+        <div className="px-6 py-5">
           <p className="text-sm text-ink-muted">Only org owners and admins can change AI settings.</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>AI Provider</CardTitle>
+    <div className="rounded-xl border border-line bg-surface">
+      <div className="border-b border-line px-6 py-5">
+        <h3 className="text-base font-700 text-ink">AI Provider</h3>
         <p className="text-xs text-ink-muted mt-1">
           Choose how newsletter AI polish is powered. Keys are stored encrypted and never exposed in the browser.
         </p>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="px-6 py-5">
         <form onSubmit={handleSubmit} className="space-y-6">
 
           {/* Provider selector */}
@@ -187,12 +189,12 @@ export function SettingsForm({
           )}
 
           {result?.error && (
-            <p className="text-red-600 text-xs bg-red-50 border border-red-100 rounded-md px-3 py-2 flex items-start gap-2">
+            <p className="text-danger text-xs bg-danger/10 border border-danger/20 rounded-md px-3 py-2 flex items-start gap-2">
               <X className="h-3.5 w-3.5 mt-0.5 shrink-0" /> {result.error}
             </p>
           )}
           {result?.success && (
-            <p className="text-lime text-xs bg-lime/10 border border-lime/20 rounded-md px-3 py-2 flex items-center gap-2">
+            <p className="text-success text-xs bg-success/10 border border-success/20 rounded-md px-3 py-2 flex items-center gap-2">
               <Check className="h-3.5 w-3.5 shrink-0" /> Settings saved.
             </p>
           )}
@@ -201,7 +203,7 @@ export function SettingsForm({
             {pending ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Saving…</> : 'Save AI settings'}
           </Button>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
