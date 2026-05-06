@@ -6,6 +6,20 @@ import type { Database } from '@/lib/types/database'
 
 type OrgUpdate = Database['public']['Tables']['organizations']['Update']
 
+export async function saveOrgSettings(formData: FormData) {
+  const { orgId, error: authError } = await requireOwnerOrAdmin()
+  if (authError || !orgId) return { error: authError ?? 'Unauthorized' }
+
+  const name = (formData.get('name') as string)?.trim()
+  if (!name) return { error: 'Organization name is required.' }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('organizations').update({ name }).eq('id', orgId)
+  if (error) return { error: error.message }
+
+  return { success: true }
+}
+
 export async function saveAISettings(formData: FormData) {
   const { orgId, error: authError } = await requireOwnerOrAdmin()
   if (authError || !orgId) return { error: authError ?? 'Unauthorized' }
