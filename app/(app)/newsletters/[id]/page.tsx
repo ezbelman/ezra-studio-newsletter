@@ -128,7 +128,7 @@ export default async function NewsletterDetailPage({ params }: Props) {
         </div>
 
         {!issues || issues.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-line bg-white/50 px-6 py-12 text-center animate-scale-in delay-150">
+          <div className="rounded-xl border border-dashed border-line bg-surface/50 px-6 py-12 text-center animate-scale-in delay-150">
             <div className="h-12 w-12 rounded-full bg-cyan/10 flex items-center justify-center mx-auto mb-3">
               <Calendar className="h-5 w-5 text-cyan" />
             </div>
@@ -141,7 +141,7 @@ export default async function NewsletterDetailPage({ params }: Props) {
             </Button>
           </div>
         ) : (
-          <div className="rounded-xl border border-line bg-white overflow-hidden">
+          <div className="rounded-xl border border-line bg-surface overflow-hidden">
             <ul className="divide-y divide-line">
               {issues.map((issue, i) => (
                 <li

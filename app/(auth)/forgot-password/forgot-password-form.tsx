@@ -33,9 +33,9 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="bg-white rounded-xl border border-line p-8 shadow-card text-center">
-        <div className="h-11 w-11 rounded-full bg-lime/10 flex items-center justify-center mx-auto mb-4">
-          <span className="text-lime text-lg">✓</span>
+      <div className="bg-surface rounded-xl border border-line p-8 shadow-card text-center">
+        <div className="h-11 w-11 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
+          <span className="text-success text-lg">✓</span>
         </div>
         <h2 className="text-ink font-700 text-lg mb-2">Check your email</h2>
         <p className="text-ink-muted text-sm">
@@ -47,7 +47,7 @@ export function ForgotPasswordForm() {
           Didn&apos;t receive it?{' '}
           <button
             onClick={() => setSent(false)}
-            className="text-cyan hover:text-cyan-bright transition-colors font-600"
+            className="text-accent hover:text-accent/80 transition-colors font-600"
           >
             Try again
           </button>
@@ -57,7 +57,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-line p-8 shadow-card">
+    <div className="bg-surface rounded-xl border border-line p-8 shadow-card">
       <h1 className="text-ink font-display font-700 text-xl mb-1">Reset your password</h1>
       <p className="text-ink-muted text-sm mb-7">
         Enter your email and we&apos;ll send a reset link.
@@ -72,7 +72,7 @@ export function ForgotPasswordForm() {
             onChange={e => setEmail(e.target.value)}
             required
             placeholder="you@company.com"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
           />
         </div>
 
@@ -89,7 +89,7 @@ export function ForgotPasswordForm() {
 
       <p className="text-ink-muted text-xs text-center mt-6 pt-6 border-t border-line">
         Remember it?{' '}
-        <Link href="/login" className="text-cyan hover:text-cyan-bright transition-colors font-600">
+        <Link href="/login" className="text-accent hover:text-accent/80 transition-colors font-600">
           Sign in
         </Link>
       </p>

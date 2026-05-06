@@ -35,7 +35,7 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-line p-8 shadow-card">
+    <div className="bg-surface rounded-xl border border-line p-8 shadow-card">
       <h1 className="text-ink font-display font-700 text-xl mb-1">Set new password</h1>
       <p className="text-ink-muted text-sm mb-7">Choose a strong password for your account.</p>
 
@@ -49,7 +49,7 @@ export function ResetPasswordForm() {
             required
             minLength={8}
             placeholder="8+ characters"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
           />
         </div>
 
@@ -61,7 +61,7 @@ export function ResetPasswordForm() {
             onChange={e => setConfirm(e.target.value)}
             required
             placeholder="••••••••"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
           />
         </div>
 

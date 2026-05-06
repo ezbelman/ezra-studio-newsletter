@@ -75,7 +75,7 @@ export function NewNewsletterForm({ orgId }: { orgId: string }) {
               onChange={e => setDescription(e.target.value)}
               placeholder="A brief description of your newsletter's topic and audience"
               rows={3}
-              className="w-full rounded-sm border border-line bg-white px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted/50 focus:outline-none focus:ring-2 focus:ring-cyan focus:border-cyan resize-none"
+              className="w-full rounded-sm border border-line bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted/50 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent resize-none"
             />
           </div>
 

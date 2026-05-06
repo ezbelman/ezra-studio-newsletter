@@ -66,7 +66,7 @@ export function MemberList({
   }
 
   return (
-    <div className="rounded-xl border border-line bg-white overflow-hidden">
+    <div className="rounded-xl border border-line bg-surface overflow-hidden">
       <div className="px-6 py-4 border-b border-line flex items-center justify-between">
         <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Members</h2>
         <span className="text-xs text-ink-muted">{members.length} total</span>
@@ -109,7 +109,7 @@ export function MemberList({
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
                   {openMenu === m.id && (
-                    <div className="absolute right-0 top-8 z-10 bg-white rounded-lg border border-line shadow-lg py-1 w-44" onMouseLeave={() => setOpenMenu(null)}>
+                    <div className="absolute right-0 top-8 z-10 bg-elevated rounded-lg border border-line shadow-lg py-1 w-44" onMouseLeave={() => setOpenMenu(null)}>
                       <p className="px-3 py-1.5 text-xs font-700 uppercase tracking-widest text-ink-muted">Change role</p>
                       {['admin', 'editor', 'viewer'].map(r => (
                         <button
@@ -119,7 +119,7 @@ export function MemberList({
                         >
                           <Shield className="h-3.5 w-3.5 text-ink-muted" />
                           {r.charAt(0).toUpperCase() + r.slice(1)}
-                          {m.role === r && <span className="ml-auto text-cyan text-xs">✓</span>}
+                          {m.role === r && <span className="ml-auto text-accent text-xs">✓</span>}
                         </button>
                       ))}
                       <div className="border-t border-line my-1" />

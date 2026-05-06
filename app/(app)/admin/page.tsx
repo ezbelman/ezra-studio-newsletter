@@ -43,7 +43,7 @@ export default async function AdminPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8 animate-fade-up delay-50">
         {stats.map(s => (
-          <div key={s.label} className="rounded-xl border border-line bg-white p-5">
+          <div key={s.label} className="rounded-xl border border-line bg-surface p-5">
             <div className="h-8 w-8 rounded-lg bg-cyan/10 flex items-center justify-center mb-3">
               <s.icon className="h-4 w-4 text-cyan" />
             </div>
@@ -65,7 +65,7 @@ export default async function AdminPage() {
           <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Users</h2>
           <span className="text-xs text-ink-muted">{users?.length ?? 0} total</span>
         </div>
-        <div className="rounded-xl border border-line bg-white overflow-hidden">
+        <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-line bg-bg/50">
@@ -99,7 +99,7 @@ export default async function AdminPage() {
           <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Organizations</h2>
           <span className="text-xs text-ink-muted">{orgs?.length ?? 0} total</span>
         </div>
-        <div className="rounded-xl border border-line bg-white overflow-hidden">
+        <div className="rounded-xl border border-line bg-surface overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-line bg-bg/50">

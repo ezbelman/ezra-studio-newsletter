@@ -149,7 +149,7 @@ export default async function DashboardPage() {
                 <Link
                   key={card.n}
                   href={card.href}
-                  className="group rounded-xl border border-line bg-white p-6 transition-all hover:border-navy/20 hover:shadow-card"
+                  className="group rounded-xl border border-line bg-surface p-6 transition-all hover:border-accent/20 hover:shadow-card"
                 >
                   <p className="mb-3 text-[10px] font-700 uppercase tracking-widest text-ink-muted/40">Step {card.n}</p>
                   <h3 className="mb-1.5 text-sm font-700 text-ink">{card.title}</h3>
@@ -174,7 +174,7 @@ export default async function DashboardPage() {
                       'animate-fade-up rounded-xl p-5',
                       s.dark
                         ? 'bg-[#0B1120] text-white'
-                        : 'border border-line bg-white',
+                        : 'border border-line bg-surface',
                     )}
                     style={{ animationDelay: `${i * 60}ms` }}
                   >
@@ -182,7 +182,7 @@ export default async function DashboardPage() {
                       <p className={cn('text-[11px] font-600 uppercase tracking-wider', s.dark ? 'text-white/35' : 'text-ink-muted')}>
                         {s.label}
                       </p>
-                      <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg', s.dark ? 'bg-white/[0.07]' : 'border border-line bg-bg')}>
+                      <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg', s.dark ? 'bg-white/[0.07]' : 'border border-line bg-elevated')}>
                         <Icon className={cn('h-3.5 w-3.5', s.dark ? 'text-white/35' : 'text-ink-muted/60')} />
                       </div>
                     </div>
@@ -201,7 +201,7 @@ export default async function DashboardPage() {
             <div className="grid grid-cols-3 gap-6">
 
               {/* Recent issues — 2 cols */}
-              <div className="col-span-2 overflow-hidden rounded-xl border border-line bg-white">
+              <div className="col-span-2 overflow-hidden rounded-xl border border-line bg-surface">
                 <div className="flex items-center justify-between border-b border-line px-6 py-4">
                   <h2 className="text-sm font-700 text-ink">Recent issues</h2>
                   <Link
@@ -258,7 +258,7 @@ export default async function DashboardPage() {
               <div className="col-span-1 flex flex-col gap-4">
 
                 {/* Quick actions */}
-                <div className="rounded-xl border border-line bg-white p-5">
+                <div className="rounded-xl border border-line bg-surface p-5">
                   <h2 className="mb-4 text-sm font-700 text-ink">Quick actions</h2>
                   <div className="space-y-1.5">
                     {quickActions.map(({ label, href, icon: Icon }) => (
@@ -267,7 +267,7 @@ export default async function DashboardPage() {
                         href={href}
                         className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-500 text-ink-muted transition-all hover:bg-bg hover:text-ink"
                       >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-line bg-white transition-colors group-hover:border-navy/15 group-hover:bg-bg">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-line bg-elevated transition-colors group-hover:border-accent/15 group-hover:bg-bg">
                           <Icon className="h-3.5 w-3.5 text-ink-muted/60" />
                         </div>
                         {label}

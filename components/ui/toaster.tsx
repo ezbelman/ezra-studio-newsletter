@@ -17,10 +17,10 @@ export function Toaster() {
           className={cn(
             'flex items-start gap-3 rounded-lg border px-4 py-3 shadow-lg w-80',
             'animate-scale-in',
-            t.variant === 'success'     && 'bg-white border-lime/40',
-            t.variant === 'destructive' && 'bg-white border-red-300',
-            t.variant === 'default'     && 'bg-white border-line',
-            !t.variant                  && 'bg-white border-line',
+            t.variant === 'success'     && 'bg-elevated border-success/40',
+            t.variant === 'destructive' && 'bg-elevated border-danger/40',
+            t.variant === 'default'     && 'bg-elevated border-line',
+            !t.variant                  && 'bg-elevated border-line',
           )}
         >
           <span className="shrink-0 mt-0.5">

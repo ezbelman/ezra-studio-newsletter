@@ -12,7 +12,7 @@ const buttonVariants = cva(
       variant: {
         default:   'bg-ink text-white hover:bg-ink/90 focus-visible:ring-ink',
         primary:   'bg-cyan text-white hover:bg-cyan-bright focus-visible:ring-cyan',
-        outline:   'border border-line bg-white text-ink hover:bg-bg focus-visible:ring-ink',
+        outline:   'border border-line bg-surface text-ink hover:bg-elevated focus-visible:ring-ink',
         ghost:     'text-ink-muted hover:bg-bg hover:text-ink',
         danger:    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600',
         lime:      'bg-lime text-white hover:opacity-90 focus-visible:ring-lime',

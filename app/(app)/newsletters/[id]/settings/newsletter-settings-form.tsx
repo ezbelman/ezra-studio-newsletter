@@ -61,7 +61,7 @@ export function NewsletterSettingsForm({ newsletter }: { newsletter: Newsletter 
   return (
     <>
       {/* General */}
-      <div className="rounded-lg border border-line bg-white overflow-hidden mb-6 animate-fade-up delay-100">
+      <div className="rounded-lg border border-line bg-surface overflow-hidden mb-6 animate-fade-up delay-100">
         <div className="px-5 py-4 border-b border-line">
           <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">General</h2>
         </div>
@@ -83,7 +83,7 @@ export function NewsletterSettingsForm({ newsletter }: { newsletter: Newsletter 
               onChange={e => setDesc(e.target.value)}
               rows={3}
               placeholder="What this newsletter is about…"
-              className="w-full rounded-sm border border-line bg-white px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted/50 focus:outline-none focus:ring-2 focus:ring-cyan focus:border-cyan resize-none"
+              className="w-full rounded-sm border border-line bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted/50 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent resize-none"
             />
           </div>
           {name && (
@@ -103,7 +103,7 @@ export function NewsletterSettingsForm({ newsletter }: { newsletter: Newsletter 
       </div>
 
       {/* Danger zone */}
-      <div className="rounded-lg border border-red-200 bg-white overflow-hidden animate-fade-up delay-150">
+      <div className="rounded-lg border border-red-200 bg-surface overflow-hidden animate-fade-up delay-150">
         <div className="px-5 py-4 border-b border-red-200 bg-red-50/50">
           <h2 className="text-xs font-700 uppercase tracking-widest text-red-600 flex items-center gap-2">
             <AlertTriangle className="h-3.5 w-3.5" />

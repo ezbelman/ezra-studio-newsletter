@@ -35,7 +35,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-line p-8 shadow-card">
+    <div className="bg-surface rounded-xl border border-line p-8 shadow-card">
       <h1 className="text-ink font-display font-700 text-xl mb-1">Welcome back</h1>
       <p className="text-ink-muted text-sm mb-7">Sign in to your workspace</p>
 
@@ -48,7 +48,7 @@ export function LoginForm() {
             onChange={e => setEmail(e.target.value)}
             required
             placeholder="you@company.com"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
           />
         </div>
 
@@ -60,7 +60,7 @@ export function LoginForm() {
             onChange={e => setPassword(e.target.value)}
             required
             placeholder="••••••••"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
           />
         </div>
 
@@ -76,12 +76,12 @@ export function LoginForm() {
       </form>
 
       <div className="flex items-center justify-between mt-6 pt-6 border-t border-line">
-        <Link href="/forgot-password" className="text-ink-muted text-xs hover:text-cyan transition-colors">
+        <Link href="/forgot-password" className="text-ink-muted text-xs hover:text-accent transition-colors">
           Forgot password?
         </Link>
         <p className="text-ink-muted text-xs">
           No account?{' '}
-          <Link href="/signup" className="text-cyan hover:text-cyan-bright transition-colors font-600">
+          <Link href="/signup" className="text-accent hover:text-accent/80 transition-colors font-600">
             Create one
           </Link>
         </p>

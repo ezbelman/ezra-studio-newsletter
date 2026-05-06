@@ -131,7 +131,7 @@ export default function NewIssuePage() {
       <div className="space-y-5">
 
         {/* Issue details panel */}
-        <div className="rounded-lg border border-line bg-white overflow-hidden animate-fade-up delay-100">
+        <div className="rounded-lg border border-line bg-surface overflow-hidden animate-fade-up delay-100">
           <div className="px-4 py-3 border-b border-line">
             <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Issue Details</h2>
           </div>
@@ -155,7 +155,7 @@ export default function NewIssuePage() {
         </div>
 
         {/* Raw notes panel */}
-        <div className="rounded-lg border border-line bg-white overflow-hidden animate-fade-up delay-150">
+        <div className="rounded-lg border border-line bg-surface overflow-hidden animate-fade-up delay-150">
           <div className="flex items-center justify-between px-4 py-3 border-b border-line">
             <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Raw Notes</h2>
             <Button

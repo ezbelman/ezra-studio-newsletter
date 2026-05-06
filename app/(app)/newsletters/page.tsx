@@ -48,7 +48,7 @@ export default async function NewslettersPage() {
       {isEmpty ? (
         <div className="animate-scale-in delay-100">
           {/* Atmospheric empty state */}
-          <div className="relative overflow-hidden rounded-xl border border-line bg-white p-12 text-center">
+          <div className="relative overflow-hidden rounded-xl border border-line bg-surface p-12 text-center">
             <div className="absolute inset-0 bg-gradient-to-br from-cyan/4 via-transparent to-lime/4 pointer-events-none" />
             <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px w-48 bg-gradient-to-r from-transparent via-cyan/40 to-transparent" />
 
@@ -126,7 +126,7 @@ export default async function NewslettersPage() {
                   </div>
                 ) : (
                   /* Regular card */
-                  <div className="flex items-center gap-5 rounded-lg border border-line bg-white px-6 py-5 hover:border-navy/20 hover:shadow-card transition-all">
+                  <div className="flex items-center gap-5 rounded-lg border border-line bg-surface px-6 py-5 hover:border-accent/20 hover:shadow-card transition-all">
                     <div className="h-9 w-9 rounded-lg bg-bg border border-line flex items-center justify-center shrink-0">
                       <Newspaper className="h-4 w-4 text-ink-muted" />
                     </div>

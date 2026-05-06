@@ -30,7 +30,7 @@ export function CreateOrgForm() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-line p-6 shadow-card">
+    <div className="bg-surface rounded-xl border border-line p-6 shadow-card">
       <h2 className="text-base font-700 text-ink mb-1">Create enterprise</h2>
       <p className="text-xs text-ink-muted mb-5">Creates a new organization workspace.</p>
 
@@ -44,7 +44,7 @@ export function CreateOrgForm() {
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="Acme Corp"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
           />
           {slug && (
             <p className="text-ink-muted text-xs mt-1.5 font-mono">
@@ -64,7 +64,7 @@ export function CreateOrgForm() {
             value={userId}
             onChange={e => setUserId(e.target.value)}
             placeholder="uuid of the user to assign as owner"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors font-mono text-xs"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors font-mono text-xs"
           />
           <p className="text-ink-muted/60 text-xs mt-1">Leave blank to create org without an owner.</p>
         </div>

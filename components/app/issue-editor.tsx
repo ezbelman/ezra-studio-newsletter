@@ -173,7 +173,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
       <div className="grid grid-cols-5 gap-6">
         {/* Raw notes — left */}
         <div className="col-span-2 animate-fade-up delay-100">
-          <div className="rounded-lg border border-line bg-white overflow-hidden">
+          <div className="rounded-lg border border-line bg-surface overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-line">
               <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Raw Notes</h2>
               <Button
@@ -207,7 +207,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
           {polished ? (
             <>
               {polished.stories?.map((story, i) => (
-                <div key={i} className="rounded-lg border border-line bg-white p-5">
+                <div key={i} className="rounded-lg border border-line bg-surface p-5">
                   <h3 className="font-display font-700 text-ink mb-3">{story.headline}</h3>
                   <ul className="space-y-1.5 mb-3">
                     {story.bullets.map((b, j) => (
@@ -223,7 +223,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
               ))}
 
               {polished.prompts?.length > 0 && (
-                <div className="rounded-lg border border-line bg-white p-5">
+                <div className="rounded-lg border border-line bg-surface p-5">
                   <h3 className="text-xs font-700 uppercase tracking-widest text-ink-muted mb-3">Prompts</h3>
                   <ul className="space-y-2">
                     {polished.prompts.map((p, i) => (
@@ -250,7 +250,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
               )}
             </>
           ) : (
-            <div className="rounded-lg border border-dashed border-line bg-white/50 p-10 text-center">
+            <div className="rounded-lg border border-dashed border-line bg-surface/50 p-10 text-center">
               <div className="h-12 w-12 rounded-full bg-cyan/10 flex items-center justify-center mx-auto mb-4">
                 <Sparkles className="h-5 w-5 text-cyan" />
               </div>

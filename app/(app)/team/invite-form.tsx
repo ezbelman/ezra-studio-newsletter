@@ -55,7 +55,7 @@ export function InviteForm() {
               <p className="text-xs font-600 text-lime mb-2">Invite link created</p>
               <p className="text-xs text-ink-muted mb-3">Share this link with the person you're inviting:</p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-xs font-mono bg-white border border-line rounded px-3 py-2 truncate text-ink">
+                <code className="flex-1 text-xs font-mono bg-elevated border border-line rounded px-3 py-2 truncate text-ink">
                   {inviteLink}
                 </code>
                 <Button type="button" variant="outline" size="sm" onClick={copyLink} className="shrink-0">
@@ -81,7 +81,7 @@ export function InviteForm() {
                 type="email"
                 required
                 placeholder="colleague@company.com"
-                className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+                className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
               />
             </div>
 
@@ -92,7 +92,7 @@ export function InviteForm() {
                   <label
                     key={r.value}
                     className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      role === r.value ? 'border-cyan bg-cyan/5' : 'border-line hover:border-ink-muted/40'
+                      role === r.value ? 'border-accent bg-accent/5' : 'border-line hover:border-ink-muted/40'
                     }`}
                   >
                     <input
@@ -101,7 +101,7 @@ export function InviteForm() {
                       value={r.value}
                       checked={role === r.value}
                       onChange={() => setRole(r.value)}
-                      className="mt-0.5 accent-cyan"
+                      className="mt-0.5 accent-[#7B5CF0]"
                     />
                     <div>
                       <p className="text-sm font-600 text-ink">{r.label}</p>

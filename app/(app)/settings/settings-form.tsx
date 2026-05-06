@@ -55,7 +55,7 @@ function KeyField({
             type={show ? 'text' : 'password'}
             placeholder={placeholder}
             autoComplete="off"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 pr-10 text-sm font-mono text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 pr-10 text-sm font-mono text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
           />
           <button
             type="button"
@@ -121,7 +121,7 @@ export function SettingsForm({
                 key={p.value}
                 className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-colors ${
                   provider === p.value
-                    ? 'border-cyan bg-cyan/5'
+                    ? 'border-accent bg-accent/5'
                     : 'border-line hover:border-ink-muted/40'
                 }`}
               >
@@ -131,7 +131,7 @@ export function SettingsForm({
                   value={p.value}
                   checked={provider === p.value}
                   onChange={() => setProvider(p.value)}
-                  className="mt-0.5 accent-cyan"
+                  className="mt-0.5 accent-[#7B5CF0]"
                 />
                 <div>
                   <p className="text-sm font-600 text-ink">{p.label}</p>

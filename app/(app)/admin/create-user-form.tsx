@@ -21,7 +21,7 @@ export function CreateUserForm() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-line p-6 shadow-card">
+    <div className="bg-surface rounded-xl border border-line p-6 shadow-card">
       <h2 className="text-base font-700 text-ink mb-1">Create user</h2>
       <p className="text-xs text-ink-muted mb-5">New user will be confirmed immediately.</p>
 
@@ -33,7 +33,7 @@ export function CreateUserForm() {
             type="text"
             required
             placeholder="Jane Smith"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
           />
         </div>
 
@@ -44,7 +44,7 @@ export function CreateUserForm() {
             type="email"
             required
             placeholder="jane@company.com"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
           />
         </div>
 
@@ -56,7 +56,7 @@ export function CreateUserForm() {
             required
             minLength={6}
             placeholder="Temporary password"
-            className="w-full h-10 rounded-md border border-line bg-white px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-cyan/30 focus:border-cyan transition-colors"
+            className="w-full h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink placeholder:text-ink-muted/40 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors"
           />
         </div>
 
