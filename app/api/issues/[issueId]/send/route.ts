@@ -5,7 +5,6 @@ import { renderEmailHtml } from '@/lib/email/template'
 import { generateUnsubscribeToken } from '@/lib/email/unsubscribe-token'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
 const FROM_EMAIL = process.env.FROM_EMAIL ?? 'newsletter@ezrastudio.com'
 
@@ -63,6 +62,7 @@ export async function POST(
     return NextResponse.json({ error: 'No active subscribers for this newsletter' }, { status: 400 })
   }
 
+  const resend = new Resend(process.env.RESEND_API_KEY)
   const adminClient = createAdminClient()
 
   const emails = subscribers.map(sub => {
