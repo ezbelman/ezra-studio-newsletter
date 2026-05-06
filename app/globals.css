@@ -3,30 +3,73 @@
 @tailwind utilities;
 
 @layer base {
-  /* ── Light mode tokens ──────────────────────────────────── */
+  /* ── Design tokens (dark-first per PRD) ─────────────────── */
   :root {
-    --color-ink:      30 41 59;       /* #1E293B */
-    --color-ink-muted: 100 116 139;   /* #64748B */
-    --color-bg:       248 250 252;    /* #F8FAFC */
-    --color-line:     226 232 240;    /* #E2E8F0 */
-    --color-surface:  255 255 255;    /* #FFFFFF */
+    /* Backgrounds */
+    --color-bg-base:     10  10  15;    /* #0A0A0F */
+    --color-bg-surface:  17  17  24;    /* #111118 */
+    --color-bg-elevated: 26  26  36;    /* #1A1A24 */
 
-    /* Legacy CSS vars used in some raw CSS */
-    --navy:       #0A2540;
-    --navy-deep:  #0A2540;
-    --navy-soft:  #1D3461;
-    --navy-muted: #334E7B;
-    --cyan:       #2563EB;
-    --lime:       #10B981;
+    /* Borders */
+    --color-border:      42  42  56;    /* #2A2A38 */
+
+    /* Text */
+    --color-text-primary:   240 240 245;  /* #F0F0F5 */
+    --color-text-secondary: 136 136 160;  /* #8888A0 */
+    --color-text-muted:      85  85 106;  /* #55556A */
+
+    /* Accents */
+    --color-accent:         123  92 240;  /* #7B5CF0 purple */
+    --color-accent-blue:     79 142 247;  /* #4F8EF7 blue */
+
+    /* Status */
+    --color-success:    34 197  94;   /* #22C55E */
+    --color-warning:   245 158  11;   /* #F59E0B */
+    --color-error:     239  68  68;   /* #EF4444 */
+
+    /* Channels */
+    --color-whatsapp:   37 211 102;   /* #25D366 */
+    --color-telegram:   42 171 238;   /* #2AABEE */
+    --color-instagram: 225  48 108;   /* #E1306C */
+
+    /* Legacy (kept for backward compat) */
+    --navy:       #0A0A0F;
+    --navy-deep:  #0A0A0F;
+    --navy-soft:  #111118;
+    --navy-muted: #1A1A24;
+    --cyan:       #7B5CF0;
+    --lime:       #22C55E;
+
+    /* Semantic aliases used by Tailwind utilities */
+    --color-ink:       var(--color-text-primary);
+    --color-ink-muted: var(--color-text-secondary);
+    --color-bg:        var(--color-bg-base);
+    --color-line:      var(--color-border);
+    --color-surface:   var(--color-bg-surface);
   }
 
-  /* ── Dark mode tokens ───────────────────────────────────── */
-  .dark {
-    --color-ink:       248 250 252;   /* #F8FAFC — nearly white */
-    --color-ink-muted: 148 163 184;   /* #94A3B8 */
-    --color-bg:        15 23 42;      /* #0F172A */
-    --color-line:      51 65 85;      /* #334155 */
-    --color-surface:   30 41 59;      /* #1E293B */
+  /* ── Light mode override ────────────────────────────────── */
+  .light {
+    --color-bg-base:     248 250 252;
+    --color-bg-surface:  255 255 255;
+    --color-bg-elevated: 241 245 249;
+    --color-border:      226 232 240;
+    --color-text-primary:   15  23  42;
+    --color-text-secondary: 100 116 139;
+    --color-text-muted:     148 163 184;
+
+    --color-ink:       var(--color-text-primary);
+    --color-ink-muted: var(--color-text-secondary);
+    --color-bg:        var(--color-bg-base);
+    --color-line:      var(--color-border);
+    --color-surface:   var(--color-bg-surface);
+
+    --navy:       #7B5CF0;
+    --navy-deep:  #5B3FD0;
+    --navy-soft:  #8B6CF0;
+    --navy-muted: #A08CF0;
+    --cyan:       #4F8EF7;
+    --lime:       #22C55E;
   }
 
   * { @apply border-line; }
@@ -37,12 +80,47 @@
   }
 
   h1, h2, h3, h4, h5, h6 { @apply font-display; }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgb(var(--color-border)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--color-text-muted)); }
+}
+
+/* ── Gradient utilities ──────────────────────────────────── */
+.gradient-accent {
+  background: linear-gradient(135deg, rgb(var(--color-accent)), rgb(var(--color-accent-blue)));
+}
+.gradient-accent-text {
+  background: linear-gradient(135deg, rgb(var(--color-accent)), rgb(var(--color-accent-blue)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-hero {
+  background: radial-gradient(ellipse 80% 60% at 50% -10%,
+    rgb(123 92 240 / 0.25) 0%,
+    transparent 70%),
+    rgb(var(--color-bg-base));
 }
 
 /* ── Auth surface ────────────────────────────────────────── */
-.auth-surface { background: rgb(var(--color-bg)); }
+.auth-surface { background: rgb(var(--color-bg-base)); }
 
-/* ── Entry animations ───────────────────────────────────── */
+/* ── Card variants ───────────────────────────────────────── */
+.card {
+  background: rgb(var(--color-bg-surface));
+  border: 1px solid rgb(var(--color-border));
+  border-radius: 12px;
+}
+.card-elevated {
+  background: rgb(var(--color-bg-elevated));
+  border: 1px solid rgb(var(--color-border));
+  border-radius: 12px;
+}
+
+/* ── Entry animations ────────────────────────────────────── */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -55,10 +133,19 @@
   from { opacity: 0; transform: scale(0.97); }
   to   { opacity: 1; transform: scale(1); }
 }
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
 
-.animate-fade-up   { animation: fade-up   0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
-.animate-fade-in   { animation: fade-in   0.25s ease both; }
-.animate-scale-in  { animation: scale-in  0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-up      { animation: fade-up      0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in      { animation: fade-in      0.25s ease both; }
+.animate-scale-in     { animation: scale-in     0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-right  { animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
 .delay-0   { animation-delay: 0ms; }
 .delay-50  { animation-delay: 50ms; }
@@ -68,7 +155,43 @@
 .delay-250 { animation-delay: 250ms; }
 .delay-300 { animation-delay: 300ms; }
 
+/* ── Skeleton loader ─────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--color-bg-surface)) 25%,
+    rgb(var(--color-bg-elevated)) 50%,
+    rgb(var(--color-bg-surface)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+/* ── Status badge colors ─────────────────────────────────── */
+.badge-draft     { background: rgb(var(--color-text-muted) / 0.15);    color: rgb(var(--color-text-secondary)); }
+.badge-pending   { background: rgb(var(--color-warning) / 0.15);       color: rgb(var(--color-warning)); }
+.badge-approved  { background: rgb(var(--color-accent-blue) / 0.15);   color: rgb(var(--color-accent-blue)); }
+.badge-scheduled { background: rgb(var(--color-accent) / 0.15);        color: rgb(var(--color-accent)); }
+.badge-published { background: rgb(var(--color-success) / 0.15);       color: rgb(var(--color-success)); }
+.badge-active    { background: rgb(var(--color-success) / 0.15);       color: rgb(var(--color-success)); }
+.badge-bounced   { background: rgb(var(--color-error) / 0.15);         color: rgb(var(--color-error)); }
+.badge-error     { background: rgb(var(--color-error) / 0.15);         color: rgb(var(--color-error)); }
+
+/* ── Channel badges ──────────────────────────────────────── */
+.badge-whatsapp  { background: rgb(var(--color-whatsapp) / 0.15);  color: rgb(var(--color-whatsapp)); }
+.badge-telegram  { background: rgb(var(--color-telegram) / 0.15);  color: rgb(var(--color-telegram)); }
+.badge-instagram { background: rgb(var(--color-instagram) / 0.15); color: rgb(var(--color-instagram)); }
+.badge-email     { background: rgb(var(--color-accent-blue) / 0.15); color: rgb(var(--color-accent-blue)); }
+
 @layer utilities {
   .font-display { font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif; }
   .font-mono    { font-family: var(--font-jetbrains), 'JetBrains Mono', monospace; }
+  .text-primary   { color: rgb(var(--color-text-primary)); }
+  .text-secondary { color: rgb(var(--color-text-secondary)); }
+  .text-muted-fg  { color: rgb(var(--color-text-muted)); }
+  .bg-base        { background-color: rgb(var(--color-bg-base)); }
+  .bg-surface-1   { background-color: rgb(var(--color-bg-surface)); }
+  .bg-elevated-1  { background-color: rgb(var(--color-bg-elevated)); }
+  .border-default { border-color: rgb(var(--color-border)); }
 }
