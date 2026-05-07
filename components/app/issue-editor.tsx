@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Sparkles, Loader2, ChevronRight, Send, Users, X } from 'lucide-react'
+import { ArrowLeft, Sparkles, Loader2, ChevronRight, Send, Users, X, History, FlaskConical } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { issueStatusBadgeVariant, issueStatusLabel } from '@/lib/types/display'
 import type { IssueStatus, Json } from '@/lib/types/database'
 import { toast } from '@/hooks/use-toast'
+import { saveIssueVersion } from '@/lib/actions/issue-versions'
 
 interface Story {
   headline: string
@@ -31,6 +32,9 @@ interface Issue {
   issue_date: string | null
   raw_notes: unknown
   polished_json: unknown
+  ab_subject_b: string | null
+  ab_winner: string | null
+  ab_status: 'none' | 'running' | 'complete'
   created_at: string
   updated_at: string
 }
@@ -44,7 +48,7 @@ interface Props {
 const STATUS_ACTIONS: Partial<Record<IssueStatus, { label: string; next: IssueStatus; variant: 'primary' | 'outline' }[]>> = {
   draft:            [{ label: 'Submit for Approval', next: 'pending_approval', variant: 'primary' }],
   pending_approval: [
-    { label: 'Back to Draft', next: 'draft', variant: 'outline' },
+    { label: 'Back to Draft', next: 'draft',     variant: 'outline' },
     { label: 'Approve',        next: 'approved', variant: 'primary' },
   ],
   approved: [
@@ -61,6 +65,8 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
   const [isSending,       setIsSending]       = useState(false)
   const [showSendDialog,  setShowSendDialog]  = useState(false)
   const [recipientCount,  setRecipientCount]  = useState<number | null>(null)
+  const [abEnabled,       setAbEnabled]       = useState(false)
+  const [abSubjectB,      setAbSubjectB]      = useState(initialIssue.ab_subject_b ?? '')
   const [error,           setError]           = useState('')
 
   const rawNotesText = (issue.raw_notes as { text: string } | null)?.text ?? ''
@@ -91,6 +97,10 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
       if (updateError) { setError(updateError.message); return }
 
       setIssue(prev => ({ ...prev, polished_json: p, title: p.title ?? prev.title }))
+
+      // Save version snapshot after each successful polish
+      await saveIssueVersion(issue.id)
+
       toast.success('Issue polished', 'Content is ready for review.')
     } catch {
       setError('Network error.')
@@ -136,7 +146,14 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
     setIsSending(true)
     setError('')
     try {
-      const res = await fetch(`/api/issues/${issue.id}/send`, { method: 'POST' })
+      const body: Record<string, unknown> = {}
+      if (abEnabled && abSubjectB.trim()) body.abSubjectB = abSubjectB.trim()
+
+      const res = await fetch(`/api/issues/${issue.id}/send`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body),
+      })
       const result = await res.json()
       if (!res.ok || !result.success) {
         setError(result.error ?? 'Send failed.')
@@ -145,7 +162,8 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
       }
       setIssue(prev => ({ ...prev, status: 'published' }))
       setShowSendDialog(false)
-      toast.success('Issue sent!', `Delivered to ${result.recipients} subscriber${result.recipients !== 1 ? 's' : ''}.`)
+      const suffix = result.abEnabled ? ' (A/B test running)' : ''
+      toast.success('Issue sent!', `Delivered to ${result.recipients} subscriber${result.recipients !== 1 ? 's' : ''}${suffix}.`)
     } catch {
       setError('Network error during send.')
       setShowSendDialog(false)
@@ -175,6 +193,11 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
             <Badge variant={issueStatusBadgeVariant[issue.status]}>
               {issueStatusLabel(issue.status)}
             </Badge>
+            {issue.ab_status === 'running' && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-700 bg-accent/10 text-accent border border-accent/20">
+                A/B running
+              </span>
+            )}
           </div>
           <h1 className="text-2xl font-display font-700 text-ink">
             {issue.title ?? 'Untitled Issue'}
@@ -185,6 +208,15 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Version history link */}
+          <Link
+            href={`/newsletters/${newsletterId}/issues/${issue.id}/versions`}
+            className="inline-flex items-center gap-1.5 text-xs text-ink/40 hover:text-ink px-2.5 py-1.5 rounded-lg border border-line hover:border-ink/20 transition-colors"
+          >
+            <History className="h-3.5 w-3.5" />
+            History
+          </Link>
+
           {actions.map(action => (
             <Button
               key={action.next}
@@ -328,6 +360,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
             </div>
 
             <div className="px-6 py-5 space-y-4">
+              {/* Recipient count */}
               <div className="flex items-center gap-3 bg-elevated rounded-lg p-4 border border-line">
                 <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                   <Users className="h-5 w-5 text-accent" />
@@ -344,6 +377,44 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
                 </p>
               )}
 
+              {/* A/B test toggle */}
+              <div className="bg-elevated rounded-lg border border-line p-4 space-y-3">
+                <button
+                  onClick={() => setAbEnabled(v => !v)}
+                  className="w-full flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-2">
+                    <FlaskConical className="h-4 w-4 text-accent/60" />
+                    <span className="text-xs font-600 text-ink">A/B subject line test</span>
+                    <span className="text-[10px] text-ink/30 font-400">50/50 split</span>
+                  </div>
+                  <div className={`h-5 w-9 rounded-full transition-colors border ${abEnabled ? 'bg-accent border-accent' : 'bg-elevated border-ink/20'}`}>
+                    <div className={`h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform m-0.5 ${abEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </div>
+                </button>
+
+                {abEnabled && (
+                  <div className="space-y-2 pt-1 border-t border-line">
+                    <div>
+                      <p className="text-[11px] text-ink/40 mb-1">Subject A (current title)</p>
+                      <p className="text-xs text-ink bg-surface rounded px-2.5 py-2 border border-line truncate">
+                        {issue.title ?? 'Untitled Issue'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-ink/40 mb-1">Subject B</p>
+                      <input
+                        type="text"
+                        value={abSubjectB}
+                        onChange={e => setAbSubjectB(e.target.value)}
+                        placeholder="Enter alternative subject line…"
+                        className="w-full text-xs text-ink bg-surface rounded px-2.5 py-2 border border-line focus:outline-none focus:border-accent/50 placeholder:text-ink/20"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <p className="text-xs text-ink/40 leading-relaxed">
                 This will send <strong className="text-ink/60">{issue.title ?? 'this issue'}</strong> to all active subscribers
                 of <strong className="text-ink/60">{newsletterName}</strong> and mark the issue as published.
@@ -351,18 +422,13 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
               </p>
 
               <div className="flex justify-end gap-2 pt-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSendDialog(false)}
-                  disabled={isSending}
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowSendDialog(false)} disabled={isSending}>
                   Cancel
                 </Button>
                 <Button
                   variant="primary"
                   size="sm"
-                  disabled={isSending || recipientCount === 0}
+                  disabled={isSending || recipientCount === 0 || (abEnabled && !abSubjectB.trim())}
                   onClick={handleSend}
                 >
                   {isSending ? (

@@ -7,9 +7,17 @@ import { Resend } from 'resend'
 
 const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
 const FROM_EMAIL = process.env.FROM_EMAIL ?? 'onboarding@resend.dev'
+const BATCH_SIZE = 100
+
+type EmailPayload = {
+  from: string
+  to: string
+  subject: string
+  html: string
+}
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ issueId: string }> }
 ) {
   const { issueId } = await params
@@ -27,6 +35,15 @@ export async function POST(
   if (!membership || !['owner', 'admin'].includes(membership.role)) {
     return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
   }
+
+  // Parse optional A/B subject
+  let abSubjectB: string | null = null
+  try {
+    const body = await request.json().catch(() => ({}))
+    if (typeof body?.abSubjectB === 'string' && body.abSubjectB.trim()) {
+      abSubjectB = body.abSubjectB.trim()
+    }
+  } catch { /* no body is fine */ }
 
   const { data: issue, error: issueErr } = await supabase
     .from('issues')
@@ -47,9 +64,10 @@ export async function POST(
     return NextResponse.json({ error: 'Issue has no content — polish it first' }, { status: 400 })
   }
 
-  const nl  = issue.newsletters as { name: string; slug: string; organizations: { name: string; primary_color: string | null } } | null
-  const org = nl?.organizations
+  const nl         = issue.newsletters as { name: string; slug: string; organizations: { name: string; primary_color: string | null } } | null
+  const org        = nl?.organizations
   const issueTitle = issue.title ?? 'Newsletter'
+  const polishedJson = issue.polished_json as Parameters<typeof renderEmailHtml>[0]['polishedJson']
 
   const { data: subscribers } = await supabase
     .from('subscribers')
@@ -62,73 +80,126 @@ export async function POST(
     return NextResponse.json({ error: 'No active subscribers for this newsletter' }, { status: 400 })
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
+  const resend      = new Resend(process.env.RESEND_API_KEY)
   const adminClient = createAdminClient()
 
-  const emails = subscribers.map(sub => {
-    const unsubToken    = generateUnsubscribeToken(sub.id, sub.newsletter_id)
-    const unsubscribeUrl = `${APP_URL}/unsubscribe?token=${unsubToken}`
-    const webViewUrl    = nl?.slug ? `${APP_URL}/s/${nl.slug}/${issueId}` : undefined
+  type SubscriberRow = { id: string; email: string; newsletter_id: string }
+  function buildEmails(subs: SubscriberRow[], subject: string): EmailPayload[] {
+    return subs.map(sub => {
+      const unsubToken     = generateUnsubscribeToken(sub.id, sub.newsletter_id)
+      const unsubscribeUrl = `${APP_URL}/unsubscribe?token=${unsubToken}`
+      const webViewUrl     = nl?.slug ? `${APP_URL}/s/${nl.slug}/${issueId}` : undefined
 
-    const html = renderEmailHtml({
-      orgName:        org?.name ?? 'Newsletter',
-      primaryColor:   org?.primary_color ?? '#7B5CF0',
-      issueTitle,
-      polishedJson:   issue.polished_json as unknown as Parameters<typeof renderEmailHtml>[0]['polishedJson'],
-      unsubscribeUrl,
-      webViewUrl,
+      const html = renderEmailHtml({
+        orgName:      org?.name ?? 'Newsletter',
+        primaryColor: org?.primary_color ?? '#7B5CF0',
+        issueTitle,
+        polishedJson: polishedJson,
+        unsubscribeUrl,
+        webViewUrl,
+      })
+
+      return { from: `${org?.name ?? 'Newsletter Studio'} <${FROM_EMAIL}>`, to: sub.email, subject, html }
     })
-
-    return {
-      from:    `${org?.name ?? 'Newsletter Studio'} <${FROM_EMAIL}>`,
-      to:      sub.email,
-      subject: issueTitle,
-      html,
-    }
-  })
-
-  const BATCH_SIZE = 100
-  let totalSent = 0
-  const batchIds: string[] = []
-
-  for (let i = 0; i < emails.length; i += BATCH_SIZE) {
-    const batch = emails.slice(i, i + BATCH_SIZE)
-    const { data: batchResult, error: sendErr } = await resend.batch.send(batch)
-
-    if (sendErr) {
-      return NextResponse.json({ error: `Send failed: ${sendErr.message}` }, { status: 500 })
-    }
-
-    totalSent += batch.length
-    if (batchResult?.data) {
-      batchIds.push(...batchResult.data.map((r: { id: string }) => r.id))
-    }
   }
 
-  /* email_sends.Insert has no sent_at — omit it; DB default handles timestamp */
-  await adminClient.from('email_sends').insert({
-    issue_id:        issueId,
-    org_id:          membership.org_id,
-    resend_batch_id: batchIds[0] ?? null,
-    recipient_count: totalSent,
-    delivered_count: 0,
-    opened_count:    0,
-    clicked_count:   0,
-  })
+  async function sendBatches(emails: EmailPayload[]): Promise<{ totalSent: number; batchIds: string[] }> {
+    let totalSent = 0
+    const batchIds: string[] = []
+    for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+      const batch = emails.slice(i, i + BATCH_SIZE)
+      const { data: batchResult, error: sendErr } = await resend.batch.send(batch)
+      if (sendErr) throw new Error(sendErr.message)
+      totalSent += batch.length
+      if (batchResult?.data) batchIds.push(...batchResult.data.map((r: { id: string }) => r.id))
+    }
+    return { totalSent, batchIds }
+  }
 
-  await supabase
-    .from('issues')
-    .update({ status: 'published', published_at: new Date().toISOString() })
-    .eq('id', issueId)
+  try {
+    if (abSubjectB) {
+      // A/B split: first half gets subject A, second half gets subject B
+      const mid       = Math.ceil(subscribers.length / 2)
+      const subsA     = subscribers.slice(0, mid)
+      const subsB     = subscribers.slice(mid)
+      const emailsA   = buildEmails(subsA, issueTitle)
+      const emailsB   = buildEmails(subsB, abSubjectB)
 
-  await adminClient.from('activity_logs').insert({
-    org_id:        membership.org_id,
-    user_id:       user.id,
-    action:        'issue.sent',
-    resource_type: 'issue',
-    resource_id:   issueId,
-    metadata:      { recipient_count: totalSent },
-  })
+      const [resultA, resultB] = await Promise.all([sendBatches(emailsA), sendBatches(emailsB)])
+      const totalSent = resultA.totalSent + resultB.totalSent
 
-  return NextResponse.json({ success: true, recipients: totalSent })
+      await Promise.all([
+        adminClient.from('email_sends').insert({
+          issue_id:        issueId,
+          org_id:          membership.org_id,
+          resend_batch_id: resultA.batchIds[0] ?? null,
+          recipient_count: resultA.totalSent,
+          delivered_count: 0,
+          opened_count:    0,
+          clicked_count:   0,
+          ab_variant:      'a',
+        }),
+        adminClient.from('email_sends').insert({
+          issue_id:        issueId,
+          org_id:          membership.org_id,
+          resend_batch_id: resultB.batchIds[0] ?? null,
+          recipient_count: resultB.totalSent,
+          delivered_count: 0,
+          opened_count:    0,
+          clicked_count:   0,
+          ab_variant:      'b',
+        }),
+        adminClient.from('issues').update({
+          status:        'published',
+          published_at:  new Date().toISOString(),
+          ab_subject_b:  abSubjectB,
+          ab_status:     'running',
+        }).eq('id', issueId),
+      ])
+
+      await adminClient.from('activity_logs').insert({
+        org_id:        membership.org_id,
+        user_id:       user.id,
+        action:        'issue.sent_ab',
+        resource_type: 'issue',
+        resource_id:   issueId,
+        metadata:      { recipient_count: totalSent, ab_subject_b: abSubjectB },
+      })
+
+      return NextResponse.json({ success: true, recipients: totalSent, abEnabled: true })
+    }
+
+    // Standard send (no A/B)
+    const emails = buildEmails(subscribers, issueTitle)
+    const { totalSent, batchIds } = await sendBatches(emails)
+
+    await adminClient.from('email_sends').insert({
+      issue_id:        issueId,
+      org_id:          membership.org_id,
+      resend_batch_id: batchIds[0] ?? null,
+      recipient_count: totalSent,
+      delivered_count: 0,
+      opened_count:    0,
+      clicked_count:   0,
+    })
+
+    await supabase
+      .from('issues')
+      .update({ status: 'published', published_at: new Date().toISOString() })
+      .eq('id', issueId)
+
+    await adminClient.from('activity_logs').insert({
+      org_id:        membership.org_id,
+      user_id:       user.id,
+      action:        'issue.sent',
+      resource_type: 'issue',
+      resource_id:   issueId,
+      metadata:      { recipient_count: totalSent },
+    })
+
+    return NextResponse.json({ success: true, recipients: totalSent, abEnabled: false })
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Send failed'
+    return NextResponse.json({ error: `Send failed: ${message}` }, { status: 500 })
+  }
 }

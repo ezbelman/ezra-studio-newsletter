@@ -14,7 +14,7 @@ export default async function IssueDetailPage({ params }: Props) {
   const [{ data: issue }, { data: nl }] = await Promise.all([
     supabase
       .from('issues')
-      .select('id, vol, title, status, issue_date, raw_notes, polished_json, created_at, updated_at')
+      .select('id, vol, title, status, issue_date, raw_notes, polished_json, ab_subject_b, ab_winner, ab_status, created_at, updated_at')
       .eq('id', issueId)
       .eq('newsletter_id', id)
       .single(),

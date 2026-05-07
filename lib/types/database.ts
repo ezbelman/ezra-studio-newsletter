@@ -188,6 +188,9 @@ export interface Database {
           published_at: string | null
           created_by: string | null
           approved_by: string | null
+          ab_subject_b: string | null
+          ab_winner: string | null
+          ab_status: 'none' | 'running' | 'complete'
           created_at: string
           updated_at: string
         }
@@ -207,6 +210,9 @@ export interface Database {
           published_at?: string | null
           created_by?: string | null
           approved_by?: string | null
+          ab_subject_b?: string | null
+          ab_winner?: string | null
+          ab_status?: 'none' | 'running' | 'complete'
         }
         Update: {
           title?: string | null
@@ -219,6 +225,9 @@ export interface Database {
           scheduled_at?: string | null
           published_at?: string | null
           approved_by?: string | null
+          ab_subject_b?: string | null
+          ab_winner?: string | null
+          ab_status?: 'none' | 'running' | 'complete'
         }
         Relationships: [
           { foreignKeyName: 'issues_newsletter_id_fkey'; columns: ['newsletter_id']; isOneToOne: false; referencedRelation: 'newsletters'; referencedColumns: ['id'] },
@@ -264,6 +273,7 @@ export interface Database {
           delivered_count: number
           opened_count: number
           clicked_count: number
+          ab_variant: 'a' | 'b' | null
         }
         Insert: {
           id?: string
@@ -274,6 +284,7 @@ export interface Database {
           delivered_count?: number
           opened_count?: number
           clicked_count?: number
+          ab_variant?: 'a' | 'b' | null
         }
         Update: {
           delivered_count?: number
@@ -282,6 +293,33 @@ export interface Database {
         }
         Relationships: [
           { foreignKeyName: 'email_sends_issue_id_fkey'; columns: ['issue_id']; isOneToOne: false; referencedRelation: 'issues'; referencedColumns: ['id'] }
+        ]
+      }
+      issue_versions: {
+        Row: {
+          id: string
+          issue_id: string
+          org_id: string
+          version_number: number
+          title: string | null
+          raw_notes: Json | null
+          polished_json: Json | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          issue_id: string
+          org_id: string
+          version_number?: number
+          title?: string | null
+          raw_notes?: Json | null
+          polished_json?: Json | null
+          created_by?: string | null
+        }
+        Update: never
+        Relationships: [
+          { foreignKeyName: 'issue_versions_issue_id_fkey'; columns: ['issue_id']; isOneToOne: false; referencedRelation: 'issues'; referencedColumns: ['id'] }
         ]
       }
       activity_logs: {
