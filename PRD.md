@@ -1489,10 +1489,12 @@ POST   /api/ai/polish                         AI content polish (internal)
 
 ## 13. Phased Roadmap
 
+> **Competitive benchmark:** Beehiiv is the primary reference point for feature parity. Gap items are marked with **[GAP]** to distinguish them from originally planned features.
+
 ### Phase 1 — Core Loop Complete (Current Sprint)
 - [x] Auth, onboarding, newsletters, issues, AI polish
 - [x] Team management, roles, invitations
-- [x] Settings (org, user, AI provider)
+- [x] Settings (org rename, AI provider)
 - [ ] **Email send via Resend** (wire existing schema to actual delivery)
 - [ ] **Public subscribe page** `/s/[slug]`
 - [ ] **Unsubscribe flow** `/unsubscribe?token=xxx`
@@ -1500,6 +1502,9 @@ POST   /api/ai/polish                         AI content polish (internal)
 - [ ] **Email template renderer** (polished_json → responsive HTML)
 - [ ] **Invite accept flow** `/invite/accept?token=xxx`
 - [ ] **Bounce webhook handler** (Resend → auto-mark bounced)
+- [ ] **[GAP] Merge tags** — personalize emails with `{{subscriber.first_name}}`, `{{subscriber.custom_field}}`
+- [ ] **[GAP] Subscriber preference center** — let subscribers choose topics/frequency
+- [ ] **[GAP] Migration importer** — import from Mailchimp, Substack, Ghost, ConvertKit via CSV or API
 
 ### Phase 2 — Growth & Multi-Channel
 - [ ] Connections: Telegram
@@ -1510,25 +1515,44 @@ POST   /api/ai/polish                         AI content polish (internal)
 - [ ] Automations (welcome series, re-engagement)
 - [ ] Analytics dashboard (charts, heatmap, channel comparison incl. LinkedIn)
 - [ ] Templates library (platform + org)
-- [ ] Forms & embeddable subscribe widget
+- [ ] Forms & embeddable subscribe widget (multiple layouts: inline, popup, sticky, slide-in; behavioral triggers: scroll depth, exit-intent, time on page)
 - [ ] Billing (Stripe integration)
-- [ ] A/B subject line testing
-- [ ] **CRM** (contact records, engagement score, notes, timeline)
-- [ ] **Referral system** (subscriber referral links + creator acquisition referrals)
-- [ ] **White-label branding** (logo, colors, font, footer, live preview)
-- [ ] **Platform Admin KPI dashboard** (WAC, send rate, AI usage, churn, RPU)
+- [ ] A/B subject line testing (up to 4 variants, auto-winner)
+- [ ] CRM (contact records, engagement score, notes, timeline)
+- [ ] Referral system (subscriber referral links + creator acquisition referrals)
+- [ ] White-label branding (logo, colors, font, footer, live preview)
+- [ ] Platform Admin KPI dashboard (WAC, send rate, AI usage, churn, RPU)
+- [ ] **[GAP] Paid subscriptions & paywalls** — creators charge readers for premium issues; full-post and mid-content paywalls; Stripe-powered (0% platform cut); multiple pricing tiers per newsletter
+- [ ] **[GAP] Polls & surveys in emails** — voting polls, trivia blocks, multi-question surveys embedded in issues; real-time results dashboard; CSV export; response-based segmentation
+- [ ] **[GAP] AI Social Helper** — auto-generate social media posts (LinkedIn, Instagram, X) from issue content in the creator's brand voice
+- [ ] **[GAP] AI Translator** — one-click translation of a polished issue into another language; translated version saved as a variant issue
+- [ ] **[GAP] Verified clicks** — bot-filtered click metrics using IP, user-agent, and click-pattern analysis; distinguish bot vs real clicks in analytics
+- [ ] **[GAP] Version history** — every saved issue state is snapshotted; single-click restore; diff view between versions
+- [ ] **[GAP] Custom subscriber fields** — org-defined extra fields (birthday, company, plan tier, etc.) collected on subscribe form and usable in segments, merge tags, and CRM
+- [ ] **[GAP] Real-time collaborative editing** — multiple team members editing the same issue simultaneously with live cursor presence
+- [ ] **[GAP] Recommendations network** — during subscribe flow, show the reader other newsletters on the platform they may like; cross-promotion opt-in; attribution tracking
 
 ### Phase 3 — Scale & Enterprise
 - [ ] Connections: Instagram
 - [ ] Connections: X/Twitter
-- [ ] **Sponsorship & Ads** (admin campaign manager, mid-roll injection, revenue share)
+- [ ] Sponsorship & Ads (admin campaign manager, mid-roll injection, revenue share)
+- [ ] **[GAP] Direct sponsorship storefront** — creator-facing self-service ad sales: ad calendar, Stripe invoicing, verified click reporting; separate from platform ad network
+- [ ] **[GAP] Ad network marketplace** — pre-negotiated sponsorship matching between advertisers and creators; CPM/CPC pricing; real-time offer surfacing by audience profile
+- [ ] **[GAP] Native podcast hosting** — audio upload, RSS feed generation, distribution to Apple Podcasts / Spotify / Overcast; IAB analytics; private podcast feeds for paid subscribers
+- [ ] **[GAP] Dynamic content blocks** — conditional email content based on subscriber segment, custom field value, or behavior (if subscriber tagged "premium" → show block A else block B); block-level if/then logic
+- [ ] **[GAP] Digital product sales** — sell PDFs, courses, templates directly from newsletters; Stripe checkout; delivery via download link in email
+- [ ] **[GAP] Website/blog builder** — each newsletter gets a full public website (not just web archive); drag-and-drop page builder; SEO-optimized article pages; Google Analytics integration; custom domain per newsletter
 - [ ] Developers: API keys, webhooks, OpenAPI docs
 - [ ] MFA (TOTP)
-- [ ] Custom email domain with DMARC setup
+- [ ] Custom email domain with DMARC setup + smart domain warming
 - [ ] SOC 2 Type II audit
 - [ ] Geographic analytics
 - [ ] Custom app domain per org (true white-label hosting)
 - [ ] Help & Docs in-app knowledge base
+- [ ] **[GAP] SSO (SAML/OIDC)** — enterprise single sign-on
+- [ ] **[GAP] Dedicated sending IPs** — enterprise deliverability; separate IP reputation per org
+- [ ] **[GAP] Boosts marketplace** — paid subscriber acquisition: creators pay to have their newsletter promoted in other newsletters' post-subscribe flows; verified subscriber billing only
+- [ ] **[GAP] MCP integration** — expose newsletter data via Model Context Protocol so AI assistants (Claude, Cursor, Codex) can query subscribers, analytics, and issues directly
 
 ---
 
@@ -1547,6 +1571,11 @@ POST   /api/ai/polish                         AI content polish (internal)
 | 9 | Sponsorship revenue share %: fixed platform cut (e.g. 30%) or negotiable per org plan? | Ezra | Before Phase 3 sponsorship build |
 | 10 | LinkedIn: personal profile posts or company page only? Personal requires individual OAuth per user, adding auth complexity. | Ezra | Before Phase 2 LinkedIn connection |
 | 11 | White-label font: Google Fonts selector (limited, free) or allow custom font upload (complex, hosting cost)? | Ezra | Before Phase 2 branding build |
+| 12 | Paid subscriptions: 0% platform cut (Beehiiv model, Stripe fees only) or platform takes a % cut (revenue share model)? | Ezra | Before Phase 2 billing |
+| 13 | Polls/surveys: built in-house or integrate a third-party embed (Typeform, Tally)? In-house is differentiating; third-party is faster. | Ezra | Before Phase 2 interactive content |
+| 14 | Newsletter website builder: build custom drag-and-drop (6+ months) or integrate an existing headless CMS (Ghost, Sanity) for Phase 3? | Ezra | Before Phase 3 web builder |
+| 15 | Boosts marketplace: build from scratch (network effect problem with cold start) or partner with an existing newsletter ad network (e.g. Paved, Letterhead) for Phase 3? | Ezra | Before Phase 3 marketplace |
+| 16 | Podcast hosting: build native (S3 + RSS feed) or white-label a provider (Transistor, Simplecast) for Phase 3? | Ezra | Before Phase 3 podcast feature |
 
 ---
 
