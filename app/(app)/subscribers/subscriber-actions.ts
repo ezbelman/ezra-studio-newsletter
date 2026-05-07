@@ -95,12 +95,12 @@ export async function importSubscribers(
   const CHUNK = 500
   let added = 0
   for (let i = 0; i < records.length; i += CHUNK) {
-    const { error, count } = await admin
+    const { data, error } = await admin
       .from('subscribers')
       .upsert(records.slice(i, i + CHUNK), { onConflict: 'newsletter_id,email', ignoreDuplicates: true })
-      .select('id', { count: 'exact', head: true })
+      .select('id')
     if (error) return { error: error.message }
-    added += count ?? 0
+    added += data?.length ?? 0
   }
 
   revalidatePath('/subscribers')
