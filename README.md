@@ -202,12 +202,17 @@ draft → pending_approval → approved → published
 - [ ] Content calendar
 - [ ] Segments (rule-based)
 - [ ] Automations (welcome series, re-engagement)
-- [ ] Connections: Telegram, WhatsApp
+- [ ] Connections: Telegram, WhatsApp, LinkedIn
 - [ ] Template library
 - [ ] Billing (Stripe)
+- [ ] CRM (contact records, engagement scoring, notes)
+- [ ] Referral system (subscriber + creator acquisition)
+- [ ] White-label branding (logo, colors, font per org)
+- [ ] Platform Admin KPI dashboard
 
 ### Phase 3 — Scale & Enterprise
-- [ ] Connections: Instagram, LinkedIn, X
+- [ ] Connections: Instagram, X/Twitter
+- [ ] Sponsorship & Ads (admin campaign manager, revenue share)
 - [ ] Developer API & webhooks
 - [ ] MFA (TOTP)
 - [ ] SOC 2 Type II audit

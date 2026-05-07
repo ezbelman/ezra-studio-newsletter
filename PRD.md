@@ -1,6 +1,6 @@
 # Newsletter Studio — Product Requirements Document (PRD)
-**Version:** 1.0  
-**Date:** 2026-05-06  
+**Version:** 1.1  
+**Date:** 2026-05-07  
 **Author:** Ezra Bellon  
 **Status:** Draft — Awaiting Approval
 
@@ -35,6 +35,10 @@
    - 8.17 Help & Docs
    - 8.18 Platform Admin
    - 8.19 Public Pages
+   - 8.20 CRM
+   - 8.21 Sponsorship & Ads
+   - 8.22 Referral System
+   - 8.23 White-Label Branding
 9. [Security Architecture](#9-security-architecture)
 10. [Data Models](#10-data-models)
 11. [API Surface](#11-api-surface)
@@ -82,6 +86,22 @@
 | Subscriber growth MoM | > 15% | Subscriber count delta |
 | Approval workflow usage | > 60% of issues | Issues that pass through `pending_approval` |
 | Weekly active orgs | > 70% of paid orgs | Sessions in last 7 days |
+
+### Platform Admin KPIs Dashboard
+
+The platform admin panel exposes a dedicated KPIs view tracking the health of the creator ecosystem. These metrics are calculated nightly and displayed as time-series charts with 7-day, 30-day, and 90-day windows.
+
+| KPI | Definition | Target | Data Source |
+|---|---|---|---|
+| **Weekly Active Creators** | Distinct orgs that published at least one issue or used AI Polish in the last 7 days | > 70% of paid orgs | `issues.created_at`, `issues.polished_json` |
+| **Type of Communication Send Rate** | Breakdown of sends by channel (email / WhatsApp / Telegram / LinkedIn / Instagram) as a % of total sends per week | Email > 60%, multi-channel adoption growing | `channel_sends.channel` |
+| **Referral Rate** | % of new org sign-ups that originated from a referral link | > 25% of new signups | `referrals.referred_org_id` |
+| **AI Usage per User** | Average number of AI Polish calls per active editor per week | > 3 per user | `ai_usage_logs.user_id` |
+| **Subscriber Growth** | Net new subscribers across all orgs week-over-week | Platform-wide > 10% MoM | `subscribers.created_at` |
+| **Churn** | Orgs that downgraded, cancelled, or went inactive (no activity in 30 days) | < 5% MoM | `billing.status`, last session date |
+| **Revenue per Creator** | MRR divided by number of active paying orgs | Growing > 5% QoQ | `billing.mrr`, active org count |
+
+All KPIs are visible to platform admins only in the **Admin → KPIs** tab. Each card shows: current value, delta vs previous period, and a sparkline chart. Critical regressions (WAC drops > 10%, churn spikes > 2%) trigger a PagerDuty alert.
 
 ---
 
@@ -224,11 +244,15 @@ Newsletter Studio
     ├── /analytics                 Analytics dashboard
     ├── /forms                     Subscribe forms & pages
     ├── /team                      Team members & roles
-    ├── /settings                  Org & user settings
+    ├── /settings                  Org & user settings (incl. branding)
     ├── /billing                   Plan & payment management
     ├── /developers                API keys & webhooks
     ├── /help                      Docs & support
+    ├── /crm                       Subscriber CRM & contact records
+    ├── /referrals                 Referral program management
     └── /admin                     Platform admin (superadmin only)
+        ├── /admin/kpis            Platform KPI dashboard
+        └── /admin/sponsorships    Sponsorship campaign management
 ```
 
 ---
@@ -298,7 +322,7 @@ Newsletter Studio
                      │     │         └──────────┬──────────────┘
                      │     │                    ↓
                      │     │         Distribution panel opens:
-                     │     │         ✅ Email  ✅ WhatsApp  ✅ Telegram  ⬜ Instagram
+                     │     │         ✅ Email  ✅ WhatsApp  ✅ Telegram  ⬜ Instagram  ⬜ LinkedIn
                      │     │                    ↓  confirm
                      │     │              [Published ✓]
                      │     │                    └──→ Web archive: /s/[slug]/[issue-slug]
@@ -433,7 +457,14 @@ PUBLIC PATH:
  │     ├── Connected ✓ — account displayed
  │     └── Post settings: caption style, hashtags, image template
  │
- └── COMING SOON: LinkedIn, X/Twitter, Slack
+ ├── LINKEDIN
+ │     ├── Status: Connected / Not connected
+ │     ├── "Connect" → OAuth with LinkedIn (OpenID Connect + r_organization_social scope)
+ │     ├── Select: Company Page or Personal Profile
+ │     ├── Connected ✓ — page/profile name displayed
+ │     └── Post settings: text format (short/long), article vs text post, hashtags
+ │
+ └── COMING SOON: X/Twitter, Slack
 ```
 
 ### 7.10 Analytics Paths
@@ -545,14 +576,27 @@ PUBLIC PATH:
 [/admin]
  ├── Tab: Overview
  │     └── Platform stats: total orgs, users, issues, sends (this month)
+ ├── Tab: KPIs
+ │     ├── Weekly Active Creators (WAC) — chart + current value + delta
+ │     ├── Type of Communication Send Rate — stacked bar by channel
+ │     ├── Referral Rate — % new orgs from referral link
+ │     ├── AI Usage per User — avg polishes/editor/week
+ │     ├── Subscriber Growth — net new subscribers MoM
+ │     ├── Churn — cancelled/inactive orgs MoM %
+ │     └── Revenue per Creator — MRR / active orgs
  ├── Tab: Organizations
  │     ├── List: name, plan, member count, newsletter count, created date
  │     ├──→ "Create Org" modal
- │     └──→ Click org  →  org detail (members, newsletters, usage)
+ │     └──→ Click org  →  org detail (members, newsletters, usage, branding)
  ├── Tab: Users
  │     ├── List: email, name, orgs count, admin flag, created date
  │     ├──→ "Create User" modal
  │     └──→ Toggle admin flag
+ ├── Tab: Sponsorships
+ │     ├── List: campaign name, advertiser, status, flight dates, impressions, clicks, CTR
+ │     ├──→ "New Campaign" modal (advertiser, CTA, URL, placement, budget, dates, targeting)
+ │     ├──→ Campaign detail → assignment list (orgs/newsletters) + impression chart
+ │     └──→ Revenue report: total ad revenue, creator payouts, platform share
  └── Tab: System
        └── Rate limit status, error rates, recent activity log
 ```
@@ -787,6 +831,14 @@ draft → pending_approval → approved → [scheduled | published]
 - Image: auto-generated card (headline + org logo + gradient) or manual upload
 - Hashtags: configurable per newsletter
 
+#### LinkedIn
+- OAuth 2.0 via LinkedIn API (scopes: `r_liteprofile`, `r_organization_social`, `w_member_social`, `w_organization_social`)
+- Supports both **Company Pages** and **Personal Profiles**
+- Post types: **Text post** (up to 3,000 chars, AI-generated from issue highlights) or **Article** (long-form, mirrors full issue content)
+- Hashtags: configurable per newsletter (up to 5 recommended by LinkedIn algorithm)
+- Engagement tracking: reactions, comments, shares, impressions (via LinkedIn Analytics API)
+- One page/profile per newsletter (or shared org-wide page)
+
 #### Distribution panel (in issue editor)
 - Shows all connected channels with subscriber/reach counts
 - Toggle per channel before sending
@@ -802,6 +854,7 @@ draft → pending_approval → approved → [scheduled | published]
 - WhatsApp: delivered, read
 - Telegram: sent (no read receipts)
 - Instagram: reach, impressions, likes, comments, saves
+- LinkedIn: impressions, reactions, comments, shares, clicks
 
 **Dashboard charts:**
 - Subscriber growth (line, by newsletter or org-wide)
@@ -872,9 +925,10 @@ draft → pending_approval → approved → [scheduled | published]
 ### 8.14 Settings
 
 **Profile tab:** full name, avatar (upload to Supabase storage), email (view only)  
-**Organization tab:** name, logo, primary color, accent color, default language, timezone  
+**Organization tab:** name (inline-editable from dashboard), logo, default language, timezone  
+**Branding tab:** logo upload, favicon upload, primary color picker, accent color picker, heading font selector, custom footer text, "Remove Powered by" toggle (Growth+), live preview panel showing mock email + subscribe page with changes applied  
 **AI Provider tab:** provider selection, API key management (AES-256 encrypted at rest), test connection  
-**Email Sending tab:** from name, reply-to, custom domain setup  
+**Email Sending tab:** from name, reply-to, custom domain setup (DKIM/SPF guide)  
 **Notifications tab:** configurable email alerts (approval requests, subscriber milestones, bounce spikes)
 
 ---
@@ -948,6 +1002,159 @@ draft → pending_approval → approved → [scheduled | published]
 - `/invite/accept?token=xxx` — Token-based, requires auth (creates account if new)
 
 All public pages: no cookies, no tracking pixels, no user session required.
+
+---
+
+### 8.20 CRM
+
+Newsletter Studio embeds a lightweight but functional CRM so creators can manage their audience relationships without switching tools.
+
+**Contact record (per subscriber):**
+- Identity: email, full name, avatar (Gravatar fallback), company, job title, location
+- Subscription history: which newsletters, joined date, status (active / unsubscribed / bounced)
+- Engagement score: computed weekly from opens, clicks, and recency (0–100 scale, color-coded)
+- Tags: freeform labels (e.g. "VIP", "cold", "prospect")
+- Notes: internal freeform notes per contact (visible to team, not subscriber)
+- Activity timeline: chronological feed of every email received, opened, clicked, unsubscribed
+
+**CRM views:**
+- **Contacts list** — searchable, filterable by newsletter / tag / status / engagement score / join date
+- **Contact detail panel** — slide-over drawer with full timeline, notes, and quick actions
+- **Engagement heatmap** — grid showing each subscriber's open history across the last 20 issues
+- **Segments** — dynamic rules that auto-tag or group contacts (see 8.6)
+
+**Quick actions from contact record:**
+- Add/remove tags
+- Add internal note
+- Manually unsubscribe
+- Move to segment
+- View all issues they received and which they opened
+
+**CRM in Admin Panel:**
+- Platform admins can view aggregate CRM health across all orgs (total contacts, avg engagement score, churn risk count)
+- Cannot view individual subscriber PII across orgs (each org's data is RLS-isolated)
+
+**Data model additions:**
+- `subscriber_notes(id, subscriber_id, author_id, body, created_at)`
+- `subscriber_engagement_scores(subscriber_id, score, computed_at)` — updated nightly
+- `crm_fields(id, org_id, label, field_type, required)` — custom fields per org
+
+---
+
+### 8.21 Sponsorship & Ads
+
+Platform admins can sell and inject sponsorships into newsletters. This creates a revenue-sharing model between the platform and creators.
+
+**Admin: Sponsorship management**
+
+Located at **Admin → Sponsorships**:
+
+- Create a sponsorship campaign: advertiser name, logo, CTA text, destination URL, budget, flight dates (start/end)
+- Assign to: all orgs, specific orgs, or newsletters matching a tag/topic
+- Choose placement: **Top banner** (above issue body), **Mid-roll** (after story 1), **Footer** (before unsubscribe link)
+- Set frequency cap: max N injections per subscriber per flight
+- Track: impressions, clicks, CTR, spend, CPM
+
+**Creator: Sponsorship visibility**
+
+- Creators see a **Sponsorships** tab on each newsletter's settings page
+- Shows active campaigns injected into their newsletter: advertiser, dates, placement, estimated impressions
+- Can opt out of specific campaigns (opt-out is logged; platform admin can enforce mandatory campaigns on free-tier orgs)
+- Revenue share: % of ad revenue credited to creator's balance (configurable per plan in billing)
+
+**Injection mechanism:**
+- Sponsorship blocks are injected at send time by the email renderer — not stored in the issue body
+- Rendered as a visually distinct, labeled block: `Sponsored by [Advertiser]`
+- CAN-SPAM/GDPR compliant: clearly labeled as sponsored content
+- Click tracking via redirect through platform domain before forwarding to advertiser URL
+
+**Data model:**
+- `sponsors(id, name, logo_url, contact_email, created_at)`
+- `sponsorship_campaigns(id, sponsor_id, cta_text, url, placement, budget_cents, starts_at, ends_at, status)`
+- `campaign_assignments(id, campaign_id, org_id, newsletter_id, opt_out_at)`
+- `sponsorship_impressions(id, campaign_id, issue_id, subscriber_id, channel, clicked_at)`
+
+---
+
+### 8.22 Referral System
+
+A built-in referral program lets creators grow their subscriber base by rewarding readers who bring new sign-ups.
+
+**How it works (subscriber referral):**
+
+1. Each active subscriber receives a unique referral link included in every email footer: `https://app.com/s/[slug]?ref=[subscriber_token]`
+2. When someone subscribes via that link, the referral is attributed to the referring subscriber
+3. The creator sees a **Referrals** tab on each newsletter showing: referrer email, referred email, date, status (subscribed / confirmed / churned)
+4. Milestone rewards (configured by creator per newsletter):
+   - Refer 1 → thank-you email
+   - Refer 5 → exclusive content unlock (creator-defined)
+   - Refer 10 → physical reward (creator-managed externally)
+
+**Platform-level referral (creator acquisition):**
+
+- Each org gets a unique platform referral link: `https://app.com/signup?ref=[org_token]`
+- When a new org signs up via that link and activates a paid plan, the referring org earns a credit (configurable: e.g. $20 account credit per conversion)
+- Admin → Referrals tab shows: referring org, referred org, conversion status, credit issued
+- Fraud prevention: referred org must stay active 30 days before credit is issued
+
+**Referral dashboard (per newsletter):**
+- Total referrals generated
+- Conversion rate (referred → confirmed subscriber)
+- Top referrers leaderboard (top 10 subscribers by referral count)
+- Reward milestone tracker per referrer
+
+**Data model:**
+- `referral_links(id, org_id, newsletter_id, subscriber_id, token, created_at)` — nullable `subscriber_id` = org-level link
+- `referrals(id, link_id, referred_email, referred_subscriber_id, referred_org_id, converted_at, credit_issued_at)`
+- `referral_rewards(id, newsletter_id, milestone, reward_type, reward_config JSONB, created_at)`
+
+---
+
+### 8.23 White-Label Branding
+
+Each organization can customize the look of their public-facing pages and email templates to match their brand, replacing Newsletter Studio's default visual identity.
+
+**Configurable brand elements (Settings → Organization → Branding):**
+
+| Element | What it controls |
+|---|---|
+| Logo | Shown in email header, subscribe page header, web archive |
+| Favicon | Tab icon for hosted public pages (`/s/[slug]`) |
+| Primary color | Button backgrounds, link color, accent highlights in emails |
+| Accent color | Badge colors, progress indicators |
+| Font | Heading font for public pages (Google Fonts — limited selection) |
+| Footer text | Custom footer copy replacing the default platform tagline |
+| Custom domain (email from) | `From: newsletter@yourdomain.com` (requires DNS setup) |
+| Remove "Powered by" badge | Available on Growth plan and above |
+
+**Preview:**
+- Live preview panel in Settings showing a mock email and subscribe page with the current brand applied
+- Changes are applied to all future sends; past issues are not retroactively updated
+
+**Email template theming:**
+- Primary color cascades into button background, link underlines, and divider lines
+- Logo is inserted at top of every email in a centered header block
+- All colors are validated for WCAG AA contrast ratio before save (warn if contrast fails)
+
+**Subscribe page theming:**
+- `/s/[slug]` renders using org's primary color, logo, and font
+- Open Graph image (for social sharing previews) is auto-generated with org logo + newsletter name on the primary-color background
+
+**Admin view:**
+- Platform admins can see each org's branding config in **Admin → Organizations → [Org] → Branding**
+- Cannot override an org's branding (read-only for admins)
+
+**Data model additions to `organizations`:**
+```sql
+ALTER TABLE organizations ADD COLUMN
+  brand_logo_url        TEXT,
+  brand_favicon_url     TEXT,
+  brand_primary_color   TEXT DEFAULT '#7B5CF0',
+  brand_accent_color    TEXT DEFAULT '#4F8EF7',
+  brand_font            TEXT DEFAULT 'Inter',
+  brand_footer_text     TEXT,
+  brand_remove_badge    BOOLEAN DEFAULT false;
+```
 
 ---
 
@@ -1272,6 +1479,7 @@ POST   /api/ai/polish                         AI content polish (internal)
 | **Meta Business API** | WhatsApp Business, Instagram posting |
 | **Twilio / 360dialog** | Alternative WhatsApp provider |
 | **Telegram Bot API** | Telegram channel posting |
+| **LinkedIn API** | Company page / profile post and article publishing |
 | **Cloudflare Turnstile** | Bot protection on subscribe forms |
 | **Sentry** | Error monitoring (server + client) |
 | **DOMPurify** | HTML sanitization before email send/render |
@@ -1296,24 +1504,30 @@ POST   /api/ai/polish                         AI content polish (internal)
 ### Phase 2 — Growth & Multi-Channel
 - [ ] Connections: Telegram
 - [ ] Connections: WhatsApp
+- [ ] Connections: LinkedIn (OAuth + post/article publishing)
 - [ ] Calendar view
 - [ ] Segments (dynamic rule-based)
 - [ ] Automations (welcome series, re-engagement)
-- [ ] Analytics dashboard (charts, heatmap, channel comparison)
+- [ ] Analytics dashboard (charts, heatmap, channel comparison incl. LinkedIn)
 - [ ] Templates library (platform + org)
 - [ ] Forms & embeddable subscribe widget
 - [ ] Billing (Stripe integration)
 - [ ] A/B subject line testing
+- [ ] **CRM** (contact records, engagement score, notes, timeline)
+- [ ] **Referral system** (subscriber referral links + creator acquisition referrals)
+- [ ] **White-label branding** (logo, colors, font, footer, live preview)
+- [ ] **Platform Admin KPI dashboard** (WAC, send rate, AI usage, churn, RPU)
 
 ### Phase 3 — Scale & Enterprise
 - [ ] Connections: Instagram
-- [ ] Connections: LinkedIn, X/Twitter
+- [ ] Connections: X/Twitter
+- [ ] **Sponsorship & Ads** (admin campaign manager, mid-roll injection, revenue share)
 - [ ] Developers: API keys, webhooks, OpenAPI docs
 - [ ] MFA (TOTP)
 - [ ] Custom email domain with DMARC setup
 - [ ] SOC 2 Type II audit
 - [ ] Geographic analytics
-- [ ] White-label (custom app domain per org)
+- [ ] Custom app domain per org (true white-label hosting)
 - [ ] Help & Docs in-app knowledge base
 
 ---
@@ -1329,6 +1543,10 @@ POST   /api/ai/polish                         AI content polish (internal)
 | 5 | Email template: single standard layout or configurable block editor (like Beehiiv)? Block editor is a major scope increase. | Ezra | Before Phase 1 email send |
 | 6 | Public API: included in Growth plan or Enterprise only? | Ezra | Before billing feature |
 | 7 | Analytics: self-hosted (Supabase queries) or third-party (Mixpanel/PostHog)? | Ezra | Before Phase 2 analytics |
+| 8 | Referral rewards: platform-managed (account credits) only, or support physical/digital rewards creator configures externally? | Ezra | Before Phase 2 referral build |
+| 9 | Sponsorship revenue share %: fixed platform cut (e.g. 30%) or negotiable per org plan? | Ezra | Before Phase 3 sponsorship build |
+| 10 | LinkedIn: personal profile posts or company page only? Personal requires individual OAuth per user, adding auth complexity. | Ezra | Before Phase 2 LinkedIn connection |
+| 11 | White-label font: Google Fonts selector (limited, free) or allow custom font upload (complex, hosting cost)? | Ezra | Before Phase 2 branding build |
 
 ---
 
