@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { RotateCcw, Loader2, Check } from 'lucide-react'
-import { restoreVersion } from '../version-actions'
+import { restoreVersion } from '@/lib/actions/issue-versions'
 
 interface Props {
   versionId: string
