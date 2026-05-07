@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Sparkles, Loader2, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Sparkles, Loader2, ChevronRight, Send, Users, X } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { issueStatusBadgeVariant, issueStatusLabel } from '@/lib/types/display'
 import type { IssueStatus, Json } from '@/lib/types/database'
@@ -55,10 +55,13 @@ const STATUS_ACTIONS: Partial<Record<IssueStatus, { label: string; next: IssueSt
 export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName }: Props) {
   const supabase = createClient()
 
-  const [issue,       setIssue]       = useState(initialIssue)
-  const [isPolishing, setIsPolishing] = useState(false)
-  const [isSaving,    setIsSaving]    = useState(false)
-  const [error,       setError]       = useState('')
+  const [issue,           setIssue]           = useState(initialIssue)
+  const [isPolishing,     setIsPolishing]     = useState(false)
+  const [isSaving,        setIsSaving]        = useState(false)
+  const [isSending,       setIsSending]       = useState(false)
+  const [showSendDialog,  setShowSendDialog]  = useState(false)
+  const [recipientCount,  setRecipientCount]  = useState<number | null>(null)
+  const [error,           setError]           = useState('')
 
   const rawNotesText = (issue.raw_notes as { text: string } | null)?.text ?? ''
   const polished     = issue.polished_json as PolishedContent | null
@@ -111,10 +114,43 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
 
       if (updateError) { setError(updateError.message); return }
       setIssue(prev => ({ ...prev, status: next }))
-      const label = next === 'published' ? 'Issue published' : next === 'approved' ? 'Issue approved' : `Status → ${issueStatusLabel(next)}`
+      const label = next === 'approved' ? 'Issue approved' : `Status → ${issueStatusLabel(next)}`
       toast.success(label)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function handlePublishClick() {
+    setError('')
+    const { count } = await supabase
+      .from('subscribers')
+      .select('id', { count: 'exact', head: true })
+      .eq('newsletter_id', newsletterId)
+      .eq('status', 'active')
+    setRecipientCount(count ?? 0)
+    setShowSendDialog(true)
+  }
+
+  async function handleSend() {
+    setIsSending(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/issues/${issue.id}/send`, { method: 'POST' })
+      const result = await res.json()
+      if (!res.ok || !result.success) {
+        setError(result.error ?? 'Send failed.')
+        setShowSendDialog(false)
+        return
+      }
+      setIssue(prev => ({ ...prev, status: 'published' }))
+      setShowSendDialog(false)
+      toast.success('Issue sent!', `Delivered to ${result.recipients} subscriber${result.recipients !== 1 ? 's' : ''}.`)
+    } catch {
+      setError('Network error during send.')
+      setShowSendDialog(false)
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -155,7 +191,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
               variant={action.variant}
               size="sm"
               disabled={isSaving}
-              onClick={() => handleStatusChange(action.next)}
+              onClick={() => action.next === 'published' ? handlePublishClick() : handleStatusChange(action.next)}
             >
               {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {action.label}
@@ -165,7 +201,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
       </div>
 
       {error && (
-        <p className="text-red-500 text-xs bg-red-50 border border-red-200 rounded px-3 py-2 mb-6">
+        <p className="text-danger text-xs bg-danger/10 border border-danger/20 rounded-lg px-3 py-2 mb-6">
           {error}
         </p>
       )}
@@ -228,7 +264,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
                   <ul className="space-y-2">
                     {polished.prompts.map((p, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-ink">
-                        <ChevronRight className="h-4 w-4 text-cyan shrink-0 mt-0.5" />
+                        <ChevronRight className="h-4 w-4 text-accent shrink-0 mt-0.5" />
                         {p}
                       </li>
                     ))}
@@ -237,22 +273,22 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
               )}
 
               {polished.hot_take && (
-                <div className="relative overflow-hidden rounded-lg bg-navy-deep text-white p-5">
-                  <div className="absolute -top-4 -right-4 h-20 w-20 rounded-full bg-cyan/10 blur-2xl pointer-events-none" />
+                <div className="relative overflow-hidden rounded-lg bg-elevated border border-accent/20 p-5">
+                  <div className="absolute -top-4 -right-4 h-20 w-20 rounded-full bg-accent/10 blur-2xl pointer-events-none" />
                   <div className="relative">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="h-1.5 w-1.5 rounded-full bg-lime" />
-                      <h3 className="text-xs font-700 uppercase tracking-widest text-white/40">Hot Take</h3>
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                      <h3 className="text-xs font-700 uppercase tracking-widest text-ink/40">Hot Take</h3>
                     </div>
-                    <p className="text-sm leading-relaxed">{polished.hot_take}</p>
+                    <p className="text-sm leading-relaxed text-ink">{polished.hot_take}</p>
                   </div>
                 </div>
               )}
             </>
           ) : (
             <div className="rounded-lg border border-dashed border-line bg-surface/50 p-10 text-center">
-              <div className="h-12 w-12 rounded-full bg-cyan/10 flex items-center justify-center mx-auto mb-4">
-                <Sparkles className="h-5 w-5 text-cyan" />
+              <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="h-5 w-5 text-accent" />
               </div>
               <p className="text-sm font-600 text-ink mb-1">Not yet polished</p>
               <p className="text-xs text-ink-muted mb-5">
@@ -273,6 +309,73 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
           )}
         </div>
       </div>
+
+      {/* Send confirmation dialog */}
+      {showSendDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => !isSending && setShowSendDialog(false)}
+          />
+          <div className="relative z-10 w-full max-w-md rounded-xl border border-line bg-surface shadow-lg animate-scale-in">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h2 className="text-sm font-700 text-ink">Send issue</h2>
+              {!isSending && (
+                <button onClick={() => setShowSendDialog(false)} className="text-ink-muted hover:text-ink transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div className="flex items-center gap-3 bg-elevated rounded-lg p-4 border border-line">
+                <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                  <Users className="h-5 w-5 text-accent" />
+                </div>
+                <div>
+                  <p className="text-2xl font-700 text-ink">{recipientCount?.toLocaleString() ?? '…'}</p>
+                  <p className="text-xs text-ink/40">active subscriber{recipientCount !== 1 ? 's' : ''} will receive this</p>
+                </div>
+              </div>
+
+              {recipientCount === 0 && (
+                <p className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
+                  No active subscribers for this newsletter. Add subscribers before sending.
+                </p>
+              )}
+
+              <p className="text-xs text-ink/40 leading-relaxed">
+                This will send <strong className="text-ink/60">{issue.title ?? 'this issue'}</strong> to all active subscribers
+                of <strong className="text-ink/60">{newsletterName}</strong> and mark the issue as published.
+                This action cannot be undone.
+              </p>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSendDialog(false)}
+                  disabled={isSending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={isSending || recipientCount === 0}
+                  onClick={handleSend}
+                >
+                  {isSending ? (
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</>
+                  ) : (
+                    <><Send className="h-3.5 w-3.5" /> Send to {recipientCount?.toLocaleString()} subscriber{recipientCount !== 1 ? 's' : ''}</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

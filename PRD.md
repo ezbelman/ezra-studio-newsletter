@@ -1265,6 +1265,9 @@ SUPABASE_SERVICE_ROLE_KEY=        # server-side only
 # Email
 RESEND_API_KEY=                   # server-side only
 RESEND_WEBHOOK_SECRET=            # server-side only
+FROM_EMAIL=                       # ⚠️ PENDING — requires a verified sending domain in Resend
+                                  # Fallback: onboarding@resend.dev (Resend's shared domain, dev/testing only)
+                                  # Production: set to newsletter@yourdomain.com after DNS verification
 
 # Encryption
 ENCRYPTION_KEY=                   # 32-byte AES key for API key encryption

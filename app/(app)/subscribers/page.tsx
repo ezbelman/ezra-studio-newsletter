@@ -1,17 +1,28 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentOrgId } from '@/lib/data/org'
-import { Users, Plus, Upload, Search, Mail, CheckCircle2, AlertCircle, XCircle } from 'lucide-react'
+import { Users, CheckCircle2, AlertCircle, XCircle } from 'lucide-react'
+import { AddSubscriberDialog } from './add-subscriber-dialog'
+import { ImportCsvDialog } from './import-csv-dialog'
+import { SubscriberFilters } from './subscriber-filters'
+import { UnsubscribeButton } from './unsubscribe-button'
 
 export const metadata = { title: 'Subscribers' }
 
-const STATUS_MAP = {
-  active:       { label: 'Active',       cls: 'badge-active' },
-  unsubscribed: { label: 'Unsubscribed', cls: 'badge-draft' },
-  bounced:      { label: 'Bounced',      cls: 'badge-error' },
+const PAGE_SIZE = 50
+
+interface SearchParams {
+  q?:          string
+  newsletter?: string
+  status?:     string
+  cursor?:     string
 }
 
-export default async function SubscribersPage() {
+export default async function SubscribersPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -19,11 +30,12 @@ export default async function SubscribersPage() {
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) redirect('/onboarding')
 
+  const { q, newsletter, status, cursor } = await searchParams
+
   const [
     { count: activeCount },
     { count: bouncedCount },
     { count: unsubCount },
-    { data: subscribers },
     { data: newsletters },
   ] = await Promise.all([
     supabase.from('subscribers').select('id', { count: 'exact', head: true })
@@ -32,46 +44,62 @@ export default async function SubscribersPage() {
       .eq('org_id', orgId).eq('status', 'bounced'),
     supabase.from('subscribers').select('id', { count: 'exact', head: true })
       .eq('org_id', orgId).eq('status', 'unsubscribed'),
-    supabase.from('subscribers')
-      .select('id, email, name, status, subscribed_at, newsletters(name)')
-      .eq('org_id', orgId)
-      .order('subscribed_at', { ascending: false })
-      .limit(50),
     supabase.from('newsletters')
       .select('id, name')
       .eq('org_id', orgId)
-      .eq('status', 'active'),
+      .eq('status', 'active')
+      .order('name'),
   ])
 
+  // Build filtered query
+  let query = supabase
+    .from('subscribers')
+    .select('id, email, name, status, subscribed_at, newsletter_id, newsletters(name)')
+    .eq('org_id', orgId)
+    .order('subscribed_at', { ascending: false })
+    .limit(PAGE_SIZE + 1)
+
+  if (q)          query = query.or(`email.ilike.%${q}%,name.ilike.%${q}%`)
+  if (newsletter) query = query.eq('newsletter_id', newsletter)
+  if (status)     query = query.eq('status', status as 'active' | 'unsubscribed' | 'bounced')
+  if (cursor)     query = query.lt('subscribed_at', cursor)
+
+  const { data: rows } = await query
+
+  const hasMore = (rows?.length ?? 0) > PAGE_SIZE
+  const subscribers = rows?.slice(0, PAGE_SIZE) ?? []
+  const nextCursor = hasMore ? subscribers[subscribers.length - 1]?.subscribed_at : null
+
   const total = (activeCount ?? 0) + (bouncedCount ?? 0) + (unsubCount ?? 0)
+  const nl = newsletters ?? []
+
+  const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
+    active:       { label: 'Active',       cls: 'text-success bg-success/10 border border-success/20' },
+    unsubscribed: { label: 'Unsubscribed', cls: 'text-ink-muted bg-elevated border border-line' },
+    bounced:      { label: 'Bounced',      cls: 'text-danger bg-danger/10 border border-danger/20' },
+  }
 
   return (
     <div className="p-8 max-w-6xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-600 text-ink">Subscribers</h1>
-          <p className="text-ink/50 text-sm mt-0.5">Manage your audience across all newsletters</p>
+          <h1 className="text-[22px] font-display font-700 text-ink">Subscribers</h1>
+          <p className="text-ink-muted text-sm mt-0.5">Manage your audience across all newsletters</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-line text-sm text-ink/60 hover:text-ink hover:border-accent/40 transition-colors">
-            <Upload className="h-4 w-4" />
-            Import CSV
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg gradient-accent text-white text-sm font-500 hover:opacity-90 transition-opacity">
-            <Plus className="h-4 w-4" />
-            Add subscriber
-          </button>
+          <ImportCsvDialog newsletters={nl} />
+          <AddSubscriberDialog newsletters={nl} />
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         {[
-          { label: 'Total',         value: total,              icon: Users,        color: 'text-ink/40' },
-          { label: 'Active',        value: activeCount ?? 0,   icon: CheckCircle2, color: 'text-success' },
-          { label: 'Bounced',       value: bouncedCount ?? 0,  icon: AlertCircle,  color: 'text-danger' },
-          { label: 'Unsubscribed',  value: unsubCount ?? 0,    icon: XCircle,      color: 'text-ink/30' },
+          { label: 'Total',        value: total,              icon: Users,        color: 'text-ink/40' },
+          { label: 'Active',       value: activeCount ?? 0,   icon: CheckCircle2, color: 'text-success' },
+          { label: 'Bounced',      value: bouncedCount ?? 0,  icon: AlertCircle,  color: 'text-danger' },
+          { label: 'Unsubscribed', value: unsubCount ?? 0,    icon: XCircle,      color: 'text-ink/30' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-surface border border-line rounded-xl p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -84,33 +112,10 @@ export default async function SubscribersPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-5">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/30" />
-          <input
-            type="text"
-            placeholder="Search by email or name..."
-            className="w-full pl-9 pr-4 py-2 bg-surface border border-line rounded-lg text-sm text-ink placeholder:text-ink/30 focus:outline-none focus:border-accent/50 transition-colors"
-          />
-        </div>
-
-        <select className="px-3 py-2 bg-surface border border-line rounded-lg text-sm text-ink/60 focus:outline-none focus:border-accent/50 transition-colors">
-          <option value="">All newsletters</option>
-          {(newsletters ?? []).map(nl => (
-            <option key={nl.id} value={nl.id}>{nl.name}</option>
-          ))}
-        </select>
-
-        <select className="px-3 py-2 bg-surface border border-line rounded-lg text-sm text-ink/60 focus:outline-none focus:border-accent/50 transition-colors">
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="bounced">Bounced</option>
-          <option value="unsubscribed">Unsubscribed</option>
-        </select>
-      </div>
+      <SubscriberFilters newsletters={nl} />
 
       {/* Table */}
-      {subscribers && subscribers.length > 0 ? (
+      {subscribers.length > 0 ? (
         <div className="bg-surface border border-line rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -124,8 +129,8 @@ export default async function SubscribersPage() {
             </thead>
             <tbody className="divide-y divide-line">
               {subscribers.map(sub => {
-                const statusInfo = STATUS_MAP[sub.status as keyof typeof STATUS_MAP] ?? STATUS_MAP.active
-                const nl = sub.newsletters as { name: string } | null
+                const info = STATUS_STYLE[sub.status] ?? STATUS_STYLE.active
+                const subNl = sub.newsletters as { name: string } | null
                 return (
                   <tr key={sub.id} className="hover:bg-elevated/50 transition-colors">
                     <td className="px-5 py-3.5">
@@ -141,10 +146,10 @@ export default async function SubscribersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 text-ink/50 text-sm">{nl?.name ?? '—'}</td>
+                    <td className="px-5 py-3.5 text-ink/50 text-sm">{subNl?.name ?? '—'}</td>
                     <td className="px-5 py-3.5">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-600 uppercase tracking-wide ${statusInfo.cls}`}>
-                        {statusInfo.label}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-600 uppercase tracking-wide ${info.cls}`}>
+                        {info.label}
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-ink/40 text-xs">
@@ -153,9 +158,7 @@ export default async function SubscribersPage() {
                         : '—'}
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <button className="text-xs text-ink/30 hover:text-danger transition-colors">
-                        Unsubscribe
-                      </button>
+                      {sub.status === 'active' && <UnsubscribeButton subscriberId={sub.id} />}
                     </td>
                   </tr>
                 )
@@ -163,12 +166,20 @@ export default async function SubscribersPage() {
             </tbody>
           </table>
 
-          {total > 50 && (
+          {(nextCursor || cursor) && (
             <div className="px-5 py-3 border-t border-line bg-elevated/50 flex items-center justify-between">
-              <p className="text-xs text-ink/40">Showing 50 of {total.toLocaleString()} subscribers</p>
-              <button className="text-xs text-accent hover:text-accent/80 transition-colors">
-                Load more
-              </button>
+              <p className="text-xs text-ink/40">
+                Showing {subscribers.length} subscriber{subscribers.length !== 1 ? 's' : ''}
+                {q || newsletter || status ? ' (filtered)' : ''}
+              </p>
+              {nextCursor && (
+                <a
+                  href={`?${new URLSearchParams({ ...(q ? { q } : {}), ...(newsletter ? { newsletter } : {}), ...(status ? { status } : {}), cursor: nextCursor }).toString()}`}
+                  className="text-xs text-accent hover:text-accent/80 transition-colors"
+                >
+                  Load more
+                </a>
+              )}
             </div>
           )}
         </div>
@@ -177,20 +188,20 @@ export default async function SubscribersPage() {
           <div className="h-14 w-14 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <Users className="h-6 w-6 text-accent" />
           </div>
-          <p className="text-sm font-500 text-ink mb-1">No subscribers yet</p>
-          <p className="text-xs text-ink/40 mb-6">
-            Import a CSV, add subscribers manually, or share your subscribe page
+          <p className="text-sm font-500 text-ink mb-1">
+            {q || newsletter || status ? 'No subscribers match your filters' : 'No subscribers yet'}
           </p>
-          <div className="flex items-center justify-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-line text-sm text-ink/60 hover:text-ink hover:border-accent/40 transition-colors">
-              <Upload className="h-4 w-4" />
-              Import CSV
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg gradient-accent text-white text-sm font-500 hover:opacity-90 transition-opacity">
-              <Plus className="h-4 w-4" />
-              Add subscriber
-            </button>
-          </div>
+          <p className="text-xs text-ink/40 mb-6">
+            {q || newsletter || status
+              ? 'Try adjusting your search or filters.'
+              : 'Import a CSV, add subscribers manually, or share your subscribe page.'}
+          </p>
+          {!q && !newsletter && !status && (
+            <div className="flex items-center justify-center gap-3">
+              <ImportCsvDialog newsletters={nl} />
+              <AddSubscriberDialog newsletters={nl} />
+            </div>
+          )}
         </div>
       )}
     </div>

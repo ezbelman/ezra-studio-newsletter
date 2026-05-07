@@ -1,6 +1,8 @@
 interface Story {
   headline: string
-  body: string
+  bullets?: string[]
+  takeaway?: string
+  body?: string
   url?: string
 }
 
@@ -24,22 +26,31 @@ export function renderEmailHtml(opts: TemplateOptions): string {
   const { orgName, primaryColor, issueTitle, polishedJson, unsubscribeUrl, webViewUrl } = opts
   const color = primaryColor || '#7B5CF0'
 
-  const storiesHtml = (polishedJson.stories ?? []).map(story => `
+  const storiesHtml = (polishedJson.stories ?? []).map(story => {
+    const bodyContent = story.body
+      ? `<p style="margin: 0 0 10px 0; font-size: 15px; color: #8888A0; line-height: 1.7;">${escapeHtml(story.body)}</p>`
+      : (story.bullets ?? []).map(b =>
+          `<p style="margin: 0 0 6px 0; font-size: 15px; color: #8888A0; line-height: 1.6;">· ${escapeHtml(b)}</p>`
+        ).join('')
+    const takeawayHtml = story.takeaway
+      ? `<p style="margin: 8px 0 0 0; font-size: 13px; color: #55556A; border-top: 1px solid #2A2A38; padding-top: 8px;"><strong style="color: #8888A0;">Why it matters: </strong>${escapeHtml(story.takeaway)}</p>`
+      : ''
+    return `
     <tr>
       <td style="padding: 0 0 28px 0;">
-        <h2 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #F0F0F5; line-height: 1.4;">
+        <h2 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 600; color: #F0F0F5; line-height: 1.4;">
           ${escapeHtml(story.headline)}
         </h2>
-        <p style="margin: 0 0 10px 0; font-size: 15px; color: #8888A0; line-height: 1.7;">
-          ${escapeHtml(story.body)}
-        </p>
+        ${bodyContent}
+        ${takeawayHtml}
         ${story.url ? `
         <a href="${escapeHtml(story.url)}"
-           style="display: inline-block; font-size: 13px; font-weight: 600; color: ${color}; text-decoration: none;">
+           style="display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 600; color: ${color}; text-decoration: none;">
           Read more →
         </a>` : ''}
       </td>
-    </tr>`).join('')
+    </tr>`
+  }).join('')
 
   const promptsHtml = polishedJson.prompts && polishedJson.prompts.length > 0 ? `
     <tr>

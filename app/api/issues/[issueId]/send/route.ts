@@ -6,7 +6,7 @@ import { generateUnsubscribeToken } from '@/lib/email/unsubscribe-token'
 import { Resend } from 'resend'
 
 const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
-const FROM_EMAIL = process.env.FROM_EMAIL ?? 'newsletter@ezrastudio.com'
+const FROM_EMAIL = process.env.FROM_EMAIL ?? 'onboarding@resend.dev'
 
 export async function POST(
   _request: NextRequest,

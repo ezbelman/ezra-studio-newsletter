@@ -6,6 +6,24 @@ import type { Database } from '@/lib/types/database'
 
 type OrgUpdate = Database['public']['Tables']['organizations']['Update']
 
+export async function saveBrandingSettings(formData: FormData) {
+  const { orgId, error: authError } = await requireOwnerOrAdmin()
+  if (authError || !orgId) return { error: authError ?? 'Unauthorized' }
+
+  const logo_url      = (formData.get('logo_url')      as string)?.trim() || null
+  const primary_color = (formData.get('primary_color') as string)?.trim() || '#7B5CF0'
+  const accent_color  = (formData.get('accent_color')  as string)?.trim() || '#4F8EF7'
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('organizations')
+    .update({ logo_url, primary_color, accent_color })
+    .eq('id', orgId)
+  if (error) return { error: error.message }
+
+  return { success: true }
+}
+
 export async function saveOrgSettings(formData: FormData) {
   const { orgId, error: authError } = await requireOwnerOrAdmin()
   if (authError || !orgId) return { error: authError ?? 'Unauthorized' }
