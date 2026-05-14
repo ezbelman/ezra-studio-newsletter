@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Sparkles, Loader2, ChevronRight, Send, Users, X, History, FlaskConical } from 'lucide-react'
+import { ArrowLeft, Sparkles, Loader2, ChevronRight, Send, Users, X, History, FlaskConical, Wand2, Clock } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { issueStatusBadgeVariant, issueStatusLabel } from '@/lib/types/display'
 import type { IssueStatus, Json } from '@/lib/types/database'
@@ -51,9 +51,8 @@ const STATUS_ACTIONS: Partial<Record<IssueStatus, { label: string; next: IssueSt
     { label: 'Back to Draft', next: 'draft',     variant: 'outline' },
     { label: 'Approve',        next: 'approved', variant: 'primary' },
   ],
-  approved: [
-    { label: 'Publish Now', next: 'published', variant: 'primary' },
-  ],
+  approved:  [{ label: 'Send / Schedule', next: 'published', variant: 'primary' }],
+  scheduled: [{ label: 'Cancel Schedule', next: 'approved',  variant: 'outline' }],
 }
 
 export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName }: Props) {
@@ -68,6 +67,12 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
   const [abEnabled,       setAbEnabled]       = useState(false)
   const [abSubjectB,      setAbSubjectB]      = useState(initialIssue.ab_subject_b ?? '')
   const [error,           setError]           = useState('')
+  const [subjectSuggestions,   setSubjectSuggestions]   = useState<string[]>([])
+  const [showSuggestions,      setShowSuggestions]      = useState(false)
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
+  const [scheduledMode,        setScheduledMode]        = useState(false)
+  const [scheduledAt,          setScheduledAt]          = useState('')
+  const [isScheduling,         setIsScheduling]         = useState(false)
 
   const rawNotesText = (issue.raw_notes as unknown as { text: string } | null)?.text ?? ''
   const polished     = issue.polished_json as unknown as PolishedContent | null
@@ -172,6 +177,80 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
     }
   }
 
+  async function handleSuggestSubjects() {
+    if (!polished) return
+    setIsLoadingSuggestions(true)
+    setShowSuggestions(true)
+    setSubjectSuggestions([])
+    try {
+      const content = polished.stories.map(s => `${s.headline}: ${s.bullets.join(', ')}`).join('\n').slice(0, 2000)
+      const res     = await fetch('/api/ai/subject-suggestions', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ title: issue.title ?? '', content }),
+      })
+      const result = await res.json()
+      if (result.success) setSubjectSuggestions(result.suggestions)
+      else toast.error('Suggestion failed', result.error ?? '')
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setIsLoadingSuggestions(false)
+    }
+  }
+
+  async function handleSelectSuggestion(title: string) {
+    const { error: updateError } = await supabase.from('issues').update({ title }).eq('id', issue.id)
+    if (updateError) { toast.error('Failed to update title', updateError.message); return }
+    setIssue(prev => ({ ...prev, title }))
+    setShowSuggestions(false)
+    setSubjectSuggestions([])
+    toast.success('Subject updated')
+  }
+
+  async function handleSchedule() {
+    if (!scheduledAt) return
+    setIsScheduling(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/issues/${issue.id}/schedule`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ scheduled_at: new Date(scheduledAt).toISOString() }),
+      })
+      const result = await res.json()
+      if (!res.ok || !result.success) {
+        setError(result.error ?? 'Schedule failed.')
+        setShowSendDialog(false)
+        return
+      }
+      setIssue(prev => ({ ...prev, status: 'scheduled' }))
+      setShowSendDialog(false)
+      toast.success('Issue scheduled', `Will send on ${new Date(scheduledAt).toLocaleString()}.`)
+    } catch {
+      setError('Network error during scheduling.')
+      setShowSendDialog(false)
+    } finally {
+      setIsScheduling(false)
+    }
+  }
+
+  async function handleCancelSchedule() {
+    setIsSaving(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/issues/${issue.id}/schedule`, { method: 'DELETE' })
+      const result = await res.json()
+      if (!res.ok || !result.success) { setError(result.error ?? 'Failed to cancel.'); return }
+      setIssue(prev => ({ ...prev, status: 'approved' }))
+      toast.success('Schedule cancelled')
+    } catch {
+      setError('Network error.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="p-4 sm:p-8 max-w-6xl mx-auto">
       <Link
@@ -205,6 +284,46 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
           {issue.issue_date && (
             <p className="text-xs text-ink-muted mt-1">{formatDate(issue.issue_date)}</p>
           )}
+          {/* D11: AI subject suggestions */}
+          {polished && (
+            <div className="relative mt-1">
+              <button
+                onClick={handleSuggestSubjects}
+                disabled={isLoadingSuggestions}
+                className="inline-flex items-center gap-1 text-[11px] text-ink/30 hover:text-accent transition-colors"
+              >
+                <Wand2 className="h-3 w-3" />
+                {isLoadingSuggestions ? 'Generating subjects…' : 'Suggest subjects'}
+              </button>
+              {showSuggestions && (
+                <div className="absolute top-5 left-0 z-20 w-80 bg-surface border border-line rounded-xl shadow-lg overflow-hidden">
+                  <div className="px-3 py-2 border-b border-line flex items-center justify-between">
+                    <p className="text-[10px] font-600 uppercase tracking-wide text-ink/40">Subject suggestions</p>
+                    <button onClick={() => setShowSuggestions(false)} className="text-ink/30 hover:text-ink transition-colors"><X className="h-3.5 w-3.5" /></button>
+                  </div>
+                  {isLoadingSuggestions ? (
+                    <div className="px-4 py-5 flex items-center gap-2 text-xs text-ink/40">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Asking Claude…
+                    </div>
+                  ) : subjectSuggestions.length > 0 ? (
+                    <div className="py-1">
+                      {subjectSuggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSelectSuggestion(s)}
+                          className="w-full text-left text-xs text-ink/80 hover:text-ink hover:bg-elevated px-4 py-2.5 transition-colors"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="px-4 py-4 text-xs text-ink/30">No suggestions available.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -223,7 +342,11 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
               variant={action.variant}
               size="sm"
               disabled={isSaving}
-              onClick={() => action.next === 'published' ? handlePublishClick() : handleStatusChange(action.next)}
+              onClick={() => {
+                if (action.next === 'published') handlePublishClick()
+                else if (issue.status === 'scheduled' && action.next === 'approved') handleCancelSchedule()
+                else handleStatusChange(action.next)
+              }}
             >
               {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {action.label}
@@ -415,28 +538,73 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
                 )}
               </div>
 
-              <p className="text-xs text-ink/40 leading-relaxed">
-                This will send <strong className="text-ink/60">{issue.title ?? 'this issue'}</strong> to all active subscribers
-                of <strong className="text-ink/60">{newsletterName}</strong> and mark the issue as published.
-                This action cannot be undone.
-              </p>
+              {/* D12: Schedule toggle */}
+              <div className="bg-elevated rounded-lg border border-line p-4 space-y-3">
+                <button
+                  onClick={() => setScheduledMode(v => !v)}
+                  className="w-full flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-accent/60" />
+                    <span className="text-xs font-600 text-ink">Schedule for later</span>
+                  </div>
+                  <div className={`h-5 w-9 rounded-full transition-colors border ${scheduledMode ? 'bg-accent border-accent' : 'bg-elevated border-ink/20'}`}>
+                    <div className={`h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform m-0.5 ${scheduledMode ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </div>
+                </button>
+                {scheduledMode && (
+                  <div className="pt-1 border-t border-line">
+                    <p className="text-[11px] text-ink/40 mb-1.5">Send date & time</p>
+                    <input
+                      type="datetime-local"
+                      value={scheduledAt}
+                      min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
+                      onChange={e => setScheduledAt(e.target.value)}
+                      className="w-full text-xs text-ink bg-surface rounded px-2.5 py-2 border border-line focus:outline-none focus:border-accent/50"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {!scheduledMode && (
+                <p className="text-xs text-ink/40 leading-relaxed">
+                  This will send <strong className="text-ink/60">{issue.title ?? 'this issue'}</strong> to all active subscribers
+                  of <strong className="text-ink/60">{newsletterName}</strong> and mark the issue as published.
+                  This action cannot be undone.
+                </p>
+              )}
 
               <div className="flex justify-end gap-2 pt-1">
-                <Button variant="outline" size="sm" onClick={() => setShowSendDialog(false)} disabled={isSending}>
+                <Button variant="outline" size="sm" onClick={() => setShowSendDialog(false)} disabled={isSending || isScheduling}>
                   Cancel
                 </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  disabled={isSending || recipientCount === 0 || (abEnabled && !abSubjectB.trim())}
-                  onClick={handleSend}
-                >
-                  {isSending ? (
-                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</>
-                  ) : (
-                    <><Send className="h-3.5 w-3.5" /> Send to {recipientCount?.toLocaleString()} subscriber{recipientCount !== 1 ? 's' : ''}</>
-                  )}
-                </Button>
+                {scheduledMode ? (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    disabled={isScheduling || !scheduledAt}
+                    onClick={handleSchedule}
+                  >
+                    {isScheduling ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Scheduling…</>
+                    ) : (
+                      <><Clock className="h-3.5 w-3.5" /> Schedule send</>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    disabled={isSending || recipientCount === 0 || (abEnabled && !abSubjectB.trim())}
+                    onClick={handleSend}
+                  >
+                    {isSending ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</>
+                    ) : (
+                      <><Send className="h-3.5 w-3.5" /> Send to {recipientCount?.toLocaleString()} subscriber{recipientCount !== 1 ? 's' : ''}</>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

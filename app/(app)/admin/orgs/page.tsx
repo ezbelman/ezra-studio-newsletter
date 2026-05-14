@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { Building2, Users, Newspaper, FileText, Crown, Shield, Pen, Eye } from 'lucide-react'
+import { Building2, Users, Newspaper, FileText, Crown, Shield, Pen, Eye, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 
 export const metadata = { title: 'Organizations' }
 
@@ -68,12 +69,15 @@ export default async function OrgsPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h2 className="text-sm font-700 text-ink">{org.name}</h2>
+                    <Link href={`/admin/orgs/${org.id}`} className="text-sm font-700 text-ink hover:text-accent transition-colors">{org.name}</Link>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-700 border capitalize ${planCls}`}>{org.plan}</span>
                   </div>
                   <p className="text-xs text-ink/40 font-mono">{org.slug} · created {createdAt}</p>
                 </div>
                 {/* Stats */}
+                <Link href={`/admin/orgs/${org.id}`} className="shrink-0 p-1.5 rounded-lg text-ink/20 hover:text-accent hover:bg-accent/10 transition-colors" title="View details">
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
                 <div className="flex items-center gap-4 text-xs text-ink/40">
                   {[
                     { icon: Newspaper, val: nlByOrg[org.id]    ?? 0, label: 'newsletters' },

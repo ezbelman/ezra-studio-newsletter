@@ -61,21 +61,21 @@ Known regressions and silent failures in the core product.
 
 ---
 
-## Group D — Growth Features 🚀 Future
+## Group D — Growth Features ✅ Complete (core items)
 
 Features to turn Newsletter Studio into a competitive SaaS product.
 
-| # | Feature | Priority | Notes |
-|---|---------|----------|-------|
-| D1 | Billing / plan management UI (Stripe integration) | High | Unlock plan gating already in schema |
-| D2 | Org impersonation for support — admin opens any org as read-only | High | Needs RLS bypass + audit log |
-| D3 | Newsletter analytics dashboard — open rate, click rate, unsubscribe trend | High | Needs tracking pixel + link wrapper |
-| D4 | Subscriber import via CSV | Medium | Already on UI roadmap, no backend yet |
-| D5 | Custom domain sending (per-org FROM address, Resend domain verification) | Medium | |
-| D6 | Admin read-only newsletter view — see any org's drafts from `/admin/orgs/[id]` | Medium | |
-| D7 | Invite link flow (email invite → accept → org member) | Medium | Currently only admin can add members |
-| D8 | Unsubscribe page + one-click opt-out link in emails | High | Legal requirement (CAN-SPAM / GDPR) |
-| D9 | GDPR data export / deletion request flow | Medium | |
-| D10 | Multi-newsletter support per org (UI to switch between newsletters) | Low | Schema ready, UI missing |
-| D11 | AI subject line suggestions | Low | |
-| D12 | Scheduled send (pick date/time, queue send) | Low | |
+| # | Feature | Priority | Status | Notes |
+|---|---------|----------|--------|-------|
+| D1 | Billing / plan management UI (Stripe integration) | High | 🔲 Future | External service setup required |
+| D2 | Org impersonation for support — admin opens any org as read-only | High | ✅ | `/admin/orgs/[id]` — full org detail with newsletters, issues, members, activity |
+| D3 | Newsletter analytics dashboard — open rate, click rate, unsubscribe trend | High | ✅ | `/analytics` and `/analytics/[sendId]` pages built |
+| D4 | Subscriber import via CSV | Medium | ✅ | `ImportCsvDialog` + `importSubscribers` action |
+| D5 | Custom domain sending (per-org FROM address, Resend domain verification) | Medium | 🔲 Future | Resend domain API setup required |
+| D6 | Admin read-only newsletter view — see any org's drafts from `/admin/orgs/[id]` | Medium | ✅ | Covered by D2 |
+| D7 | Invite link flow (email invite → accept → org member) | Medium | ✅ | `/team` invite form, `/invite/accept` page, `org_invitations` table |
+| D8 | Unsubscribe page + one-click opt-out link in emails | High | ✅ | `/unsubscribe` page, token-based opt-out in all sent emails |
+| D9 | GDPR data export / deletion request flow | Medium | 🔲 Future | Complex compliance scope |
+| D10 | Multi-newsletter support per org (UI to switch between newsletters) | Low | ✅ | `/newsletters` list is the switcher; all pages are newsletter-scoped |
+| D11 | AI subject line suggestions | Low | ✅ | "Suggest subjects" button in issue editor, Claude generates 5 options |
+| D12 | Scheduled send (pick date/time, queue send) | Low | ✅ | Schedule toggle in send dialog, `/api/cron/scheduled-sends` runs every 5 min |
