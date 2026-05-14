@@ -11,7 +11,11 @@ export function DeleteAutomationButton({ id }: { id: string }) {
 
   function handleDelete() {
     if (!confirm('Delete this automation? Enrolled subscribers will not be affected.')) return
-    start(async () => { await deleteAutomation(id); router.refresh() })
+    start(async () => {
+      const result = await deleteAutomation(id)
+      if ('error' in result) { alert(result.error); return }
+      router.refresh()
+    })
   }
 
   return (

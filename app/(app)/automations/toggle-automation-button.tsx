@@ -12,7 +12,11 @@ export function ToggleAutomationButton({ id, status }: { id: string; status: str
 
   return (
     <button
-      onClick={() => start(async () => { await toggleAutomation(id, status); router.refresh() })}
+      onClick={() => start(async () => {
+        const result = await toggleAutomation(id, status)
+        if ('error' in result) { alert(result.error); return }
+        router.refresh()
+      })}
       disabled={pending}
       title={isActive ? 'Pause automation' : 'Resume automation'}
       className="p-2 rounded-lg hover:bg-elevated text-ink/30 hover:text-ink transition-colors disabled:opacity-40"

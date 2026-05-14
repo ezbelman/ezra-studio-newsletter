@@ -12,7 +12,8 @@ export function DeleteSegmentButton({ id }: { id: string }) {
   function handleDelete() {
     if (!confirm('Delete this segment? This cannot be undone.')) return
     start(async () => {
-      await deleteSegment(id)
+      const result = await deleteSegment(id)
+      if ('error' in result) { alert(result.error); return }
       router.refresh()
     })
   }

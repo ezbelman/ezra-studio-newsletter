@@ -39,7 +39,7 @@ export default async function CalendarPage() {
 
   const { data: issues } = membership ? await supabase
     .from('issues')
-    .select('id, title, status, issue_date, scheduled_at, newsletters(name)')
+    .select('id, title, status, issue_date, scheduled_at, newsletter_id, newsletters(name)')
     .eq('org_id', membership.org_id)
     .or(`issue_date.gte.${monthStart},scheduled_at.gte.${monthStart}`)
     .or(`issue_date.lte.${monthEnd},scheduled_at.lte.${monthEnd}`)

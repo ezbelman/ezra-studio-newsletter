@@ -12,7 +12,8 @@ export function DeleteTemplateButton({ id }: { id: string }) {
   function handleDelete() {
     if (!confirm('Delete this template? This cannot be undone.')) return
     start(async () => {
-      await deleteTemplate(id)
+      const result = await deleteTemplate(id)
+      if ('error' in result) { alert(result.error); return }
       router.refresh()
     })
   }

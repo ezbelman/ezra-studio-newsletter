@@ -45,19 +45,19 @@ Full-featured admin shell visible only to `is_platform_admin = true` users.
 
 ---
 
-## Group C — Product Bug Fixes 🔧 In Progress
+## Group C — Product Bug Fixes ✅ Complete
 
 Known regressions and silent failures in the core product.
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| C1 | Calendar page broken — `newsletter_id` missing from select in `/calendar/page.tsx` | 🔲 | |
-| C2 | Segments page silent errors — delete/toggle swallows errors without user feedback | 🔲 | |
-| C3 | Templates page silent errors — same pattern as C2 | 🔲 | |
-| C4 | Automations page silent errors — same pattern as C2 | 🔲 | |
-| C5 | `automation_enrollments` schema — verify `next_step_at` column exists, add if missing | 🔲 | May require `ALTER TABLE` |
-| C6 | Segments migration conflict — two migration files define overlapping schema | 🔲 | Needs dedup |
-| C7 | Automation execution engine — `next_step_at` cron / background worker | 🔲 | |
+| C1 | Calendar page broken — `newsletter_id` missing from select in `/calendar/page.tsx` | ✅ | |
+| C2 | Segments page silent errors — delete/toggle swallows errors without user feedback | ✅ | |
+| C3 | Templates page silent errors — same pattern as C2 | ✅ | |
+| C4 | Automations page silent errors — same pattern as C2 | ✅ | |
+| C5 | `automation_enrollments` schema — verify `next_step_at` column exists, add if missing | ✅ | `20260514_fixup.sql` |
+| C6 | Segments/templates migration conflict — stale RLS policies from new_features.sql | ✅ | `20260514_fixup.sql` |
+| C7 | Automation execution engine — `next_step_at` cron / background worker | ✅ | `/api/cron/automations`, runs every 5 min |
 
 ---
 
