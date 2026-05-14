@@ -78,7 +78,7 @@ export default async function ActivityPage() {
               <div className="bg-surface border border-line rounded-xl overflow-hidden divide-y divide-line">
                 {entries!.map(a => {
                   const meta = ACTION_META[a.action]
-                  const org  = a.organizations as { name: string } | null
+                  const org  = a.organizations as unknown as { name: string } | null
                   const who  = profileMap[a.user_id ?? ''] ?? 'Someone'
                   const label = meta?.label ?? a.action
 

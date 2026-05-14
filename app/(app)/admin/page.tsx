@@ -122,7 +122,7 @@ export default async function AdminDashboard() {
               <div className="divide-y divide-line">
                 {(activityRaw ?? []).map(a => {
                   const meta   = ACTION_META[a.action]
-                  const org    = a.organizations as { name: string } | null
+                  const org    = a.organizations as unknown as { name: string } | null
                   const who    = profileMap[a.user_id ?? ''] ?? 'Someone'
                   const label  = meta?.label ?? a.action
 
