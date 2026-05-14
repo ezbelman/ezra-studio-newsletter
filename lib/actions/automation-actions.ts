@@ -123,7 +123,7 @@ export async function enrollSubscriberInAutomations(
   if (!automations || automations.length === 0) return
 
   for (const auto of automations) {
-    const steps = auto.steps as { delay_hours: number }[]
+    const steps = auto.steps as unknown as { delay_hours: number }[]
     const firstDelay = steps[0]?.delay_hours ?? 0
     const nextStepAt = firstDelay > 0
       ? new Date(Date.now() + firstDelay * 3600 * 1000).toISOString()

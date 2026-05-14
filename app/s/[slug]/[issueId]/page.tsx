@@ -55,7 +55,7 @@ export default async function IssueArchivePage({ params }: Props) {
 
   const org     = nl.organizations
   const color   = org?.primary_color ?? '#7B5CF0'
-  const polished = issue.polished_json as PolishedContent | null
+  const polished = issue.polished_json as unknown as PolishedContent | null
 
   const publishedDate = issue.published_at
     ? new Date(issue.published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })

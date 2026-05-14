@@ -42,7 +42,7 @@ export default async function SegmentsPage() {
 
   const segs = segments ?? []
   const nl   = newsletters ?? []
-  const dynamicCount = segs.filter(s => (s.rules as Rule[]).length > 0).length
+  const dynamicCount = segs.filter(s => (s.rules as unknown as Rule[]).length > 0).length
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl">

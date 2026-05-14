@@ -69,8 +69,8 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
   const [abSubjectB,      setAbSubjectB]      = useState(initialIssue.ab_subject_b ?? '')
   const [error,           setError]           = useState('')
 
-  const rawNotesText = (issue.raw_notes as { text: string } | null)?.text ?? ''
-  const polished     = issue.polished_json as PolishedContent | null
+  const rawNotesText = (issue.raw_notes as unknown as { text: string } | null)?.text ?? ''
+  const polished     = issue.polished_json as unknown as PolishedContent | null
   const actions      = STATUS_ACTIONS[issue.status] ?? []
 
   async function handlePolish() {
