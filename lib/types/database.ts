@@ -476,6 +476,27 @@ export interface Database {
           { foreignKeyName: 'automation_enrollments_subscriber_id_fkey'; columns: ['subscriber_id']; isOneToOne: false; referencedRelation: 'subscribers'; referencedColumns: ['id'] }
         ]
       }
+      org_usage: {
+        Row: {
+          org_id:    string
+          month:     string
+          sends:     number
+          ai_polish: number
+        }
+        Insert: {
+          org_id:    string
+          month:     string
+          sends?:    number
+          ai_polish?: number
+        }
+        Update: {
+          sends?:    number
+          ai_polish?: number
+        }
+        Relationships: [
+          { foreignKeyName: 'org_usage_org_id_fkey'; columns: ['org_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] }
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -489,6 +510,10 @@ export interface Database {
       create_organization_for_user: {
         Args: { p_name: string; p_slug: string }
         Returns: string
+      }
+      increment_org_usage: {
+        Args: { p_org_id: string; p_month: string; p_field: string; p_amount?: number }
+        Returns: void
       }
     }
     Enums: Record<string, never>

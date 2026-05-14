@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireOwnerOrAdmin } from '@/lib/data/require-org-access'
+import { checkOrgLimit } from '@/lib/billing/check-limit'
 import { z } from 'zod'
 import type { Role } from '@/lib/types/database'
 
@@ -21,6 +22,9 @@ export async function inviteMember(formData: FormData) {
   if (!parsed.success) return { error: 'Invalid input.' }
 
   const { email, role } = parsed.data
+
+  const check = await checkOrgLimit(orgId, 'seats')
+  if (!check.allowed) return { error: check.message }
 
   const { data: existing } = await supabase
     .from('org_invitations')

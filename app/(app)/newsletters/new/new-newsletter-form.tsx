@@ -2,21 +2,20 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createNewsletter } from './actions'
 import { slugify } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 
-export function NewNewsletterForm({ orgId }: { orgId: string }) {
-  const router   = useRouter()
-  const supabase = createClient()
+export function NewNewsletterForm({ orgId: _ }: { orgId: string }) {
+  const router = useRouter()
 
-  const [name,        setName]        = useState('')
-  const [description, setDescription] = useState('')
-  const [error,       setError]       = useState('')
-  const [loading,     setLoading]     = useState(false)
+  const [name,        setName]    = useState('')
+  const [description, setDesc]    = useState('')
+  const [error,       setError]   = useState('')
+  const [loading,     setLoading] = useState(false)
 
   const slug = slugify(name)
 
@@ -26,24 +25,17 @@ export function NewNewsletterForm({ orgId }: { orgId: string }) {
     setError('')
     setLoading(true)
 
-    const { data: nl, error: nlErr } = await supabase
-      .from('newsletters')
-      .insert({
-        org_id: orgId,
-        name: name.trim(),
-        description: description.trim() || null,
-        slug,
-      })
-      .select('id')
-      .single()
+    const fd = new FormData()
+    fd.set('name', name.trim())
+    if (description.trim()) fd.set('description', description.trim())
 
-    if (nlErr) {
-      setError(nlErr.message)
+    const result = await createNewsletter(fd)
+    if ('error' in result) {
+      setError(result.error)
       setLoading(false)
       return
     }
-
-    router.push(`/newsletters/${nl.id}`)
+    router.push(`/newsletters/${result.id}`)
   }
 
   return (
@@ -72,7 +64,7 @@ export function NewNewsletterForm({ orgId }: { orgId: string }) {
             <textarea
               id="desc"
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={e => setDesc(e.target.value)}
               placeholder="A brief description of your newsletter's topic and audience"
               rows={3}
               className="w-full rounded-sm border border-line bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted/50 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent resize-none"

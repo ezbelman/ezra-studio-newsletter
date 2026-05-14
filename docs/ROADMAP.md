@@ -67,15 +67,88 @@ Features to turn Newsletter Studio into a competitive SaaS product.
 
 | # | Feature | Priority | Status | Notes |
 |---|---------|----------|--------|-------|
-| D1 | Billing / plan management UI (Stripe integration) | High | 🔲 Future | External service setup required |
+| D1 | Billing / plan management UI (Stripe integration) | High | 🔲 Phase 4 | External service setup required |
 | D2 | Org impersonation for support — admin opens any org as read-only | High | ✅ | `/admin/orgs/[id]` — full org detail with newsletters, issues, members, activity |
 | D3 | Newsletter analytics dashboard — open rate, click rate, unsubscribe trend | High | ✅ | `/analytics` and `/analytics/[sendId]` pages built |
 | D4 | Subscriber import via CSV | Medium | ✅ | `ImportCsvDialog` + `importSubscribers` action |
-| D5 | Custom domain sending (per-org FROM address, Resend domain verification) | Medium | 🔲 Future | Resend domain API setup required |
+| D5 | Custom domain sending (per-org FROM address, Resend domain verification) | Medium | 🔲 Phase 4 | Resend domain API setup required |
 | D6 | Admin read-only newsletter view — see any org's drafts from `/admin/orgs/[id]` | Medium | ✅ | Covered by D2 |
 | D7 | Invite link flow (email invite → accept → org member) | Medium | ✅ | `/team` invite form, `/invite/accept` page, `org_invitations` table |
 | D8 | Unsubscribe page + one-click opt-out link in emails | High | ✅ | `/unsubscribe` page, token-based opt-out in all sent emails |
-| D9 | GDPR data export / deletion request flow | Medium | 🔲 Future | Complex compliance scope |
+| D9 | GDPR data export / deletion request flow | Medium | 🔲 Phase 4 | Complex compliance scope |
 | D10 | Multi-newsletter support per org (UI to switch between newsletters) | Low | ✅ | `/newsletters` list is the switcher; all pages are newsletter-scoped |
 | D11 | AI subject line suggestions | Low | ✅ | "Suggest subjects" button in issue editor, Claude generates 5 options |
 | D12 | Scheduled send (pick date/time, queue send) | Low | ✅ | Schedule toggle in send dialog, `/api/cron/scheduled-sends` runs every 5 min |
+
+---
+
+## Phase 1 — Security & Stability 🔄 In Progress
+
+> Target: 2 weeks. Blockers and high-severity issues from the [expert audit](./AUDIT.md).
+
+| # | Task | Priority | Status | Notes |
+|---|------|----------|--------|-------|
+| P1-1 | `middleware.ts` — server-side auth guard for all app + API routes | BLOCKER-1 | ✅ | Redirect unauthenticated to `/login` |
+| P1-2 | Error boundaries — `error.tsx` at `app/`, `app/(app)/`, `app/(app)/admin/` | HIGH-8 | ✅ | Friendly fallback + retry |
+| P1-3 | `lib/billing/limits.ts` — `PLAN_LIMITS` constant | BLOCKER-2 | ✅ | trial/starter/pro/enterprise |
+| P1-4 | `supabase/migrations/20260515_org_usage.sql` — `org_usage` table | BLOCKER-2 | ✅ | Monthly send + AI counters |
+| P1-5 | `lib/billing/check-limit.ts` — `checkOrgLimit()` + `incrementUsage()` | BLOCKER-2 | ✅ | Used at every enforcement point |
+| P1-6 | Enforce newsletter limit in `new-newsletter-form.tsx` → convert to server action | BLOCKER-2 | ✅ | `newsletters/new/actions.ts` |
+| P1-7 | Enforce seat limit in `team/actions.ts → inviteMember()` | BLOCKER-2 | ✅ | |
+| P1-8 | Enforce email send limit in `/api/issues/[issueId]/send` | BLOCKER-2 | ✅ | Also applied to scheduled-sends cron |
+| P1-9 | Enforce AI polish limit in `/api/ai/polish` | BLOCKER-2 | ✅ | Platform key only |
+| P1-10 | Extract `lib/email/dispatch-issue.ts` — shared send logic (eliminating duplication) | BLOCKER-5 | 🔲 | Both send route + scheduled-sends cron use it |
+| P1-11 | Interactive calendar — URL search param month/year navigation | BLOCKER-4 | ✅ | `?year=&month=` params, `<Link>` nav |
+| P1-12 | Approval notification email — notify owners/admins when `pending_approval` | BLOCKER-3 | ✅ | `/api/issues/[issueId]/status` route + editor update |
+| P1-13 | Issue autosave — debounced raw_notes save in issue editor | HIGH | 🔲 | 2-second debounce |
+| P1-14 | Email preview modal + "Send test to self" | HIGH-1 | 🔲 | `/api/issues/[issueId]/preview` route |
+| P1-15 | `needs_revision` status + reviewer comment | M-15 | 🔲 | Extend issue status workflow |
+| P1-16 | Timezone label in schedule datetime UI | HIGH-7 | 🔲 | Detect + display user TZ |
+
+---
+
+## Phase 2 — Editor & Content Quality
+
+> Target: Weeks 3–4. Polish the issue creation and approval workflow.
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| P2-1 | Issue version history viewer — UI for `issue_versions` table + restore | M-4 | 🔲 |
+| P2-2 | Subscriber tag UI — inline chip editor + tag filter in segments | HIGH-4 | 🔲 |
+| P2-3 | Expanded role model — add `reviewer` + `contributor` roles | HIGH-3 | 🔲 |
+| P2-4 | Confirmation dialogs — delete issue, remove member, delete newsletter | M-5 | 🔲 |
+| P2-5 | Bulk subscriber actions — bulk tag, bulk unsubscribe, bulk delete | M-6 | 🔲 |
+| P2-6 | A/B test results split in analytics `/analytics/[sendId]` | M-8 | 🔲 |
+| P2-7 | Read-time estimate in issue editor (words ÷ 200 wpm) | M-10 | 🔲 |
+| P2-8 | Styled invitation emails with org branding | M-2 | 🔲 |
+| P2-9 | Activity log pagination — infinite scroll beyond 200 entries | M-3 | 🔲 |
+
+---
+
+## Phase 3 — Growth & Discovery
+
+> Target: Weeks 5–6. Make the product sticky and discoverable.
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| P3-1 | Global search modal (Cmd+K) — issues, subscribers, newsletters | HIGH-2 | 🔲 |
+| P3-2 | Automation step drag-and-drop reorder | M-7 | 🔲 |
+| P3-3 | Segment live count preview (real-time subscriber count for rule set) | — | 🔲 |
+| P3-4 | Per-org send rate throttle | M-9 | 🔲 |
+| P3-5 | Webhook retry for failed open/click events | M-11 | 🔲 |
+| P3-6 | Multi-template email layout library | HIGH-5 | 🔲 |
+| P3-7 | Public subscriber widget / embed code | M-14 | 🔲 |
+
+---
+
+## Phase 4 — Platform & Scale
+
+> Target: Weeks 7–8. External integrations and compliance.
+
+| # | Task | Priority | Status | Notes |
+|---|------|----------|--------|-------|
+| P4-1 | Stripe billing integration — plan upgrades, payment method, invoices | D1 | 🔲 | External Stripe setup required |
+| P4-2 | Custom domain sending — per-org FROM address via Resend domain API | D5 | 🔲 | Resend domain setup required |
+| P4-3 | GDPR data export + deletion request flow | D9 | 🔲 | Complex compliance scope |
+| P4-4 | Rate limiting via Redis/Upstash (replace DB-based throttle) | — | 🔲 | For scale beyond ~1k orgs |
+| P4-5 | Webhook retry infrastructure | — | 🔲 | Queue-backed retry with exponential backoff |

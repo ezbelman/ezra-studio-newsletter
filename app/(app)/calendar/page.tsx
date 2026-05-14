@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Calendar, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import Link from 'next/link'
 
 export const metadata = { title: 'Calendar' }
 
 function getMonthDays(year: number, month: number) {
-  const firstDay = new Date(year, month, 1).getDay()
+  const firstDay    = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   return { firstDay, daysInMonth }
 }
@@ -18,7 +19,16 @@ const STATUS_COLORS: Record<string, string> = {
   published:        'bg-success/15 text-success',
 }
 
-export default async function CalendarPage() {
+function navHref(year: number, month1: number) {
+  return `/calendar?year=${year}&month=${month1}`
+}
+
+export default async function CalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string; month?: string }>
+}) {
+  const { year: yearParam, month: monthParam } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -29,9 +39,11 @@ export default async function CalendarPage() {
     .eq('user_id', user.id)
     .single()
 
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth()
+  const now   = new Date()
+  // URL uses 1-indexed month; JS Date uses 0-indexed
+  const year  = yearParam  ? parseInt(yearParam)      : now.getFullYear()
+  const month = monthParam ? parseInt(monthParam) - 1 : now.getMonth()
+
   const { firstDay, daysInMonth } = getMonthDays(year, month)
 
   const monthStart = new Date(year, month, 1).toISOString()
@@ -45,8 +57,17 @@ export default async function CalendarPage() {
     .or(`issue_date.lte.${monthEnd},scheduled_at.lte.${monthEnd}`)
     .order('issue_date', { ascending: true }) : { data: [] }
 
-  const monthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-  const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const displayDate = new Date(year, month, 1)
+  const monthName   = displayDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const DAYS        = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+  // Navigation: month is 1-indexed in URL
+  const prevYear  = month === 0 ? year - 1 : year
+  const prevMonth = month === 0 ? 12 : month        // e.g. Feb(month=1) → Jan URL=1
+  const nextYear  = month === 11 ? year + 1 : year
+  const nextMonth = month === 11 ? 1 : month + 2    // e.g. Jan(month=0) → Feb URL=2
+
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth()
 
   function getIssuesForDay(day: number) {
     const date = new Date(year, month, day)
@@ -86,17 +107,30 @@ export default async function CalendarPage() {
       {/* Month nav */}
       <div className="flex items-center gap-4 mb-6">
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-lg hover:bg-elevated transition-colors text-ink/40 hover:text-ink">
+          <Link
+            href={navHref(prevYear, prevMonth)}
+            className="p-2 rounded-lg hover:bg-elevated transition-colors text-ink/40 hover:text-ink"
+            aria-label="Previous month"
+          >
             <ChevronLeft className="h-4 w-4" />
-          </button>
+          </Link>
           <h2 className="text-lg font-600 text-ink min-w-[200px] text-center">{monthName}</h2>
-          <button className="p-2 rounded-lg hover:bg-elevated transition-colors text-ink/40 hover:text-ink">
+          <Link
+            href={navHref(nextYear, nextMonth)}
+            className="p-2 rounded-lg hover:bg-elevated transition-colors text-ink/40 hover:text-ink"
+            aria-label="Next month"
+          >
             <ChevronRight className="h-4 w-4" />
-          </button>
+          </Link>
         </div>
-        <button className="px-3 py-1.5 text-sm text-ink/50 hover:text-ink border border-line rounded-lg hover:bg-elevated transition-colors">
-          Today
-        </button>
+        {!isCurrentMonth && (
+          <Link
+            href="/calendar"
+            className="px-3 py-1.5 text-sm text-ink/50 hover:text-ink border border-line rounded-lg hover:bg-elevated transition-colors"
+          >
+            Today
+          </Link>
+        )}
       </div>
 
       {/* Legend */}
@@ -125,7 +159,7 @@ export default async function CalendarPage() {
         {Array.from({ length: cells.length / 7 }, (_, wi) => (
           <div key={wi} className="grid grid-cols-7 border-b border-line last:border-b-0">
             {cells.slice(wi * 7, wi * 7 + 7).map((day, di) => {
-              const isToday = day === now.getDate()
+              const isToday = isCurrentMonth && day === now.getDate()
               const dayIssues = day ? getIssuesForDay(day) : []
               return (
                 <div
@@ -145,13 +179,13 @@ export default async function CalendarPage() {
                       </span>
                       <div className="space-y-1">
                         {dayIssues.map(issue => (
-                          <a
+                          <Link
                             key={issue.id}
-                            href={`/newsletters/${(issue as any).newsletter_id}/issues/${issue.id}`}
+                            href={`/newsletters/${(issue as { newsletter_id: string }).newsletter_id}/issues/${issue.id}`}
                             className={`block px-1.5 py-0.5 rounded text-[11px] font-500 truncate ${STATUS_COLORS[issue.status] ?? 'bg-ink/10 text-ink/50'}`}
                           >
                             {issue.title}
-                          </a>
+                          </Link>
                         ))}
                       </div>
                     </>

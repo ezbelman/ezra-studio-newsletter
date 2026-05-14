@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getPlatformSetting } from '@/lib/platform/settings'
 import { renderEmailHtml } from '@/lib/email/template'
 import { generateUnsubscribeToken } from '@/lib/email/unsubscribe-token'
+import { checkOrgLimit, incrementUsage } from '@/lib/billing/check-limit'
 import { Resend } from 'resend'
 
 const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
@@ -40,6 +41,9 @@ export async function GET(req: NextRequest) {
   for (const issue of issues ?? []) {
     try {
       if (!issue.polished_json) { failed++; continue }
+
+      const sendCheck = await checkOrgLimit(issue.org_id, 'sends')
+      if (!sendCheck.allowed) { failed++; continue }
 
       const nl  = issue.newsletters as unknown as { name: string; slug: string; organizations: { name: string; primary_color: string | null } } | null
       const org = nl?.organizations
@@ -111,6 +115,7 @@ export async function GET(req: NextRequest) {
           resource_id:   issue.id,
           metadata:      { recipient_count: totalSent, scheduled: true },
         }),
+        incrementUsage(issue.org_id, 'sends', totalSent),
       ])
 
       processed++

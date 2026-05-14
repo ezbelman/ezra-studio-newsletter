@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { checkOrgLimit, incrementUsage } from '@/lib/billing/check-limit'
 import { callAI, type AIProvider } from '@/lib/ai/providers'
 import { MAX_TOKENS_POLISH, POLISH_SYSTEM_PROMPT } from '@/lib/ai/constants'
 
@@ -60,6 +61,11 @@ export async function POST(request: NextRequest) {
         { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfter) } }
       )
     }
+
+    const billingCheck = await checkOrgLimit(membership?.org_id ?? '', 'aiPolish')
+    if (!billingCheck.allowed) {
+      return NextResponse.json({ success: false, error: billingCheck.message }, { status: 402 })
+    }
   }
 
   try {
@@ -73,6 +79,10 @@ export async function POST(request: NextRequest) {
 
     const jsonText = rawText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
     const polished = JSON.parse(jsonText)
+
+    if (provider === 'platform' && membership?.org_id) {
+      await incrementUsage(membership.org_id, 'ai_polish')
+    }
 
     return NextResponse.json({ success: true, data: { polished } })
   } catch (e) {

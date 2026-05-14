@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { renderEmailHtml } from '@/lib/email/template'
 import { generateUnsubscribeToken } from '@/lib/email/unsubscribe-token'
 import { getPlatformSetting } from '@/lib/platform/settings'
+import { checkOrgLimit, incrementUsage } from '@/lib/billing/check-limit'
 import { Resend } from 'resend'
 
 const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
@@ -62,6 +63,11 @@ export async function POST(
 
   if (!issue.polished_json) {
     return NextResponse.json({ error: 'Issue has no content — polish it first' }, { status: 400 })
+  }
+
+  const sendCheck = await checkOrgLimit(membership.org_id, 'sends')
+  if (!sendCheck.allowed) {
+    return NextResponse.json({ error: sendCheck.message }, { status: 402 })
   }
 
   const nl         = issue.newsletters as { name: string; slug: string; organizations: { name: string; primary_color: string | null } } | null
@@ -176,6 +182,7 @@ export async function POST(
         metadata:      { recipient_count: totalSent, ab_subject_b: abSubjectB },
       })
 
+      await incrementUsage(membership.org_id, 'sends', totalSent)
       return NextResponse.json({ success: true, recipients: totalSent, abEnabled: true })
     }
 
@@ -207,6 +214,7 @@ export async function POST(
       metadata:      { recipient_count: totalSent },
     })
 
+    await incrementUsage(membership.org_id, 'sends', totalSent)
     return NextResponse.json({ success: true, recipients: totalSent, abEnabled: false })
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Send failed'

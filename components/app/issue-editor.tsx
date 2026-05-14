@@ -119,18 +119,18 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
     setError('')
 
     try {
-      const { error: updateError } = await supabase
-        .from('issues')
-        .update({
-          status:       next,
-          published_at: next === 'published' ? new Date().toISOString() : undefined,
-        })
-        .eq('id', issue.id)
-
-      if (updateError) { setError(updateError.message); return }
+      const res = await fetch(`/api/issues/${issue.id}/status`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status: next }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Failed to update status'); return }
       setIssue(prev => ({ ...prev, status: next }))
       const label = next === 'approved' ? 'Issue approved' : `Status → ${issueStatusLabel(next)}`
       toast.success(label)
+    } catch {
+      setError('Network error — please try again')
     } finally {
       setIsSaving(false)
     }
