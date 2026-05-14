@@ -58,7 +58,8 @@ const STATUS_ACTIONS: Partial<Record<IssueStatus, { label: string; next: IssueSt
 }
 
 export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName }: Props) {
-  const supabase = createClient()
+  // useMemo keeps the same Supabase client instance across renders so useCallback deps stay stable
+  const supabase = useMemo(() => createClient(), [])
 
   const [issue,           setIssue]           = useState(initialIssue)
   const [isPolishing,     setIsPolishing]     = useState(false)
@@ -83,13 +84,16 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
   const [isSendingTest,        setIsSendingTest]        = useState(false)
   const [testSentTo,           setTestSentTo]           = useState('')
 
-  const initialNotes = (initialIssue.raw_notes as unknown as { text: string } | null)?.text ?? ''
+  const initialNotes = useMemo(
+    () => (initialIssue.raw_notes as unknown as { text: string } | null)?.text ?? '',
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []  // stable — initialIssue is a server-rendered prop that never changes after mount
+  )
   const [editableNotes,  setEditableNotes]  = useState(initialNotes)
   const [notesSaveState, setNotesSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
   const notesSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const rawNotesText = (issue.raw_notes as unknown as { text: string } | null)?.text ?? ''
-  const polished     = issue.polished_json as unknown as PolishedContent | null
+  const polished = issue.polished_json as unknown as PolishedContent | null
   const actions      = STATUS_ACTIONS[issue.status] ?? []
 
   async function handlePreview() {
@@ -533,11 +537,11 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
               </div>
               <p className="text-sm font-600 text-ink mb-1">Not yet polished</p>
               <p className="text-xs text-ink-muted mb-5">
-                {rawNotesText
+                {editableNotes.trim()
                   ? 'Hit "Polish" to let Claude generate the content.'
                   : 'Add raw notes first, then polish.'}
               </p>
-              {rawNotesText && (
+              {editableNotes.trim() && (
                 <Button variant="primary" size="sm" onClick={handlePolish} disabled={isPolishing}>
                   {isPolishing ? (
                     <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Polishing…</>
@@ -736,7 +740,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
               srcDoc={previewHtml}
               title="Email preview"
               className="w-full h-full border-0"
-              sandbox="allow-same-origin"
+              sandbox=""
             />
           </div>
         </div>

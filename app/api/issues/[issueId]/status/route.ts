@@ -44,10 +44,7 @@ export async function PATCH(
 
   const { error } = await supabase
     .from('issues')
-    .update({
-      status:       next,
-      published_at: next === 'published' ? new Date().toISOString() : undefined,
-    })
+    .update({ status: next })
     .eq('id', issueId)
     .eq('org_id', membership.org_id)
 

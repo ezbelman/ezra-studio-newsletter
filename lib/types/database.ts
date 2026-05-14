@@ -3,7 +3,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json } | 
 export type Role = 'owner' | 'admin' | 'editor' | 'viewer' | 'reader'
 export type IssueStatus = 'draft' | 'pending_approval' | 'needs_revision' | 'approved' | 'scheduled' | 'published'
 export type SubscriberStatus = 'active' | 'unsubscribed' | 'bounced'
-export type Plan = 'trial' | 'starter' | 'growth' | 'enterprise'
+export type Plan = 'trial' | 'starter' | 'pro' | 'enterprise'
 
 type Relationship = {
   foreignKeyName: string
