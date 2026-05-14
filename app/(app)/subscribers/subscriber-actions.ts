@@ -29,7 +29,7 @@ export async function addSubscriber(formData: FormData) {
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
   const admin = createAdminClient()
-  const { data: inserted, error } = await admin.from('subscribers').upsert(
+  const { data: rows, error } = await admin.from('subscribers').upsert(
     {
       org_id:        orgId,
       email:         parsed.data.email.toLowerCase().trim(),
@@ -38,12 +38,13 @@ export async function addSubscriber(formData: FormData) {
       status:        'active',
     },
     { onConflict: 'newsletter_id,email', ignoreDuplicates: true }
-  ).select('id').single()
+  ).select('id')
 
   if (error) return { error: error.message }
 
-  if (inserted?.id) {
-    await enrollSubscriberInAutomations(inserted.id, parsed.data.newsletter_id, orgId)
+  const insertedId = rows?.[0]?.id
+  if (insertedId) {
+    await enrollSubscriberInAutomations(insertedId, parsed.data.newsletter_id, orgId)
   }
 
   revalidatePath('/subscribers')
