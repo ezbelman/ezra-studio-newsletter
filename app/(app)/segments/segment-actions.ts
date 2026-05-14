@@ -60,7 +60,6 @@ export async function updateSegment(segmentId: string, data: {
       name,
       description: data.description.trim() || null,
       rules:       data.rules,
-      updated_at:  new Date().toISOString(),
     })
     .eq('id', segmentId)
     .eq('org_id', orgId)

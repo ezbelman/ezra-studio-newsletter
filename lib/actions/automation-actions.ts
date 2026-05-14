@@ -74,7 +74,7 @@ export async function toggleAutomation(automationId: string, currentStatus: stri
   const admin = createAdminClient()
   const { error } = await admin
     .from('automations')
-    .update({ status: nextStatus, updated_at: new Date().toISOString() })
+    .update({ status: nextStatus })
     .eq('id', automationId)
     .eq('org_id', orgId)
 
