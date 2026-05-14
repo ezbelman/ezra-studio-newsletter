@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Sparkles, Loader2, ChevronRight, Send, Users, X, History, FlaskConical, Wand2, Clock } from 'lucide-react'
+import { ArrowLeft, Sparkles, Loader2, ChevronRight, Send, Users, X, History, FlaskConical, Wand2, Clock, Eye, Monitor } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { issueStatusBadgeVariant, issueStatusLabel } from '@/lib/types/display'
 import type { IssueStatus, Json } from '@/lib/types/database'
@@ -77,6 +77,11 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
   const [isScheduling,         setIsScheduling]         = useState(false)
   const [revisionComment,      setRevisionComment]      = useState('')
   const [showRevisionPrompt,   setShowRevisionPrompt]   = useState(false)
+  const [showPreview,          setShowPreview]          = useState(false)
+  const [previewHtml,          setPreviewHtml]          = useState('')
+  const [isLoadingPreview,     setIsLoadingPreview]     = useState(false)
+  const [isSendingTest,        setIsSendingTest]        = useState(false)
+  const [testSentTo,           setTestSentTo]           = useState('')
 
   const initialNotes = (initialIssue.raw_notes as unknown as { text: string } | null)?.text ?? ''
   const [editableNotes,  setEditableNotes]  = useState(initialNotes)
@@ -86,6 +91,37 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
   const rawNotesText = (issue.raw_notes as unknown as { text: string } | null)?.text ?? ''
   const polished     = issue.polished_json as unknown as PolishedContent | null
   const actions      = STATUS_ACTIONS[issue.status] ?? []
+
+  async function handlePreview() {
+    setIsLoadingPreview(true)
+    setTestSentTo('')
+    try {
+      const res = await fetch(`/api/issues/${issue.id}/preview`)
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Preview failed'); return }
+      setPreviewHtml(data.html)
+      setShowPreview(true)
+    } catch {
+      setError('Failed to load preview')
+    } finally {
+      setIsLoadingPreview(false)
+    }
+  }
+
+  async function handleSendTest() {
+    setIsSendingTest(true)
+    setTestSentTo('')
+    try {
+      const res = await fetch(`/api/issues/${issue.id}/preview`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Test send failed'); return }
+      setTestSentTo(data.sentTo)
+    } catch {
+      setError('Test send failed')
+    } finally {
+      setIsSendingTest(false)
+    }
+  }
 
   const saveNotes = useCallback(async (notes: string) => {
     setNotesSaveState('saving')
@@ -369,6 +405,18 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
             History
           </Link>
 
+          {/* P1-14: Email preview */}
+          {polished && (
+            <button
+              onClick={handlePreview}
+              disabled={isLoadingPreview}
+              className="inline-flex items-center gap-1.5 text-xs text-ink/40 hover:text-ink px-2.5 py-1.5 rounded-lg border border-line hover:border-ink/20 transition-colors disabled:opacity-50"
+            >
+              {isLoadingPreview ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+              Preview
+            </button>
+          )}
+
           {actions.map(action => (
             <Button
               key={action.next}
@@ -648,6 +696,48 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email preview modal */}
+      {showPreview && (
+        <div className="fixed inset-0 z-50 flex flex-col">
+          <div className="flex items-center justify-between bg-surface border-b border-line px-5 py-3 shrink-0">
+            <div className="flex items-center gap-3">
+              <Monitor className="h-4 w-4 text-ink/40" />
+              <span className="text-sm font-600 text-ink">Email Preview</span>
+              <span className="text-xs text-ink/40">{issue.title ?? 'Untitled Issue'}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              {testSentTo ? (
+                <span className="text-xs text-success/80">Test sent to {testSentTo}</span>
+              ) : (
+                <button
+                  onClick={handleSendTest}
+                  disabled={isSendingTest}
+                  className="inline-flex items-center gap-1.5 text-xs font-600 px-3 py-1.5 rounded-lg border border-line hover:bg-elevated hover:text-ink text-ink/60 transition-colors disabled:opacity-50"
+                >
+                  {isSendingTest ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                  Send test to myself
+                </button>
+              )}
+              <button
+                onClick={() => { setShowPreview(false); setTestSentTo('') }}
+                className="text-ink/40 hover:text-ink transition-colors"
+                aria-label="Close preview"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 bg-elevated overflow-hidden">
+            <iframe
+              srcDoc={previewHtml}
+              title="Email preview"
+              className="w-full h-full border-0"
+              sandbox="allow-same-origin"
+            />
           </div>
         </div>
       )}

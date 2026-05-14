@@ -101,7 +101,7 @@ Features to turn Newsletter Studio into a competitive SaaS product.
 | P1-11 | Interactive calendar — URL search param month/year navigation | BLOCKER-4 | ✅ | `?year=&month=` params, `<Link>` nav |
 | P1-12 | Approval notification email — notify owners/admins when `pending_approval` | BLOCKER-3 | ✅ | `/api/issues/[issueId]/status` route + editor update |
 | P1-13 | Issue autosave — debounced raw_notes save in issue editor | HIGH | ✅ | 1.5s debounce, raw notes now editable, "Saving…/Saved" indicator |
-| P1-14 | Email preview modal + "Send test to self" | HIGH-1 | 🔲 | `/api/issues/[issueId]/preview` route |
+| P1-14 | Email preview modal + "Send test to self" | HIGH-1 | ✅ | `/api/issues/[issueId]/preview` GET + POST; full-screen iframe modal |
 | P1-15 | `needs_revision` status + reviewer comment | M-15 | ✅ | Dialog with optional comment, notifies author via email |
 | P1-16 | Timezone label in schedule datetime UI | HIGH-7 | ✅ | `Intl.DateTimeFormat().resolvedOptions().timeZone` |
 
