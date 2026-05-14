@@ -67,7 +67,7 @@ export async function POST(
   const nl         = issue.newsletters as { name: string; slug: string; organizations: { name: string; primary_color: string | null } } | null
   const org        = nl?.organizations
   const issueTitle = issue.title ?? 'Newsletter'
-  const polishedJson = issue.polished_json as Parameters<typeof renderEmailHtml>[0]['polishedJson']
+  const polishedJson = issue.polished_json as unknown as Parameters<typeof renderEmailHtml>[0]['polishedJson']
 
   const { data: subscribers } = await supabase
     .from('subscribers')
