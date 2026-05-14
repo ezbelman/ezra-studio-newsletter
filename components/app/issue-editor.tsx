@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -47,9 +47,11 @@ interface Props {
 
 const STATUS_ACTIONS: Partial<Record<IssueStatus, { label: string; next: IssueStatus; variant: 'primary' | 'outline' }[]>> = {
   draft:            [{ label: 'Submit for Approval', next: 'pending_approval', variant: 'primary' }],
+  needs_revision:   [{ label: 'Re-submit for Approval', next: 'pending_approval', variant: 'primary' }],
   pending_approval: [
-    { label: 'Back to Draft', next: 'draft',     variant: 'outline' },
-    { label: 'Approve',        next: 'approved', variant: 'primary' },
+    { label: 'Back to Draft',     next: 'draft',           variant: 'outline' },
+    { label: 'Request Changes',   next: 'needs_revision',  variant: 'outline' },
+    { label: 'Approve',           next: 'approved',        variant: 'primary' },
   ],
   approved:  [{ label: 'Send / Schedule', next: 'published', variant: 'primary' }],
   scheduled: [{ label: 'Cancel Schedule', next: 'approved',  variant: 'outline' }],
@@ -73,21 +75,52 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
   const [scheduledMode,        setScheduledMode]        = useState(false)
   const [scheduledAt,          setScheduledAt]          = useState('')
   const [isScheduling,         setIsScheduling]         = useState(false)
+  const [revisionComment,      setRevisionComment]      = useState('')
+  const [showRevisionPrompt,   setShowRevisionPrompt]   = useState(false)
+
+  const initialNotes = (initialIssue.raw_notes as unknown as { text: string } | null)?.text ?? ''
+  const [editableNotes,  setEditableNotes]  = useState(initialNotes)
+  const [notesSaveState, setNotesSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const notesSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const rawNotesText = (issue.raw_notes as unknown as { text: string } | null)?.text ?? ''
   const polished     = issue.polished_json as unknown as PolishedContent | null
   const actions      = STATUS_ACTIONS[issue.status] ?? []
 
+  const saveNotes = useCallback(async (notes: string) => {
+    setNotesSaveState('saving')
+    try {
+      await supabase.from('issues').update({ raw_notes: notes.trim() ? { text: notes } : null }).eq('id', issue.id)
+      setIssue(prev => ({ ...prev, raw_notes: notes.trim() ? { text: notes } : null }))
+      setNotesSaveState('saved')
+    } catch {
+      setNotesSaveState('idle')
+    }
+  }, [issue.id, supabase])
+
+  useEffect(() => {
+    if (editableNotes === initialNotes) return
+    if (notesSaveTimer.current) clearTimeout(notesSaveTimer.current)
+    notesSaveTimer.current = setTimeout(() => saveNotes(editableNotes), 1500)
+    return () => { if (notesSaveTimer.current) clearTimeout(notesSaveTimer.current) }
+  }, [editableNotes, initialNotes, saveNotes])
+
   async function handlePolish() {
-    if (!rawNotesText.trim()) { setError('No raw notes to polish.'); return }
+    if (!editableNotes.trim()) { setError('No raw notes to polish.'); return }
     setError('')
     setIsPolishing(true)
+
+    // Flush any pending autosave before polishing
+    if (notesSaveTimer.current) {
+      clearTimeout(notesSaveTimer.current)
+      await saveNotes(editableNotes)
+    }
 
     try {
       const res = await fetch('/api/ai/polish', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ rawNotes: rawNotesText, title: issue.title ?? '' }),
+        body:    JSON.stringify({ rawNotes: editableNotes, title: issue.title ?? '' }),
       })
       const result = await res.json()
       if (!res.ok || !result.success) { setError(result.error ?? 'Polish failed.'); return }
@@ -344,6 +377,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
               disabled={isSaving}
               onClick={() => {
                 if (action.next === 'published') handlePublishClick()
+                else if (action.next === 'needs_revision') setShowRevisionPrompt(true)
                 else if (issue.status === 'scheduled' && action.next === 'approved') handleCancelSchedule()
                 else handleStatusChange(action.next)
               }}
@@ -366,13 +400,17 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
         <div className="lg:col-span-2 animate-fade-up delay-100">
           <div className="rounded-lg border border-line bg-surface overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-line">
-              <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Raw Notes</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Raw Notes</h2>
+                {notesSaveState === 'saving' && <span className="text-[10px] text-ink/30 animate-pulse">Saving…</span>}
+                {notesSaveState === 'saved'  && <span className="text-[10px] text-success/60">Saved</span>}
+              </div>
               <Button
                 type="button"
                 variant="primary"
                 size="sm"
                 onClick={handlePolish}
-                disabled={isPolishing || !rawNotesText.trim()}
+                disabled={isPolishing || !editableNotes.trim()}
               >
                 {isPolishing ? (
                   <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Polishing…</>
@@ -381,14 +419,14 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
                 )}
               </Button>
             </div>
-            <div className="px-4 py-3 max-h-[600px] overflow-y-auto">
-              {rawNotesText ? (
-                <p className="text-sm text-ink font-mono leading-relaxed whitespace-pre-wrap">
-                  {rawNotesText}
-                </p>
-              ) : (
-                <p className="text-sm text-ink-muted/50 italic py-4 text-center">No raw notes.</p>
-              )}
+            <div className="px-4 py-3">
+              <textarea
+                value={editableNotes}
+                onChange={e => { setEditableNotes(e.target.value); setNotesSaveState('idle') }}
+                placeholder="Paste your raw notes here…"
+                rows={16}
+                className="w-full bg-transparent text-sm text-ink placeholder:text-ink/20 focus:outline-none resize-none font-mono leading-relaxed"
+              />
             </div>
           </div>
         </div>
@@ -562,6 +600,9 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
                       onChange={e => setScheduledAt(e.target.value)}
                       className="w-full text-xs text-ink bg-surface rounded px-2.5 py-2 border border-line focus:outline-none focus:border-accent/50"
                     />
+                    <p className="text-[10px] text-ink/30 mt-1">
+                      Timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                    </p>
                   </div>
                 )}
               </div>
@@ -605,6 +646,67 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
                     )}
                   </Button>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Changes dialog */}
+      {showRevisionPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowRevisionPrompt(false)}
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-xl border border-line bg-surface shadow-lg animate-scale-in">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h2 className="text-sm font-700 text-ink">Request changes</h2>
+              <button onClick={() => setShowRevisionPrompt(false)} className="text-ink-muted hover:text-ink transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <p className="text-xs text-ink/50 mb-2">Feedback for the author <span className="text-ink/30">(optional)</span></p>
+                <textarea
+                  value={revisionComment}
+                  onChange={e => setRevisionComment(e.target.value)}
+                  placeholder="Describe what needs to be changed…"
+                  rows={4}
+                  className="w-full text-xs text-ink bg-elevated rounded px-3 py-2.5 border border-line focus:outline-none focus:border-accent/50 resize-none placeholder:text-ink/20"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={() => setShowRevisionPrompt(false)}>Cancel</Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={isSaving}
+                  onClick={async () => {
+                    setShowRevisionPrompt(false)
+                    setIsSaving(true)
+                    setError('')
+                    try {
+                      const res = await fetch(`/api/issues/${issue.id}/status`, {
+                        method:  'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body:    JSON.stringify({ status: 'needs_revision', comment: revisionComment }),
+                      })
+                      const data = await res.json()
+                      if (!res.ok) { setError(data.error ?? 'Failed to update status'); return }
+                      setIssue(prev => ({ ...prev, status: 'needs_revision' }))
+                      setRevisionComment('')
+                      toast.success('Changes requested', 'The author has been notified.')
+                    } catch {
+                      setError('Network error — please try again')
+                    } finally {
+                      setIsSaving(false)
+                    }
+                  }}
+                >
+                  {isSaving ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</> : 'Request changes'}
+                </Button>
               </div>
             </div>
           </div>

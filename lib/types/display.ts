@@ -6,11 +6,14 @@ export const issueStatusBadgeVariant: Record<
 > = {
   draft:            'draft',
   pending_approval: 'pending',
+  needs_revision:   'draft',
   approved:         'approved',
   published:        'published',
   scheduled:        'scheduled',
 }
 
 export function issueStatusLabel(status: IssueStatus): string {
-  return status === 'pending_approval' ? 'pending' : status
+  if (status === 'pending_approval') return 'pending'
+  if (status === 'needs_revision')   return 'needs revision'
+  return status
 }

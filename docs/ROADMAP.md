@@ -97,13 +97,13 @@ Features to turn Newsletter Studio into a competitive SaaS product.
 | P1-7 | Enforce seat limit in `team/actions.ts → inviteMember()` | BLOCKER-2 | ✅ | |
 | P1-8 | Enforce email send limit in `/api/issues/[issueId]/send` | BLOCKER-2 | ✅ | Also applied to scheduled-sends cron |
 | P1-9 | Enforce AI polish limit in `/api/ai/polish` | BLOCKER-2 | ✅ | Platform key only |
-| P1-10 | Extract `lib/email/dispatch-issue.ts` — shared send logic (eliminating duplication) | BLOCKER-5 | 🔲 | Both send route + scheduled-sends cron use it |
+| P1-10 | Extract `lib/email/dispatch-issue.ts` — shared send logic (eliminating duplication) | BLOCKER-5 | ✅ | Both send route + scheduled-sends cron refactored |
 | P1-11 | Interactive calendar — URL search param month/year navigation | BLOCKER-4 | ✅ | `?year=&month=` params, `<Link>` nav |
 | P1-12 | Approval notification email — notify owners/admins when `pending_approval` | BLOCKER-3 | ✅ | `/api/issues/[issueId]/status` route + editor update |
-| P1-13 | Issue autosave — debounced raw_notes save in issue editor | HIGH | 🔲 | 2-second debounce |
+| P1-13 | Issue autosave — debounced raw_notes save in issue editor | HIGH | ✅ | 1.5s debounce, raw notes now editable, "Saving…/Saved" indicator |
 | P1-14 | Email preview modal + "Send test to self" | HIGH-1 | 🔲 | `/api/issues/[issueId]/preview` route |
-| P1-15 | `needs_revision` status + reviewer comment | M-15 | 🔲 | Extend issue status workflow |
-| P1-16 | Timezone label in schedule datetime UI | HIGH-7 | 🔲 | Detect + display user TZ |
+| P1-15 | `needs_revision` status + reviewer comment | M-15 | ✅ | Dialog with optional comment, notifies author via email |
+| P1-16 | Timezone label in schedule datetime UI | HIGH-7 | ✅ | `Intl.DateTimeFormat().resolvedOptions().timeZone` |
 
 ---
 

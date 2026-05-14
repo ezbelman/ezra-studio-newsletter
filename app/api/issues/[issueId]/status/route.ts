@@ -5,10 +5,11 @@ import { getPlatformSetting } from '@/lib/platform/settings'
 import { Resend } from 'resend'
 import { z } from 'zod'
 
-const APPROVER_ONLY_STATUSES = ['approved']
+const APPROVER_ONLY_STATUSES = ['approved', 'needs_revision']
 
 const StatusSchema = z.object({
-  status: z.enum(['draft', 'pending_approval', 'approved', 'scheduled']),
+  status:  z.enum(['draft', 'pending_approval', 'needs_revision', 'approved', 'scheduled']),
+  comment: z.string().max(1000).optional(),
 })
 
 export async function PATCH(
@@ -27,7 +28,7 @@ export async function PATCH(
   const parsed = StatusSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
 
-  const { status: next } = parsed.data
+  const { status: next, comment } = parsed.data
 
   const { data: membership } = await supabase
     .from('org_members')
@@ -53,8 +54,10 @@ export async function PATCH(
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
   if (next === 'pending_approval') {
-    // Fire-and-forget — don't fail the request if email delivery fails
     notifyApprovers(issueId, membership.org_id, user.id).catch(() => undefined)
+  }
+  if (next === 'needs_revision') {
+    notifyAuthor(issueId, membership.org_id, user.id, comment ?? '').catch(() => undefined)
   }
 
   return NextResponse.json({ success: true })
@@ -122,4 +125,56 @@ async function notifyApprovers(issueId: string, orgId: string, submittedById: st
       `,
     }))
   )
+}
+
+async function notifyAuthor(issueId: string, orgId: string, reviewerId: string, comment: string) {
+  const [resendKey, fromEmail] = await Promise.all([
+    getPlatformSetting('RESEND_API_KEY'),
+    getPlatformSetting('FROM_EMAIL'),
+  ])
+  if (!resendKey) return
+
+  const admin = createAdminClient()
+
+  const [{ data: issue }, { data: org }, { data: reviewer }] = await Promise.all([
+    admin.from('issues').select('title, created_by').eq('id', issueId).single(),
+    admin.from('organizations').select('name').eq('id', orgId).single(),
+    admin.from('profiles').select('full_name').eq('id', reviewerId).single(),
+  ])
+
+  const authorId = (issue as { title: string | null; created_by: string | null } | null)?.created_by
+  if (!authorId || authorId === reviewerId) return
+
+  const { data: authUser } = await admin.auth.admin.getUserById(authorId)
+  const authorEmail = authUser.user?.email
+  if (!authorEmail) return
+
+  const { data: authorProfile } = await admin.from('profiles').select('full_name').eq('id', authorId).single()
+
+  const APP_URL     = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
+  const orgName     = org?.name ?? 'your organization'
+  const issTitle    = (issue as { title: string | null } | null)?.title ?? 'Untitled Issue'
+  const reviewerName = (reviewer as { full_name: string | null } | null)?.full_name ?? 'A reviewer'
+  const authorName   = (authorProfile as { full_name: string | null } | null)?.full_name ?? 'there'
+  const resend       = new Resend(resendKey)
+  const from         = `Newsletter Studio <${fromEmail ?? 'onboarding@resend.dev'}>`
+
+  await resend.emails.send({
+    from,
+    to:      authorEmail,
+    subject: `[${orgName}] "${issTitle}" needs revision`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <p>Hi ${authorName},</p>
+        <p><strong>${reviewerName}</strong> has requested changes to <strong>"${issTitle}"</strong> in <strong>${orgName}</strong>.</p>
+        ${comment ? `<blockquote style="border-left:3px solid #7B5CF0;margin:16px 0;padding:8px 16px;background:#f5f3ff;border-radius:0 6px 6px 0"><p style="margin:0;font-size:14px">${comment}</p></blockquote>` : ''}
+        <p style="margin:24px 0">
+          <a href="${APP_URL}/newsletters" style="background:#7B5CF0;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600">
+            View in Newsletter Studio →
+          </a>
+        </p>
+        <p style="color:#999;font-size:12px">You received this because you created this issue.</p>
+      </div>
+    `,
+  })
 }
