@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
-import { Building2, Users, Newspaper, FileText } from 'lucide-react'
+import { Building2, Users, Newspaper, FileText, Settings2 } from 'lucide-react'
 import { CreateUserForm } from './create-user-form'
 import { CreateOrgForm } from './create-org-form'
+import { SettingsPanel } from './settings-panel'
+import { getSettingsStatus } from './settings-actions'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -18,12 +20,13 @@ export default async function AdminPage() {
 
   if (!profile?.is_platform_admin) redirect('/dashboard')
 
-  const [{ data: orgs }, { data: users }, { count: nlCount }, { count: issueCount }] =
+  const [{ data: orgs }, { data: users }, { count: nlCount }, { count: issueCount }, settingsStatus] =
     await Promise.all([
       supabase.from('organizations').select('id, name, slug, created_at').order('created_at', { ascending: false }),
       supabase.from('profiles').select('id, full_name, is_platform_admin, created_at').order('created_at', { ascending: false }),
       supabase.from('newsletters').select('*', { count: 'exact', head: true }),
       supabase.from('issues').select('*', { count: 'exact', head: true }),
+      getSettingsStatus(),
     ])
 
   const stats = [
@@ -57,6 +60,18 @@ export default async function AdminPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8 animate-fade-up delay-100">
         <CreateUserForm />
         <CreateOrgForm />
+      </div>
+
+      {/* Platform Settings */}
+      <div className="animate-fade-up delay-100 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Settings2 className="h-4 w-4 text-ink-muted" />
+            <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Platform Settings</h2>
+          </div>
+          <span className="text-xs text-ink-muted">Env vars take precedence over values saved here</span>
+        </div>
+        <SettingsPanel statuses={settingsStatus} />
       </div>
 
       {/* Users table */}

@@ -3,10 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { renderEmailHtml } from '@/lib/email/template'
 import { generateUnsubscribeToken } from '@/lib/email/unsubscribe-token'
+import { getPlatformSetting } from '@/lib/platform/settings'
 import { Resend } from 'resend'
 
 const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
-const FROM_EMAIL = process.env.FROM_EMAIL ?? 'onboarding@resend.dev'
 const BATCH_SIZE = 100
 
 type EmailPayload = {
@@ -80,7 +80,17 @@ export async function POST(
     return NextResponse.json({ error: 'No active subscribers for this newsletter' }, { status: 400 })
   }
 
-  const resend      = new Resend(process.env.RESEND_API_KEY)
+  const [resendKey, fromEmail] = await Promise.all([
+    getPlatformSetting('RESEND_API_KEY'),
+    getPlatformSetting('FROM_EMAIL'),
+  ])
+
+  if (!resendKey) {
+    return NextResponse.json({ error: 'Resend API key not configured — add it in Admin → Platform Settings' }, { status: 500 })
+  }
+
+  const FROM_EMAIL  = fromEmail ?? 'onboarding@resend.dev'
+  const resend      = new Resend(resendKey)
   const adminClient = createAdminClient()
 
   type SubscriberRow = { id: string; email: string; newsletter_id: string }

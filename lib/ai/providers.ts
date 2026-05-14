@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { CLAUDE_MODEL } from './constants'
+import { getPlatformSetting } from '@/lib/platform/settings'
 
 export type AIProvider = 'platform' | 'own_anthropic' | 'own_openai' | 'own_gemini'
 
@@ -16,12 +17,12 @@ export async function callAI(opts: CallOptions): Promise<string> {
 
   if (provider === 'platform' || provider === 'own_anthropic') {
     const apiKey = provider === 'platform'
-      ? process.env.PLATFORM_ANTHROPIC_API_KEY
+      ? await getPlatformSetting('PLATFORM_ANTHROPIC_API_KEY')
       : ownKey
 
     if (!apiKey) throw new Error(
       provider === 'platform'
-        ? 'Platform AI is not configured. Contact your administrator.'
+        ? 'Platform AI is not configured. Add an Anthropic API key in Admin → Platform Settings.'
         : 'No Anthropic API key configured. Add yours in Settings → AI.'
     )
 
