@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
-import { Building2, Users, Newspaper, FileText, Settings2 } from 'lucide-react'
+import { Building2, Users, Newspaper, FileText, Settings2, ShieldCheck } from 'lucide-react'
 import { CreateUserForm } from './create-user-form'
 import { CreateOrgForm } from './create-org-form'
 import { SettingsPanel } from './settings-panel'
+import { PermissionsPanel } from './permissions-panel'
 import { getSettingsStatus } from './settings-actions'
 
 export default async function AdminPage() {
@@ -20,14 +21,27 @@ export default async function AdminPage() {
 
   if (!profile?.is_platform_admin) redirect('/dashboard')
 
-  const [{ data: orgs }, { data: users }, { count: nlCount }, { count: issueCount }, settingsStatus] =
+  const [{ data: orgs }, { data: users }, { count: nlCount }, { count: issueCount }, settingsStatus, { data: orgMembers }] =
     await Promise.all([
       supabase.from('organizations').select('id, name, slug, created_at').order('created_at', { ascending: false }),
       supabase.from('profiles').select('id, full_name, is_platform_admin, created_at').order('created_at', { ascending: false }),
       supabase.from('newsletters').select('*', { count: 'exact', head: true }),
       supabase.from('issues').select('*', { count: 'exact', head: true }),
       getSettingsStatus(),
+      supabase.from('org_members').select('org_id, user_id, role, profiles(full_name)'),
     ])
+
+  // Attach members to each org
+  const orgsWithMembers = (orgs ?? []).map(org => ({
+    ...org,
+    members: (orgMembers ?? [])
+      .filter(m => m.org_id === org.id)
+      .map(m => ({
+        user_id:  m.user_id,
+        role:     m.role,
+        profiles: m.profiles as { full_name: string | null } | null,
+      })),
+  }))
 
   const stats = [
     { label: 'Organizations', value: orgs?.length ?? 0,  icon: Building2 },
@@ -74,10 +88,23 @@ export default async function AdminPage() {
         <SettingsPanel statuses={settingsStatus} />
       </div>
 
-      {/* Users table */}
+      {/* Permissions */}
       <div className="animate-fade-up delay-150 mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <ShieldCheck className="h-4 w-4 text-ink-muted" />
+          <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Permissions</h2>
+        </div>
+        <PermissionsPanel
+          users={users ?? []}
+          orgs={orgsWithMembers}
+          currentUserId={user.id}
+        />
+      </div>
+
+      {/* Users table */}
+      <div className="animate-fade-up delay-200 mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Users</h2>
+          <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">All Users</h2>
           <span className="text-xs text-ink-muted">{users?.length ?? 0} total</span>
         </div>
         <div className="rounded-xl border border-line bg-surface overflow-hidden">

@@ -80,3 +80,53 @@ export async function adminCreateOrg(formData: FormData) {
 
   return { success: true, orgId: org.id }
 }
+
+export async function togglePlatformAdmin(userId: string, makeAdmin: boolean) {
+  await assertPlatformAdmin()
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('profiles')
+    .update({ is_platform_admin: makeAdmin })
+    .eq('id', userId)
+
+  if (error) return { error: error.message }
+
+  const { revalidatePath } = await import('next/cache')
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+export async function setOrgMemberRole(orgId: string, userId: string, role: 'owner' | 'admin' | 'editor' | 'viewer') {
+  await assertPlatformAdmin()
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('org_members')
+    .update({ role })
+    .eq('org_id', orgId)
+    .eq('user_id', userId)
+
+  if (error) return { error: error.message }
+
+  const { revalidatePath } = await import('next/cache')
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+export async function removeOrgMember(orgId: string, userId: string) {
+  await assertPlatformAdmin()
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('org_members')
+    .delete()
+    .eq('org_id', orgId)
+    .eq('user_id', userId)
+
+  if (error) return { error: error.message }
+
+  const { revalidatePath } = await import('next/cache')
+  revalidatePath('/admin')
+  return { success: true }
+}
