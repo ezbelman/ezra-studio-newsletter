@@ -26,22 +26,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!membership) {
     const pathname = (await headers()).get('x-pathname') ?? ''
 
-    // Platform admins skip onboarding — they go straight to the admin panel
+    // Platform admins skip onboarding — admin layout handles the shell
     if (profile?.is_platform_admin) {
       if (!pathname.startsWith('/admin')) redirect('/admin')
-      return (
-        <div className="flex min-h-screen bg-bg">
-          <Sidebar
-            orgName="Platform"
-            orgSlug=""
-            userFullName={profile.full_name ?? user.email ?? ''}
-            isAdmin={true}
-          />
-          <main className="flex-1 min-h-screen pt-14 md:pt-0 md:ml-64">
-            {children}
-          </main>
-        </div>
-      )
+      return <>{children}</>
     }
 
     if (pathname !== '/onboarding') redirect('/onboarding')

@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { adminCreateUser } from './actions'
 import { Button } from '@/components/ui/button'
 
-export function CreateUserForm() {
+export function CreateUserForm({ compact }: { compact?: boolean }) {
   const [pending, startTransition] = useTransition()
   const [result, setResult] = useState<{ error?: string; success?: boolean } | null>(null)
 
@@ -18,6 +18,31 @@ export function CreateUserForm() {
       setResult(res)
       if (res.success) form.reset()
     })
+  }
+
+  if (compact) {
+    return (
+      <div className="bg-surface border border-line rounded-xl overflow-hidden">
+        <div className="px-4 py-3">
+          <p className="text-sm text-ink/60 font-500">New user</p>
+        </div>
+        <div className="border-t border-line px-4 pb-4 pt-3">
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <input name="full_name" type="text" required placeholder="Full name"
+              className="w-full h-9 rounded-md border border-line bg-elevated px-3 text-sm text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors" />
+            <input name="email" type="email" required placeholder="Email address"
+              className="w-full h-9 rounded-md border border-line bg-elevated px-3 text-sm text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors" />
+            <input name="password" type="password" required minLength={6} placeholder="Password"
+              className="w-full h-9 rounded-md border border-line bg-elevated px-3 text-sm text-ink placeholder:text-ink/30 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-colors" />
+            {result?.error && <p className="text-danger text-xs">{result.error}</p>}
+            {result?.success && <p className="text-success text-xs">User created.</p>}
+            <Button type="submit" variant="primary" size="sm" disabled={pending} className="w-full">
+              {pending ? 'Creating…' : 'Create user'}
+            </Button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   return (
