@@ -46,7 +46,7 @@ export default async function VersionsPage({ params }: Props) {
       {versions && versions.length > 0 ? (
         <div className="space-y-3">
           {versions.map((v, idx) => {
-            const profile   = v.profiles as { full_name: string | null } | null
+            const profile   = v.profiles as unknown as { full_name: string | null } | null
             const isLatest  = idx === 0
             const createdAt = new Date(v.created_at).toLocaleDateString('en-US', {
               month: 'short', day: 'numeric', year: 'numeric',
