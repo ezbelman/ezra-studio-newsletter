@@ -19,7 +19,7 @@ export default async function NewsletterSettingsPage({ params }: { params: Promi
   if (!nl) notFound()
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-2xl mx-auto">
       <Link
         href={`/newsletters/${id}`}
         className="inline-flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-8 transition-colors"

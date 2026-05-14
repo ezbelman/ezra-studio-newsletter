@@ -62,7 +62,7 @@ export default async function TeamPage() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <div className="mx-auto max-w-4xl px-8 py-8">
+      <div className="mx-auto max-w-4xl px-4 sm:px-8 py-4 sm:py-8">
 
         <div className="mb-8 flex items-start justify-between">
           <div>

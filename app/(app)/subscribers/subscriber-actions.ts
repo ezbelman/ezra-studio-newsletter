@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentOrgId } from '@/lib/data/org'
+import { enrollSubscriberInAutomations } from '@/lib/actions/automation-actions'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -28,7 +29,7 @@ export async function addSubscriber(formData: FormData) {
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
   const admin = createAdminClient()
-  const { error } = await admin.from('subscribers').upsert(
+  const { data: inserted, error } = await admin.from('subscribers').upsert(
     {
       org_id:        orgId,
       email:         parsed.data.email.toLowerCase().trim(),
@@ -37,9 +38,13 @@ export async function addSubscriber(formData: FormData) {
       status:        'active',
     },
     { onConflict: 'newsletter_id,email', ignoreDuplicates: true }
-  )
+  ).select('id').single()
 
   if (error) return { error: error.message }
+
+  if (inserted?.id) {
+    await enrollSubscriberInAutomations(inserted.id, parsed.data.newsletter_id, orgId)
+  }
 
   revalidatePath('/subscribers')
   return { success: true }

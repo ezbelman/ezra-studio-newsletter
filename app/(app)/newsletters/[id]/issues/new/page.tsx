@@ -110,7 +110,7 @@ export default function NewIssuePage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-3xl mx-auto">
       <Link
         href={`/newsletters/${id}`}
         className="inline-flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-8 transition-colors"
@@ -135,7 +135,7 @@ export default function NewIssuePage() {
           <div className="px-4 py-3 border-b border-line">
             <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Issue Details</h2>
           </div>
-          <div className="p-4 grid grid-cols-2 gap-4">
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               id="vol"
               label="Volume #"
@@ -195,7 +195,7 @@ export default function NewIssuePage() {
         )}
 
         {/* Actions */}
-        <div className="flex gap-3 justify-end pt-2 animate-fade-up delay-200">
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-end pt-2 animate-fade-up delay-200">
           <Button
             type="button"
             variant="outline"

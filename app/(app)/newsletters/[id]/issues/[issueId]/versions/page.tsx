@@ -29,7 +29,7 @@ export default async function VersionsPage({ params }: Props) {
   if (!issue) notFound()
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 sm:p-8 max-w-3xl">
       <Link
         href={`/newsletters/${id}/issues/${issueId}`}
         className="inline-flex items-center gap-2 text-sm text-ink/40 hover:text-ink mb-6 transition-colors"
@@ -39,7 +39,7 @@ export default async function VersionsPage({ params }: Props) {
       </Link>
 
       <h1 className="text-[22px] font-display font-700 text-ink mb-1">Version history</h1>
-      <p className="text-sm text-ink/40 mb-8">
+      <p className="text-sm text-ink/40 mb-6 sm:mb-8">
         Each polish creates a snapshot. Restore any version to roll back.
       </p>
 
@@ -54,7 +54,7 @@ export default async function VersionsPage({ params }: Props) {
             return (
               <div
                 key={v.id}
-                className={`bg-surface border rounded-xl p-5 flex items-center gap-4 ${
+                className={`bg-surface border rounded-xl p-4 sm:p-5 flex items-center gap-4 ${
                   isLatest ? 'border-accent/30' : 'border-line'
                 }`}
               >
@@ -87,7 +87,7 @@ export default async function VersionsPage({ params }: Props) {
           })}
         </div>
       ) : (
-        <div className="bg-surface border border-dashed border-line rounded-xl p-14 text-center">
+        <div className="bg-surface border border-dashed border-line rounded-xl p-10 sm:p-14 text-center">
           <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <Clock className="h-5 w-5 text-accent" />
           </div>

@@ -47,7 +47,7 @@ export default async function SendDetailPage({ params }: Props) {
   })
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-8 max-w-4xl">
       <Link
         href="/analytics"
         className="inline-flex items-center gap-2 text-sm text-ink/40 hover:text-ink mb-6 transition-colors"
@@ -57,7 +57,7 @@ export default async function SendDetailPage({ params }: Props) {
       </Link>
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-6 sm:mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs text-ink/30 font-500">{nl?.name ?? 'Newsletter'}</span>
@@ -77,7 +77,7 @@ export default async function SendDetailPage({ params }: Props) {
             href={`/s/${nl.slug}/${issue.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/70 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/70 transition-colors self-start"
           >
             Web view <ExternalLink className="h-3 w-3" />
           </a>
@@ -85,7 +85,7 @@ export default async function SendDetailPage({ params }: Props) {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           {
             label: 'Recipients',
@@ -116,19 +116,19 @@ export default async function SendDetailPage({ params }: Props) {
             color: 'text-accent',
           },
         ].map(s => (
-          <div key={s.label} className="bg-surface border border-line rounded-xl p-5">
+          <div key={s.label} className="bg-surface border border-line rounded-xl p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-2">
               <s.icon className={`h-4 w-4 ${s.color}`} />
               <span className="text-xs text-ink/40 font-500">{s.label}</span>
             </div>
-            <p className="text-2xl font-700 text-ink">{s.value}</p>
+            <p className="text-xl sm:text-2xl font-700 text-ink">{s.value}</p>
             {s.sub && <p className="text-xs text-ink/30 mt-0.5">{s.sub}</p>}
           </div>
         ))}
       </div>
 
       {/* Engagement funnel */}
-      <div className="bg-surface border border-line rounded-xl p-6">
+      <div className="bg-surface border border-line rounded-xl p-5 sm:p-6">
         <h2 className="text-sm font-600 text-ink mb-5">Engagement funnel</h2>
         <div className="space-y-5">
           {[

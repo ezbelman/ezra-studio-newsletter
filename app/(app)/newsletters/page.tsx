@@ -28,9 +28,9 @@ export default async function NewslettersPage() {
 
   return (
     <div className="min-h-screen bg-bg">
-    <div className="mx-auto max-w-6xl px-8 py-8">
+    <div className="mx-auto max-w-6xl px-4 sm:px-8 py-4 sm:py-8">
 
-      <div className="flex items-center justify-between mb-8 animate-fade-up delay-0">
+      <div className="flex items-center justify-between gap-4 mb-6 sm:mb-8 animate-fade-up delay-0">
         <div>
           <h1 className="text-[22px] font-display font-700 leading-tight text-ink">Newsletters</h1>
           <p className="mt-1 text-sm text-ink-muted">Your publication channels</p>

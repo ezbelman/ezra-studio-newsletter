@@ -144,9 +144,9 @@ export default async function AnalyticsPage({
   const nl = newsletters ?? []
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-8 max-w-6xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
         <div>
           <h1 className="text-[22px] font-display font-700 text-ink">Analytics</h1>
           <p className="text-ink/50 text-sm mt-0.5">Track performance across all your newsletters</p>
@@ -155,7 +155,7 @@ export default async function AnalyticsPage({
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: 'Total sends',    value: totalSent.toLocaleString(),                   icon: Send,          color: 'text-accent' },
           { label: 'Avg open rate',  value: openRate  != null ? `${openRate}%`  : '—',    icon: TrendingUp,    color: 'text-success' },
@@ -173,7 +173,7 @@ export default async function AnalyticsPage({
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {/* Subscriber growth */}
         <div className="bg-surface border border-line rounded-xl p-5">
           <div className="flex items-center justify-between mb-1">
@@ -220,7 +220,7 @@ export default async function AnalyticsPage({
       </div>
 
       {/* Channel cards (email active, others placeholder) */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         <div className="bg-surface border border-line rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Mail className="h-4 w-4 text-accent" />
@@ -260,7 +260,8 @@ export default async function AnalyticsPage({
           <div className="px-5 py-4 border-b border-line">
             <h2 className="text-sm font-600 text-ink">Issue performance</h2>
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="border-b border-line bg-elevated">
                 {['Issue', 'Date', 'Recipients', 'Delivered', 'Opened', 'Clicked', 'Open rate', ''].map(h => (
@@ -314,6 +315,7 @@ export default async function AnalyticsPage({
               })}
             </tbody>
           </table>
+          </div>
         </div>
       ) : (
         <div className="bg-surface border border-dashed border-line rounded-xl p-14 text-center">

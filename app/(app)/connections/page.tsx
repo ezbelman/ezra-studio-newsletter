@@ -97,9 +97,9 @@ export default async function ConnectionsPage() {
   if (!user) redirect('/login')
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-8 max-w-4xl">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl font-600 text-ink">Connections</h1>
         <p className="text-ink/50 text-sm mt-0.5">
           Connect channels to distribute your newsletters beyond email
@@ -109,7 +109,7 @@ export default async function ConnectionsPage() {
       {/* Channel cards */}
       <div className="space-y-4">
         {CHANNELS.map(ch => (
-          <div key={ch.id} className="bg-surface border border-line rounded-xl p-6 flex items-start gap-5">
+          <div key={ch.id} className="bg-surface border border-line rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
             {/* Icon */}
             <div className={`h-11 w-11 rounded-xl ${ch.bg} flex items-center justify-center shrink-0 ${ch.color}`}>
               {ch.icon ? <ch.icon /> : (
@@ -140,7 +140,7 @@ export default async function ConnectionsPage() {
             </div>
 
             {/* Action */}
-            <div className="shrink-0">
+            <div className="shrink-0 self-start sm:self-auto mt-1 sm:mt-0">
               {ch.status === 'connected' && (
                 <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-line text-sm text-ink/60 hover:text-ink hover:border-accent/40 transition-colors">
                   <Settings className="h-3.5 w-3.5" />

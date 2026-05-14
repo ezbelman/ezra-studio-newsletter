@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentOrgId } from '@/lib/data/org'
 import Link from 'next/link'
@@ -14,7 +14,7 @@ export default async function NewNewsletterPage() {
   if (!orgId) redirect('/onboarding')
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-2xl mx-auto">
       <Link href="/newsletters" className="inline-flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-8 transition-colors">
         <ArrowLeft className="h-4 w-4" />
         Back to Newsletters

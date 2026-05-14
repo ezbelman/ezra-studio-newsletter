@@ -10,9 +10,14 @@
 6. [Approval Workflow](#6-approval-workflow)
 7. [Sending an Issue](#7-sending-an-issue)
 8. [Subscribers](#8-subscribers)
-9. [Team Management](#9-team-management)
-10. [Settings](#10-settings)
-11. [Roles & What Each Can Do](#11-roles--what-each-can-do)
+9. [Segments](#9-segments)
+10. [Templates](#10-templates)
+11. [Automations](#11-automations)
+12. [Team Management](#12-team-management)
+13. [Settings](#13-settings)
+14. [Roles & What Each Can Do](#14-roles--what-each-can-do)
+
+> **Mobile support** — Newsletter Studio works on Android and iOS browsers. All pages adapt to small screens: tables collapse to card layouts, dialogs slide up from the bottom, and action buttons stack vertically on narrow viewports.
 
 ---
 
@@ -163,13 +168,27 @@ A web-archive version of the issue is automatically available at `/s/[newsletter
 
 ### Viewing subscribers
 
-Go to **Subscribers** in the sidebar to see all active subscribers across your organization, with their email, name, subscribed newsletter, and status.
+Go to **Subscribers** in the sidebar to see all active subscribers across your organization. Each row shows the email, name, subscribed newsletter, status badge, and a **Date Added** column with the exact subscription date and a relative time label (e.g., "3d ago").
+
+### Filtering
+
+Use the filter bar to narrow the list by:
+- **Search** — email or name (partial match)
+- **Newsletter** — show subscribers of a specific publication
+- **Status** — Active, Unsubscribed, or Bounced
 
 ### Adding a subscriber manually
 
 1. Click **Add subscriber**.
 2. Enter the subscriber's email, name (optional), and select the newsletter.
 3. Click **Add**.
+
+### Importing a CSV
+
+1. Click **Import CSV**.
+2. Upload a `.csv` file with at least an `email` column. A `name` column is also supported.
+3. Select the target newsletter.
+4. Click **Import**. Duplicate emails are silently skipped.
 
 ### Public subscribe page
 
@@ -183,20 +202,126 @@ Share this URL to let readers subscribe themselves. No account required.
 
 ### Unsubscribing
 
-Every email sent includes an unsubscribe link. When a reader clicks it they are taken to a confirmation page and immediately removed from the list — no login required.
+Every email sent includes an unsubscribe link. When a reader clicks it they are taken to a confirmation page and immediately removed — no login required.
 
-You can also manually unsubscribe a subscriber from the Subscribers page by selecting them and choosing **Unsubscribe**.
+You can also manually unsubscribe from the Subscribers page using the **Unsubscribe** button on each active subscriber row.
 
 ---
 
-## 9. Team Management
+## 9. Segments
+
+Go to **Segments** in the sidebar to group subscribers by behavior, tags, or subscription date. Segments are used when sending an issue to target a specific audience instead of your full list.
+
+### Segment types
+
+| Type | Description |
+|---|---|
+| **Dynamic** | Rules are evaluated on every send. Subscribers automatically enter or exit. |
+| **Static** | No rules — acts as a named placeholder for manual curation (future: manual add/remove). |
+
+### Creating a segment
+
+1. Click **New Segment**.
+2. Enter a name and optional description.
+3. Add one or more rules:
+   - **Status is** active / unsubscribed / bounced
+   - **Newsletter is** [select newsletter]
+   - **Joined before / after** [date]
+   - **Tag is / is not** [tag name]
+4. Click **Create segment**.
+
+### Deleting a segment
+
+Click the trash icon on any segment row. This only removes the segment definition — no subscribers are affected.
+
+---
+
+## 10. Templates
+
+Go to **Templates** in the sidebar to browse reusable issue structures.
+
+### Platform Templates
+
+Five built-in templates created by the Newsletter Studio team:
+
+| Template | Best for |
+|---|---|
+| Weekly Digest | Curated stories + hot take |
+| Product Update | Feature releases and improvements |
+| Announcement | Big news in a focused format |
+| AI Industry Roundup | Curated AI news and tools |
+| Minimal Text | Pure prose, no structure |
+
+Hover over a platform template and click **Use this** → you will be directed to pick a newsletter and create a new issue pre-filled with that structure.
+
+### My Templates
+
+Click the **My Templates** tab to see templates your organization has created.
+
+**Creating a template from scratch:**
+1. Click **New template** (visible when on the My Templates tab).
+2. Enter a name and optional description.
+3. Click **Create template**. You can populate its structure from the issue editor later.
+
+**Saving an issue as a template:**
+Open any published issue in the issue editor and click **Save as template** to capture its current `polished_json` structure for reuse.
+
+**Deleting a template:**
+Click the trash icon on any My Templates card.
+
+---
+
+## 11. Automations
+
+Go to **Automations** in the sidebar to set up trigger-based email sequences that run automatically for new or existing subscribers.
+
+### How automations work
+
+1. A **trigger** fires when a condition is met (e.g., a new subscriber joins).
+2. Each subscriber is **enrolled** in the automation.
+3. The automation processes **steps** in sequence, sending emails with configurable delays.
+
+### Trigger types
+
+| Trigger | When it fires |
+|---|---|
+| New subscriber joins | Immediately when someone subscribes |
+| Tag added | When a specific tag is added to a subscriber |
+| No opens in N days | When a subscriber hasn't opened in a while |
+| Scheduled date | At a specific date and time |
+
+### Creating an automation
+
+1. Click **New Automation**.
+2. Name the automation and select the target newsletter.
+3. Choose a trigger type.
+4. Add one or more steps — each step is an email with a subject, body, and optional delay (in hours after the previous step).
+5. Click **Create automation**. New automations start in **Paused** state.
+
+### Activating / pausing
+
+Click the ▶ (Play) or ⏸ (Pause) icon on each automation card to toggle its status. Only **Active** automations enroll new subscribers.
+
+### Stats
+
+Each automation card shows:
+- **Enrolled** — total subscribers ever entered the sequence
+- **Completed** — subscribers who finished all steps
+
+### Deleting an automation
+
+Click the trash icon. Subscribers already in the flow are not affected.
+
+---
+
+## 12. Team Management
 
 Go to **Team** in the sidebar.
 
 ### Inviting a teammate
 
 1. Click **Invite member**.
-2. Enter their email address and select a role (see [Roles](#11-roles--what-each-can-do)).
+2. Enter their email address and select a role (see [Roles](#14-roles--what-each-can-do)).
 3. Click **Send invite**.
 
 They receive an email invitation. If they do not have an account yet, they can create one when accepting. Invitations expire after 7 days.
@@ -211,7 +336,7 @@ Click the **···** menu next to a member and select **Remove**. They lose acce
 
 ---
 
-## 10. Settings
+## 13. Settings
 
 Go to **Settings** in the sidebar.
 
@@ -244,7 +369,7 @@ Keys are stored encrypted on the server and never shown in full again. You can r
 
 ---
 
-## 11. Roles & What Each Can Do
+## 14. Roles & What Each Can Do
 
 | Action | Owner | Admin | Editor | Viewer |
 |---|---|---|---|---|
@@ -254,8 +379,11 @@ Keys are stored encrypted on the server and never shown in full again. You can r
 | Use AI Polish | ✅ | ✅ | ✅ | ❌ |
 | Submit issue for approval | ✅ | ✅ | ✅ | ❌ |
 | Manage subscribers | ✅ | ✅ | ✅ | ❌ |
+| Create / delete segments | ✅ | ✅ | ✅ | ❌ |
+| Create / delete templates | ✅ | ✅ | ✅ | ❌ |
 | Approve issues | ✅ | ✅ | ❌ | ❌ |
 | Publish & send issues | ✅ | ✅ | ❌ | ❌ |
+| Create / manage automations | ✅ | ✅ | ❌ | ❌ |
 | Manage team (invite, remove, change roles) | ✅ | ✅ | ❌ | ❌ |
 | Rename organization | ✅ | ✅ | ❌ | ❌ |
 | Configure AI provider | ✅ | ✅ | ❌ | ❌ |
@@ -292,4 +420,4 @@ Keys are stored encrypted on the server and never shown in full again. You can r
 
 ---
 
-*Newsletter Studio — User Manual v1.0*
+*Newsletter Studio — User Manual v1.1 — Updated 2026-05-14*

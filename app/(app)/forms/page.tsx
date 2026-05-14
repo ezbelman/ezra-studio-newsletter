@@ -26,9 +26,9 @@ export default async function FormsPage() {
   const orgSlug = (membership?.organizations as { slug: string } | null)?.slug
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
         <div>
           <h1 className="text-2xl font-600 text-ink">Forms</h1>
           <p className="text-ink/50 text-sm mt-0.5">Embeddable subscribe forms and hosted landing pages</p>
@@ -45,7 +45,7 @@ export default async function FormsPage() {
           <h2 className="text-sm font-600 text-ink mb-4">Subscribe pages</h2>
           <div className="space-y-3 mb-10">
             {newsletters.map(nl => (
-              <div key={nl.id} className="bg-surface border border-line rounded-xl p-5 flex items-center gap-4">
+              <div key={nl.id} className="bg-surface border border-line rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                 <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                   <FileText className="h-4 w-4 text-accent" />
                 </div>
@@ -125,7 +125,7 @@ export default async function FormsPage() {
       </div>
 
       {/* Analytics teaser */}
-      <div className="mt-4 grid grid-cols-3 gap-4">
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Total form views', value: '—' },
           { label: 'Total signups',    value: '—' },

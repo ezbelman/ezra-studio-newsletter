@@ -173,7 +173,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-6xl mx-auto">
       <Link
         href={`/newsletters/${newsletterId}`}
         className="inline-flex items-center gap-2 text-sm text-ink-muted hover:text-ink mb-6 transition-colors"
@@ -182,7 +182,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
         {newsletterName}
       </Link>
 
-      <div className="flex items-start justify-between mb-8 animate-fade-up delay-0">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6 sm:mb-8 animate-fade-up delay-0">
         <div>
           <div className="flex items-center gap-3 mb-1.5">
             {issue.vol && (
@@ -207,7 +207,7 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Version history link */}
           <Link
             href={`/newsletters/${newsletterId}/issues/${issue.id}/versions`}
@@ -238,9 +238,9 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
         </p>
       )}
 
-      <div className="grid grid-cols-5 gap-6">
-        {/* Raw notes — left */}
-        <div className="col-span-2 animate-fade-up delay-100">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
+        {/* Raw notes — top on mobile, left on desktop */}
+        <div className="lg:col-span-2 animate-fade-up delay-100">
           <div className="rounded-lg border border-line bg-surface overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-line">
               <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Raw Notes</h2>
@@ -270,8 +270,8 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
           </div>
         </div>
 
-        {/* Polished content — right */}
-        <div className="col-span-3 space-y-4 animate-fade-up delay-150">
+        {/* Polished content — below on mobile, right on desktop */}
+        <div className="lg:col-span-3 space-y-4 animate-fade-up delay-150">
           {polished ? (
             <>
               {polished.stories?.map((story, i) => (

@@ -67,9 +67,9 @@ export default async function CalendarPage() {
   while (cells.length % 7 !== 0) cells.push(null)
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-8 max-w-6xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
         <div>
           <h1 className="text-2xl font-600 text-ink">Calendar</h1>
           <p className="text-ink/50 text-sm mt-0.5">Schedule and track all newsletter issues</p>
@@ -100,7 +100,7 @@ export default async function CalendarPage() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-3 flex-wrap mb-4">
         {Object.entries(STATUS_COLORS).map(([status, cls]) => (
           <div key={status} className="flex items-center gap-1.5">
             <span className={`inline-block w-2 h-2 rounded-full ${cls.split(' ')[0]}`} />
@@ -109,8 +109,9 @@ export default async function CalendarPage() {
         ))}
       </div>
 
-      {/* Grid */}
-      <div className="border border-line rounded-xl overflow-hidden">
+      {/* Grid — horizontally scrollable on small screens */}
+      <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+      <div className="border border-line rounded-xl overflow-hidden min-w-[560px]">
         {/* Day headers */}
         <div className="grid grid-cols-7 border-b border-line bg-elevated">
           {DAYS.map(d => (
@@ -162,6 +163,7 @@ export default async function CalendarPage() {
         ))}
       </div>
 
+      </div>
       {(!issues || issues.length === 0) && (
         <div className="text-center py-12 mt-4">
           <Calendar className="h-10 w-10 text-ink/20 mx-auto mb-3" />

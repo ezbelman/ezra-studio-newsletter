@@ -11,6 +11,21 @@ export const metadata = { title: 'Subscribers' }
 
 const PAGE_SIZE = 50
 
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const s = Math.floor(diff / 1000)
+  if (s < 60)   return 'just now'
+  const m = Math.floor(s / 60)
+  if (m < 60)   return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24)   return `${h}h ago`
+  const d = Math.floor(h / 24)
+  if (d < 30)   return `${d}d ago`
+  const mo = Math.floor(d / 30)
+  if (mo < 12)  return `${mo}mo ago`
+  return `${Math.floor(mo / 12)}y ago`
+}
+
 interface SearchParams {
   q?:          string
   newsletter?: string
@@ -80,9 +95,9 @@ export default async function SubscribersPage({
   }
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-8 max-w-6xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
         <div>
           <h1 className="text-[22px] font-display font-700 text-ink">Subscribers</h1>
           <p className="text-ink-muted text-sm mt-0.5">Manage your audience across all newsletters</p>
@@ -94,7 +109,7 @@ export default async function SubscribersPage({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {[
           { label: 'Total',        value: total,              icon: Users,        color: 'text-ink/40' },
           { label: 'Active',       value: activeCount ?? 0,   icon: CheckCircle2, color: 'text-success' },
@@ -117,7 +132,8 @@ export default async function SubscribersPage({
       {/* Table */}
       {subscribers.length > 0 ? (
         <div className="bg-surface border border-line rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[560px]">
             <thead>
               <tr className="border-b border-line bg-elevated">
                 <th className="text-left px-5 py-3 text-[11px] font-600 uppercase tracking-wide text-ink/30">Subscriber</th>
@@ -152,10 +168,17 @@ export default async function SubscribersPage({
                         {info.label}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5 text-ink/40 text-xs">
-                      {sub.subscribed_at
-                        ? new Date(sub.subscribed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                        : '—'}
+                    <td className="px-5 py-3.5">
+                      {sub.subscribed_at ? (
+                        <>
+                          <p className="text-xs text-ink/40">
+                            {new Date(sub.subscribed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                          <p className="text-[10px] text-ink/25 mt-0.5">{relativeTime(sub.subscribed_at)}</p>
+                        </>
+                      ) : (
+                        <span className="text-xs text-ink/25">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       {sub.status === 'active' && <UnsubscribeButton subscriberId={sub.id} />}
@@ -165,6 +188,7 @@ export default async function SubscribersPage({
               })}
             </tbody>
           </table>
+          </div>
 
           {(nextCursor || cursor) && (
             <div className="px-5 py-3 border-t border-line bg-elevated/50 flex items-center justify-between">

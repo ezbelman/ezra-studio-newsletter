@@ -87,10 +87,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <div className="mx-auto max-w-6xl px-8 py-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-8 py-4 sm:py-8">
 
         {/* ── Header ──────────────────────────────── */}
-        <div className="mb-8 flex items-start justify-between">
+        <div className="mb-6 sm:mb-8 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[22px] font-display font-700 leading-tight text-ink">
               {greeting(name)}
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 {
                   n: '01', title: 'Create a newsletter',
@@ -167,7 +167,7 @@ export default async function DashboardPage() {
         ) : (
           <>
             {/* ── Stats ───────────────────────────── */}
-            <div className="mb-6 grid grid-cols-4 gap-4">
+            <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {stats.map((s, i) => {
                 const Icon = s.icon
                 return (
@@ -201,10 +201,10 @@ export default async function DashboardPage() {
             </div>
 
             {/* ── Content grid ────────────────────── */}
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
-              {/* Recent issues — 2 cols */}
-              <div className="col-span-2 overflow-hidden rounded-xl border border-line bg-surface">
+              {/* Recent issues — 2 cols on desktop, full on mobile */}
+              <div className="lg:col-span-2 overflow-hidden rounded-xl border border-line bg-surface">
                 <div className="flex items-center justify-between border-b border-line px-6 py-4">
                   <h2 className="text-sm font-700 text-ink">Recent issues</h2>
                   <Link
@@ -257,8 +257,8 @@ export default async function DashboardPage() {
                 )}
               </div>
 
-              {/* Right column — 1 col */}
-              <div className="col-span-1 flex flex-col gap-4">
+              {/* Right column */}
+              <div className="lg:col-span-1 flex flex-col gap-4">
 
                 {/* Quick actions */}
                 <div className="rounded-xl border border-line bg-surface p-5">

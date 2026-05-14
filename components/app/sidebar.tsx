@@ -1,12 +1,13 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Newspaper, Users, Settings, BarChart2,
   LogOut, Shield, Sun, Moon, Calendar, Zap, Tag,
   Layout, Link2, CreditCard, Code2, HelpCircle, ChevronDown,
-  FileText,
+  FileText, Menu, X,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -94,6 +95,10 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
   const router   = useRouter()
   const supabase = createClient()
   const { theme, toggle } = useTheme()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Close drawer on route change
+  useEffect(() => { setMobileOpen(false) }, [pathname])
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -101,93 +106,133 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
   }
 
   return (
-    <aside className="flex h-screen w-64 flex-col fixed left-0 top-0 z-40 bg-surface border-r border-line">
-
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-line">
-        <div className="h-7 w-7 rounded-lg gradient-accent flex items-center justify-center shrink-0">
-          <span className="text-white font-black text-[11px] tracking-tight">NS</span>
-        </div>
-        <div>
-          <p className="text-ink font-600 text-sm leading-none">Newsletter Studio</p>
-          <p className="text-ink/30 text-[11px] mt-0.5">by Ezra Studio</p>
-        </div>
-      </div>
-
-      {/* Org selector */}
-      <div className="px-3 py-3 border-b border-line">
-        <button className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-elevated transition-colors group">
-          <div className="h-6 w-6 rounded-md bg-accent/15 flex items-center justify-center shrink-0">
-            <span className="text-accent font-700 text-[10px]">{getInitials(orgName)}</span>
-          </div>
-          <div className="flex-1 text-left min-w-0">
-            <p className="text-ink text-sm font-500 truncate">{orgName}</p>
-            <p className="text-ink/30 text-[11px] truncate">{orgSlug}</p>
-          </div>
-          <ChevronDown className="h-3.5 w-3.5 text-ink/20 shrink-0 group-hover:text-ink/40 transition-colors" />
-        </button>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3">
-        <NavSection items={navMain} pathname={pathname} />
-        <NavSection label="Audience"  items={navAudience}  pathname={pathname} />
-        <NavSection label="Content"   items={navContent}   pathname={pathname} />
-        <NavSection label="Workspace" items={navWorkspace} pathname={pathname} />
-
-        {isAdmin && (
-          <div>
-            <p className="px-3 pt-4 pb-1.5 text-[10px] font-600 uppercase tracking-widest text-ink/20">
-              Platform
-            </p>
-            <Link
-              href="/admin"
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-150',
-                pathname.startsWith('/admin')
-                  ? 'bg-success/15 text-success font-600'
-                  : 'text-ink/40 hover:bg-elevated hover:text-ink/80'
-              )}
-            >
-              <Shield className={cn(
-                'h-4 w-4 shrink-0',
-                pathname.startsWith('/admin') ? 'text-success' : 'text-ink/25'
-              )} />
-              Admin
-            </Link>
-          </div>
-        )}
-      </nav>
-
-      {/* Bottom */}
-      <div className="px-3 py-3 border-t border-line space-y-0.5">
+    <>
+      {/* Mobile top bar — visible only below md */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center gap-3 px-4 bg-surface border-b border-line">
         <button
-          onClick={toggle}
-          className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-ink/40 hover:text-ink/70 hover:bg-elevated transition-colors text-sm"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
+          className="p-2 -ml-2 rounded-lg text-ink/40 hover:text-ink hover:bg-elevated transition-colors"
         >
-          {theme === 'dark'
-            ? <Sun  className="h-4 w-4 shrink-0" />
-            : <Moon className="h-4 w-4 shrink-0" />
-          }
-          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          <Menu className="h-5 w-5" />
         </button>
+        <div className="flex items-center gap-2.5">
+          <div className="h-6 w-6 rounded-md gradient-accent flex items-center justify-center shrink-0">
+            <span className="text-white font-black text-[10px] tracking-tight">NS</span>
+          </div>
+          <span className="text-ink font-600 text-sm">Newsletter Studio</span>
+        </div>
+      </div>
 
-        <div className="flex items-center gap-2.5 rounded-lg px-3 py-2">
-          <div className="h-7 w-7 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
-            <span className="text-accent font-600 text-xs">{getInitials(userFullName)}</span>
+      {/* Backdrop — mobile only */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar panel */}
+      <aside className={cn(
+        'flex h-screen w-64 flex-col fixed left-0 top-0 z-50 bg-surface border-r border-line transition-transform duration-300 ease-in-out',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+      )}>
+        {/* Logo */}
+        <div className="flex items-center justify-between gap-3 px-5 py-5 border-b border-line">
+          <div className="flex items-center gap-3">
+            <div className="h-7 w-7 rounded-lg gradient-accent flex items-center justify-center shrink-0">
+              <span className="text-white font-black text-[11px] tracking-tight">NS</span>
+            </div>
+            <div>
+              <p className="text-ink font-600 text-sm leading-none">Newsletter Studio</p>
+              <p className="text-ink/30 text-[11px] mt-0.5">by Ezra Studio</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-ink text-sm font-500 truncate">{userFullName}</p>
-          </div>
+          {/* Close button — mobile only */}
           <button
-            onClick={handleSignOut}
-            className="text-ink/20 hover:text-danger transition-colors p-1 rounded"
-            title="Sign out"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+            className="md:hidden p-1.5 rounded-lg text-ink/30 hover:text-ink hover:bg-elevated transition-colors"
           >
-            <LogOut className="h-3.5 w-3.5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
-      </div>
-    </aside>
+
+        {/* Org selector */}
+        <div className="px-3 py-3 border-b border-line">
+          <button className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-elevated transition-colors group">
+            <div className="h-6 w-6 rounded-md bg-accent/15 flex items-center justify-center shrink-0">
+              <span className="text-accent font-700 text-[10px]">{getInitials(orgName)}</span>
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-ink text-sm font-500 truncate">{orgName}</p>
+              <p className="text-ink/30 text-[11px] truncate">{orgSlug}</p>
+            </div>
+            <ChevronDown className="h-3.5 w-3.5 text-ink/20 shrink-0 group-hover:text-ink/40 transition-colors" />
+          </button>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto px-3 py-3">
+          <NavSection items={navMain} pathname={pathname} />
+          <NavSection label="Audience"  items={navAudience}  pathname={pathname} />
+          <NavSection label="Content"   items={navContent}   pathname={pathname} />
+          <NavSection label="Workspace" items={navWorkspace} pathname={pathname} />
+
+          {isAdmin && (
+            <div>
+              <p className="px-3 pt-4 pb-1.5 text-[10px] font-600 uppercase tracking-widest text-ink/20">
+                Platform
+              </p>
+              <Link
+                href="/admin"
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-150',
+                  pathname.startsWith('/admin')
+                    ? 'bg-success/15 text-success font-600'
+                    : 'text-ink/40 hover:bg-elevated hover:text-ink/80'
+                )}
+              >
+                <Shield className={cn(
+                  'h-4 w-4 shrink-0',
+                  pathname.startsWith('/admin') ? 'text-success' : 'text-ink/25'
+                )} />
+                Admin
+              </Link>
+            </div>
+          )}
+        </nav>
+
+        {/* Bottom */}
+        <div className="px-3 py-3 border-t border-line space-y-0.5">
+          <button
+            onClick={toggle}
+            className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-ink/40 hover:text-ink/70 hover:bg-elevated transition-colors text-sm"
+          >
+            {theme === 'dark'
+              ? <Sun  className="h-4 w-4 shrink-0" />
+              : <Moon className="h-4 w-4 shrink-0" />
+            }
+            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
+
+          <div className="flex items-center gap-2.5 rounded-lg px-3 py-2">
+            <div className="h-7 w-7 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+              <span className="text-accent font-600 text-xs">{getInitials(userFullName)}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-ink text-sm font-500 truncate">{userFullName}</p>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="text-ink/20 hover:text-danger transition-colors p-1 rounded"
+              title="Sign out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   )
 }

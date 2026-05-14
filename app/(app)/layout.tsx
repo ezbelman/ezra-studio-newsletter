@@ -56,7 +56,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         userFullName={profile?.full_name ?? user.email ?? ''}
         isAdmin={profile?.is_platform_admin ?? false}
       />
-      <main className="flex-1 min-h-screen" style={{ marginLeft: '220px' }}>
+      <main className="flex-1 min-h-screen pt-14 md:pt-0 md:ml-64">
         {children}
       </main>
     </div>

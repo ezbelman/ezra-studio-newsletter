@@ -70,20 +70,21 @@ app/
 │   ├── dashboard/          Overview dashboard
 │   ├── newsletters/        Newsletter & issue management
 │   │   └── [id]/
-│   │       ├── issues/     Issue editor
+│   │       ├── issues/     Issue editor (+ version history)
 │   │       └── settings/   Per-newsletter settings
-│   ├── subscribers/        Subscriber management
+│   ├── subscribers/        Subscriber list, CSV import, date-added column
+│   ├── segments/           Audience segments — rule builder CRUD
+│   ├── automations/        Trigger-based email sequences CRUD
+│   ├── templates/          Platform templates + My Templates CRUD
+│   ├── analytics/          Analytics dashboard
+│   ├── calendar/           Content calendar
+│   ├── connections/        Multi-channel connections
+│   ├── forms/              Subscribe forms & landing pages
 │   ├── team/               Team members & invitations
 │   ├── settings/           Org & AI provider settings
-│   ├── admin/              Platform admin (superadmin only)
-│   ├── analytics/          Analytics (Phase 2)
-│   ├── calendar/           Content calendar (Phase 2)
-│   ├── connections/        Multi-channel connections (Phase 2)
-│   ├── segments/           Audience segments (Phase 2)
-│   ├── automations/        Email automations (Phase 2)
-│   ├── templates/          Template library (Phase 2)
-│   ├── billing/            Billing (Phase 2)
-│   └── developers/         API keys & webhooks (Phase 3)
+│   ├── billing/            Billing (Stripe — Phase 2)
+│   ├── developers/         API keys & webhooks (Phase 3)
+│   └── admin/              Platform admin (superadmin only)
 ├── (auth)/                 Unauthenticated auth pages
 │   ├── login/
 │   ├── signup/
@@ -91,7 +92,8 @@ app/
 │   └── reset-password/
 ├── api/                    API routes
 │   ├── ai/polish/          AI content polish endpoint
-│   ├── issues/[id]/send/   Issue send endpoint (Resend)
+│   ├── issues/[id]/send/   Issue send endpoint (Resend + A/B)
+│   ├── webhooks/resend/    Bounce/open/click tracking
 │   └── subscribe/          Public subscribe endpoint
 ├── invite/accept/          Invitation acceptance
 ├── s/[slug]/               Public subscribe page & web archive
@@ -102,9 +104,13 @@ components/
 └── ui/                     Design system primitives (button, badge, input…)
 
 lib/
+├── actions/                Shared server actions
+│   ├── automation-actions  Create/toggle/delete automations + enrollment engine
+│   ├── segment-actions     Create/delete segments
+│   └── template-actions    Create/delete org templates
 ├── ai/                     AI provider abstraction (Anthropic / OpenAI / Gemini)
 ├── data/                   Data access helpers
-├── email/                  Email template renderer & token utilities
+├── email/                  Email template renderer & unsubscribe token utilities
 ├── supabase/               Supabase client factories (server, client, admin)
 ├── types/                  TypeScript types & display helpers
 └── utils.ts                Shared utilities
@@ -187,24 +193,26 @@ draft → pending_approval → approved → published
 
 ## Phased Roadmap
 
-### Phase 1 — Core Loop (current)
+### Phase 1 — Core Loop ✅ Complete
 - [x] Auth, onboarding, org management
 - [x] Newsletters & issues with AI polish
 - [x] Team roles & invitations
 - [x] Settings (org rename, AI provider)
 - [x] Public subscribe page & unsubscribe flow
-- [ ] Email send via Resend (wired to UI)
-- [ ] Subscriber management CRUD + CSV import
-- [ ] Invite accept flow
+- [x] Email send via Resend (batch, with A/B subject line testing)
+- [x] Subscriber management CRUD + CSV import + date-added column
+- [x] Invite accept flow
+- [x] Bounce / open / click webhook handler
+- [x] Issue version history
 
-### Phase 2 — Growth & Multi-Channel
-- [ ] Analytics dashboard
+### Phase 2 — Growth & Multi-Channel (in progress)
+- [x] Segments — rule-based CRUD with dynamic/static support
+- [x] Automations — trigger-based sequences CRUD + enrollment engine
+- [x] Templates — platform library + My Templates CRUD
+- [ ] Analytics dashboard (charts, heatmap, channel comparison)
 - [ ] Content calendar
-- [ ] Segments (rule-based)
-- [ ] Automations (welcome series, re-engagement)
 - [ ] Connections: Telegram, WhatsApp, LinkedIn
-- [ ] Template library
-- [ ] Billing (Stripe)
+- [ ] Billing (Stripe integration)
 - [ ] CRM (contact records, engagement scoring, notes)
 - [ ] Referral system (subscriber + creator acquisition)
 - [ ] White-label branding (logo, colors, font per org)

@@ -35,7 +35,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <div className="mx-auto max-w-2xl px-8 py-8">
+      <div className="mx-auto max-w-2xl px-4 sm:px-8 py-4 sm:py-8">
         <div className="mb-8">
           <h1 className="text-[22px] font-display font-700 leading-tight text-ink">Settings</h1>
           <p className="mt-1 text-sm text-ink-muted">Manage your organization, branding, and AI preferences</p>

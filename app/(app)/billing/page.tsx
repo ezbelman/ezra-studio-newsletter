@@ -74,9 +74,9 @@ export default async function BillingPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl font-600 text-ink">Billing</h1>
         <p className="text-ink/50 text-sm mt-0.5">Manage your plan, usage, and payment details</p>
       </div>
@@ -93,7 +93,7 @@ export default async function BillingPage() {
         </div>
 
         {/* Usage meters */}
-        <div className="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-line">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-line">
           {[
             { label: 'Emails sent',   used: 240,  max: 2500,  icon: Mail },
             { label: 'AI polishes',   used: 3,    max: 10,    icon: Zap },
@@ -125,7 +125,7 @@ export default async function BillingPage() {
 
       {/* Plan comparison */}
       <h2 className="text-sm font-600 text-ink mb-4">Choose a plan</h2>
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {PLANS.map(p => (
           <div
             key={p.id}

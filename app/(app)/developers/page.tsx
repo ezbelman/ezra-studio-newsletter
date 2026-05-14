@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+﻿import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Code2, Plus, Copy, Trash2, ExternalLink, Activity, Key, Webhook } from 'lucide-react'
 
@@ -29,7 +29,7 @@ export default async function DevelopersPage() {
 
   if (!isAdminOrOwner) {
     return (
-      <div className="p-8 max-w-md">
+      <div className="p-4 sm:p-8 max-w-md">
         <h1 className="text-2xl font-600 text-ink mb-2">Developers</h1>
         <div className="bg-surface border border-line rounded-xl p-6 text-center">
           <Code2 className="h-10 w-10 text-ink/20 mx-auto mb-3" />
@@ -40,7 +40,7 @@ export default async function DevelopersPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-8 max-w-4xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-600 text-ink">Developers</h1>

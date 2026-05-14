@@ -1,4 +1,4 @@
-import { HelpCircle, BookOpen, MessageCircle, ExternalLink, Search, Keyboard } from 'lucide-react'
+﻿import { HelpCircle, BookOpen, MessageCircle, ExternalLink, Search, Keyboard } from 'lucide-react'
 
 export const metadata = { title: 'Help & Docs' }
 
@@ -51,7 +51,7 @@ const SHORTCUTS = [
 
 export default function HelpPage() {
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-600 text-ink">Help & Docs</h1>

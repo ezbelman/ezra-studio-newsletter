@@ -345,6 +345,137 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      segments: {
+        Row: {
+          id: string
+          org_id: string
+          newsletter_id: string | null
+          name: string
+          description: string | null
+          rules: Json
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          newsletter_id?: string | null
+          name: string
+          description?: string | null
+          rules?: Json
+          created_by?: string | null
+        }
+        Update: {
+          name?: string
+          description?: string | null
+          rules?: Json
+          newsletter_id?: string | null
+        }
+        Relationships: [
+          { foreignKeyName: 'segments_org_id_fkey'; columns: ['org_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] }
+        ]
+      }
+      templates: {
+        Row: {
+          id: string
+          org_id: string | null
+          name: string
+          description: string | null
+          structure: Json
+          is_platform: boolean
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          org_id?: string | null
+          name: string
+          description?: string | null
+          structure?: Json
+          is_platform?: boolean
+          created_by?: string | null
+        }
+        Update: {
+          name?: string
+          description?: string | null
+          structure?: Json
+        }
+        Relationships: [
+          { foreignKeyName: 'templates_org_id_fkey'; columns: ['org_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] }
+        ]
+      }
+      automations: {
+        Row: {
+          id: string
+          org_id: string
+          newsletter_id: string
+          name: string
+          status: 'active' | 'paused' | 'archived'
+          trigger_type: 'new_subscriber' | 'tag_added' | 'no_open' | 'date'
+          trigger_config: Json
+          steps: Json
+          enrolled_count: number
+          completed_count: number
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          newsletter_id: string
+          name: string
+          status?: 'active' | 'paused' | 'archived'
+          trigger_type?: 'new_subscriber' | 'tag_added' | 'no_open' | 'date'
+          trigger_config?: Json
+          steps?: Json
+          created_by?: string | null
+        }
+        Update: {
+          name?: string
+          status?: 'active' | 'paused' | 'archived'
+          trigger_type?: 'new_subscriber' | 'tag_added' | 'no_open' | 'date'
+          trigger_config?: Json
+          steps?: Json
+          enrolled_count?: number
+          completed_count?: number
+        }
+        Relationships: [
+          { foreignKeyName: 'automations_org_id_fkey'; columns: ['org_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] },
+          { foreignKeyName: 'automations_newsletter_id_fkey'; columns: ['newsletter_id']; isOneToOne: false; referencedRelation: 'newsletters'; referencedColumns: ['id'] }
+        ]
+      }
+      automation_enrollments: {
+        Row: {
+          id: string
+          automation_id: string
+          subscriber_id: string
+          current_step: number
+          status: 'in_progress' | 'completed' | 'exited'
+          next_step_at: string | null
+          enrolled_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          automation_id: string
+          subscriber_id: string
+          current_step?: number
+          status?: 'in_progress' | 'completed' | 'exited'
+          next_step_at?: string | null
+        }
+        Update: {
+          current_step?: number
+          status?: 'in_progress' | 'completed' | 'exited'
+          next_step_at?: string | null
+          completed_at?: string | null
+        }
+        Relationships: [
+          { foreignKeyName: 'automation_enrollments_automation_id_fkey'; columns: ['automation_id']; isOneToOne: false; referencedRelation: 'automations'; referencedColumns: ['id'] },
+          { foreignKeyName: 'automation_enrollments_subscriber_id_fkey'; columns: ['subscriber_id']; isOneToOne: false; referencedRelation: 'subscribers'; referencedColumns: ['id'] }
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: {

@@ -34,14 +34,14 @@ export default async function AdminPage() {
   ]
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <div className="mb-8 animate-fade-up delay-0">
+    <div className="p-4 sm:p-8 max-w-6xl mx-auto">
+      <div className="mb-6 sm:mb-8 animate-fade-up delay-0">
         <p className="text-xs font-700 uppercase tracking-widest text-ink-muted mb-1">Platform</p>
         <h1 className="text-3xl font-display font-700 text-ink leading-none">Admin</h1>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8 animate-fade-up delay-50">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 animate-fade-up delay-50">
         {stats.map(s => (
           <div key={s.label} className="rounded-xl border border-line bg-surface p-5">
             <div className="h-8 w-8 rounded-lg bg-cyan/10 flex items-center justify-center mb-3">
@@ -54,7 +54,7 @@ export default async function AdminPage() {
       </div>
 
       {/* Create forms */}
-      <div className="grid grid-cols-2 gap-6 mb-8 animate-fade-up delay-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8 animate-fade-up delay-100">
         <CreateUserForm />
         <CreateOrgForm />
       </div>
@@ -66,7 +66,8 @@ export default async function AdminPage() {
           <span className="text-xs text-ink-muted">{users?.length ?? 0} total</span>
         </div>
         <div className="rounded-xl border border-line bg-surface overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[480px]">
             <thead>
               <tr className="border-b border-line bg-bg/50">
                 <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Name</th>
@@ -90,6 +91,7 @@ export default async function AdminPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 
@@ -100,7 +102,8 @@ export default async function AdminPage() {
           <span className="text-xs text-ink-muted">{orgs?.length ?? 0} total</span>
         </div>
         <div className="rounded-xl border border-line bg-surface overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[360px]">
             <thead>
               <tr className="border-b border-line bg-bg/50">
                 <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Name</th>
@@ -118,6 +121,7 @@ export default async function AdminPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>
