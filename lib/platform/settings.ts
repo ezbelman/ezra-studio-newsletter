@@ -6,16 +6,20 @@ export type SettingKey =
   | 'PLATFORM_ANTHROPIC_API_KEY'
   | 'RESEND_WEBHOOK_SECRET'
 
+// platform_settings is a new table not yet in generated DB types — cast via unknown
+function settingsTable() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (createAdminClient() as unknown as { from: (t: string) => any }).from('platform_settings')
+}
+
 export async function getPlatformSetting(key: SettingKey): Promise<string | null> {
   const envVal = process.env[key]
   if (envVal) return envVal
 
-  const admin = createAdminClient()
-  const { data } = await admin
-    .from('platform_settings')
+  const { data } = await settingsTable()
     .select('value')
     .eq('key', key)
-    .single()
+    .single() as { data: { value: string } | null }
 
   return data?.value ?? null
 }
