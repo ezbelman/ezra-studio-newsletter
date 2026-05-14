@@ -39,7 +39,7 @@ export default async function AdminPage() {
       .map(m => ({
         user_id:  m.user_id,
         role:     m.role,
-        profiles: m.profiles as { full_name: string | null } | null,
+        profiles: m.profiles as unknown as { full_name: string | null } | null,
       })),
   }))
 
