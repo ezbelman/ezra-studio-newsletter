@@ -6,6 +6,7 @@ import { CreateUserForm } from './create-user-form'
 import { CreateOrgForm } from './create-org-form'
 import { SettingsPanel } from './settings-panel'
 import { PermissionsPanel } from './permissions-panel'
+import { OrgMembersView } from './org-members-view'
 import { getSettingsStatus } from './settings-actions'
 
 export default async function AdminPage() {
@@ -23,7 +24,7 @@ export default async function AdminPage() {
 
   const [{ data: orgs }, { data: users }, { count: nlCount }, { count: issueCount }, settingsStatus, { data: orgMembers }] =
     await Promise.all([
-      supabase.from('organizations').select('id, name, slug, created_at').order('created_at', { ascending: false }),
+      supabase.from('organizations').select('id, name, slug, plan, created_at').order('created_at', { ascending: false }),
       supabase.from('profiles').select('id, full_name, is_platform_admin, created_at').order('created_at', { ascending: false }),
       supabase.from('newsletters').select('*', { count: 'exact', head: true }),
       supabase.from('issues').select('*', { count: 'exact', head: true }),
@@ -31,9 +32,9 @@ export default async function AdminPage() {
       supabase.from('org_members').select('org_id, user_id, role, profiles(full_name)'),
     ])
 
-  // Attach members to each org
   const orgsWithMembers = (orgs ?? []).map(org => ({
     ...org,
+    plan: (org as { plan?: string }).plan ?? 'trial',
     members: (orgMembers ?? [])
       .filter(m => m.org_id === org.id)
       .map(m => ({
@@ -137,34 +138,16 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      {/* Orgs table */}
+      {/* Organizations & Members */}
       <div className="animate-fade-up delay-200">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Organizations</h2>
-          <span className="text-xs text-ink-muted">{orgs?.length ?? 0} total</span>
-        </div>
-        <div className="rounded-xl border border-line bg-surface overflow-hidden">
-          <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[360px]">
-            <thead>
-              <tr className="border-b border-line bg-bg/50">
-                <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Name</th>
-                <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Slug</th>
-                <th className="text-left px-5 py-3 text-xs font-700 uppercase tracking-widest text-ink-muted">Created</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {orgs?.map(org => (
-                <tr key={org.id} className="hover:bg-bg/60 transition-colors">
-                  <td className="px-5 py-3.5 font-600 text-ink">{org.name}</td>
-                  <td className="px-5 py-3.5 font-mono text-xs text-ink-muted">{org.slug}</td>
-                  <td className="px-5 py-3.5 text-ink-muted">{formatDate(org.created_at)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-ink-muted" />
+            <h2 className="text-xs font-700 uppercase tracking-widest text-ink-muted">Organizations & Members</h2>
           </div>
+          <span className="text-xs text-ink-muted">{orgsWithMembers.length} org{orgsWithMembers.length !== 1 ? 's' : ''}</span>
         </div>
+        <OrgMembersView orgs={orgsWithMembers} />
       </div>
     </div>
   )
