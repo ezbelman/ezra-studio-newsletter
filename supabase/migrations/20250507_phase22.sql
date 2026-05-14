@@ -1,6 +1,6 @@
 -- ============================================================
 -- Newsletter Studio — Phase 2.2: Segments, Templates, Automations
--- Migration: 20250507_phase22
+-- Migration: 20250507_phase22 (idempotent — safe to re-run)
 -- ============================================================
 
 -- ── Segments ─────────────────────────────────────────────────
@@ -18,9 +18,11 @@ CREATE TABLE IF NOT EXISTS segments (
 
 ALTER TABLE segments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "org_members_read_segments" ON segments;
 CREATE POLICY "org_members_read_segments"
   ON segments FOR SELECT USING (is_org_member(org_id));
 
+DROP POLICY IF EXISTS "editors_manage_segments" ON segments;
 CREATE POLICY "editors_manage_segments"
   ON segments FOR ALL USING (org_role(org_id) IN ('owner', 'admin', 'editor'))
   WITH CHECK (org_role(org_id) IN ('owner', 'admin', 'editor'));
@@ -39,51 +41,55 @@ CREATE TABLE IF NOT EXISTS templates (
 
 ALTER TABLE templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "everyone_reads_platform_templates" ON templates;
 CREATE POLICY "everyone_reads_platform_templates"
   ON templates FOR SELECT USING (is_platform = true);
 
+DROP POLICY IF EXISTS "org_members_read_own_templates" ON templates;
 CREATE POLICY "org_members_read_own_templates"
   ON templates FOR SELECT USING (org_id IS NOT NULL AND is_org_member(org_id));
 
+DROP POLICY IF EXISTS "editors_create_templates" ON templates;
 CREATE POLICY "editors_create_templates"
   ON templates FOR INSERT
   WITH CHECK (org_id IS NOT NULL AND org_role(org_id) IN ('owner', 'admin', 'editor'));
 
+DROP POLICY IF EXISTS "editors_delete_templates" ON templates;
 CREATE POLICY "editors_delete_templates"
   ON templates FOR DELETE
   USING (org_id IS NOT NULL AND org_role(org_id) IN ('owner', 'admin', 'editor'));
 
--- Seed platform templates
-INSERT INTO templates (name, description, structure, is_platform) VALUES
-(
-  'Weekly Digest',
-  'A roundup of key stories with bullets and a hot take',
-  '{"title":"[Newsletter] Week in Review","stories":[{"headline":"Headline 1","bullets":["Key point A","Key point B","Key point C"],"takeaway":"Why this matters for your audience"},{"headline":"Headline 2","bullets":["Key point A","Key point B"],"takeaway":"The big picture"}],"prompts":["What do you think about this trend?","Have you tried this yet?"],"hot_take":"Your bold contrarian take here."}',
-  true
-),
-(
-  'Product Update',
-  'Announce new features or improvements',
-  '{"title":"What''s New in [Product]","stories":[{"headline":"New Feature","bullets":["What it does","How to access it","Who benefits most"],"takeaway":"Why we built this and what comes next"}],"prompts":["Try it and let us know what you think."],"hot_take":""}',
-  true
-),
-(
-  'Industry Roundup',
-  'Curate the most important news from your niche',
-  '{"title":"[Industry] Roundup","stories":[{"headline":"Story 1","bullets":["What happened","Who is involved","What changes"],"takeaway":"The strategic implication"},{"headline":"Story 2","bullets":["The key development","Numbers that matter"],"takeaway":"What to watch for"}],"prompts":["What story are you following closely?"],"hot_take":"The trend everyone is talking about but nobody is acting on yet."}',
-  true
-),
-(
-  'Deep Dive',
-  'A focused, long-form exploration of one topic',
-  '{"title":"Deep Dive: [Topic]","stories":[{"headline":"The Problem","bullets":["Why this matters now","The common misconceptions","The real challenge"],"takeaway":""},{"headline":"The Evidence","bullets":["Data point 1","Data point 2","Expert opinion"],"takeaway":"What the data actually says"},{"headline":"The Solution","bullets":["Approach 1","Approach 2","What to do next"],"takeaway":"The actionable conclusion"}],"prompts":["Have you experienced this problem?","What approach do you use?"],"hot_take":""}',
-  true
-),
-(
-  'Minimal',
-  'Clean, text-forward — no noise',
-  '{"title":"","stories":[{"headline":"","bullets":["","",""],"takeaway":""}],"prompts":[],"hot_take":""}',
-  true
+-- Seed platform templates (skip if already present)
+INSERT INTO templates (name, description, structure, is_platform)
+SELECT name, description, structure::jsonb, true FROM (VALUES
+  (
+    'Weekly Digest',
+    'A roundup of key stories with bullets and a hot take',
+    '{"title":"[Newsletter] Week in Review","stories":[{"headline":"Headline 1","bullets":["Key point A","Key point B","Key point C"],"takeaway":"Why this matters for your audience"},{"headline":"Headline 2","bullets":["Key point A","Key point B"],"takeaway":"The big picture"}],"prompts":["What do you think about this trend?","Have you tried this yet?"],"hot_take":"Your bold contrarian take here."}'
+  ),
+  (
+    'Product Update',
+    'Announce new features or improvements',
+    '{"title":"What''s New in [Product]","stories":[{"headline":"New Feature","bullets":["What it does","How to access it","Who benefits most"],"takeaway":"Why we built this and what comes next"}],"prompts":["Try it and let us know what you think."],"hot_take":""}'
+  ),
+  (
+    'Industry Roundup',
+    'Curate the most important news from your niche',
+    '{"title":"[Industry] Roundup","stories":[{"headline":"Story 1","bullets":["What happened","Who is involved","What changes"],"takeaway":"The strategic implication"},{"headline":"Story 2","bullets":["The key development","Numbers that matter"],"takeaway":"What to watch for"}],"prompts":["What story are you following closely?"],"hot_take":"The trend everyone is talking about but nobody is acting on yet."}'
+  ),
+  (
+    'Deep Dive',
+    'A focused, long-form exploration of one topic',
+    '{"title":"Deep Dive: [Topic]","stories":[{"headline":"The Problem","bullets":["Why this matters now","The common misconceptions","The real challenge"],"takeaway":""},{"headline":"The Evidence","bullets":["Data point 1","Data point 2","Expert opinion"],"takeaway":"What the data actually says"},{"headline":"The Solution","bullets":["Approach 1","Approach 2","What to do next"],"takeaway":"The actionable conclusion"}],"prompts":["Have you experienced this problem?","What approach do you use?"],"hot_take":""}'
+  ),
+  (
+    'Minimal',
+    'Clean, text-forward — no noise',
+    '{"title":"","stories":[{"headline":"","bullets":["","",""],"takeaway":""}],"prompts":[],"hot_take":""}'
+  )
+) AS t(name, description, structure)
+WHERE NOT EXISTS (
+  SELECT 1 FROM templates WHERE is_platform = true AND templates.name = t.name
 );
 
 -- ── Automations ──────────────────────────────────────────────
@@ -107,9 +113,11 @@ CREATE TABLE IF NOT EXISTS automations (
 
 ALTER TABLE automations ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "org_members_read_automations" ON automations;
 CREATE POLICY "org_members_read_automations"
   ON automations FOR SELECT USING (is_org_member(org_id));
 
+DROP POLICY IF EXISTS "admins_manage_automations" ON automations;
 CREATE POLICY "admins_manage_automations"
   ON automations FOR ALL USING (org_role(org_id) IN ('owner', 'admin'))
   WITH CHECK (org_role(org_id) IN ('owner', 'admin'));
@@ -129,6 +137,7 @@ CREATE TABLE IF NOT EXISTS automation_enrollments (
 
 ALTER TABLE automation_enrollments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "org_members_read_enrollments" ON automation_enrollments;
 CREATE POLICY "org_members_read_enrollments"
   ON automation_enrollments FOR SELECT USING (
     EXISTS (
