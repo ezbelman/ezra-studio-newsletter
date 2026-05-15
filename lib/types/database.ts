@@ -161,6 +161,7 @@ export interface Database {
           slug: string
           template: string
           email_template: string
+          custom_sending_domain: string | null
           status: string
           created_at: string
         }
@@ -172,6 +173,7 @@ export interface Database {
           slug: string
           template?: string
           email_template?: string
+          custom_sending_domain?: string | null
           status?: string
         }
         Update: {
@@ -180,6 +182,7 @@ export interface Database {
           slug?: string
           template?: string
           email_template?: string
+          custom_sending_domain?: string | null
           status?: string
         }
         Relationships: [

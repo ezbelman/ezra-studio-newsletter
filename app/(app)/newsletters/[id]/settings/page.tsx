@@ -12,7 +12,7 @@ export default async function NewsletterSettingsPage({ params }: { params: Promi
 
   const { data: nl } = await supabase
     .from('newsletters')
-    .select('id, name, description, slug, status, email_template')
+    .select('id, name, description, slug, status, email_template, custom_sending_domain')
     .eq('id', id)
     .single()
 

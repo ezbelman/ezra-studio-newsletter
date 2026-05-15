@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, AlertTriangle, Code2, ExternalLink } from 'lucide-react'
+import { Loader2, AlertTriangle, Code2, ExternalLink, Mail } from 'lucide-react'
 import { slugify } from '@/lib/utils'
 import { toast } from '@/hooks/use-toast'
 import { EMAIL_TEMPLATES } from '@/lib/email/template'
@@ -19,16 +19,18 @@ interface Newsletter {
   slug: string
   status: string
   email_template?: string | null
+  custom_sending_domain?: string | null
 }
 
 export function NewsletterSettingsForm({ newsletter }: { newsletter: Newsletter }) {
   const supabase = createClient()
   const router   = useRouter()
 
-  const [name,      setName]      = useState(newsletter.name)
-  const [desc,      setDesc]      = useState(newsletter.description ?? '')
-  const [template,  setTemplate]  = useState(newsletter.email_template ?? 'dark')
-  const [saving,    setSaving]    = useState(false)
+  const [name,         setName]         = useState(newsletter.name)
+  const [desc,         setDesc]         = useState(newsletter.description ?? '')
+  const [template,     setTemplate]     = useState(newsletter.email_template ?? 'dark')
+  const [customDomain, setCustomDomain] = useState(newsletter.custom_sending_domain ?? '')
+  const [saving,       setSaving]       = useState(false)
   const [archiving, setArchiving] = useState(false)
   const [error,     setError]     = useState('')
   const [isConfirmingArchive, setIsConfirmingArchive] = useState(false)
@@ -45,9 +47,16 @@ export function NewsletterSettingsForm({ newsletter }: { newsletter: Newsletter 
     setSaving(true)
 
     const newSlug = slugify(name)
+    const domain  = customDomain.trim().toLowerCase().replace(/^https?:\/\//, '')
     const { error: updateError } = await supabase
       .from('newsletters')
-      .update({ name: name.trim(), description: desc.trim() || null, slug: newSlug, email_template: template })
+      .update({
+        name:                 name.trim(),
+        description:          desc.trim() || null,
+        slug:                 newSlug,
+        email_template:       template,
+        custom_sending_domain: domain || null,
+      })
       .eq('id', newsletter.id)
 
     setSaving(false)
@@ -121,6 +130,30 @@ export function NewsletterSettingsForm({ newsletter }: { newsletter: Newsletter 
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Custom sending domain */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-700 uppercase tracking-widest text-ink-muted flex items-center gap-1.5">
+              <Mail className="h-3 w-3" />
+              Custom sending domain
+            </label>
+            <input
+              type="text"
+              value={customDomain}
+              onChange={e => setCustomDomain(e.target.value)}
+              placeholder="yourcompany.com"
+              className="w-full rounded-sm border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-muted/50 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent font-mono"
+            />
+            <p className="text-xs text-ink-muted">
+              Leave blank to use the default <code className="bg-elevated px-1 rounded text-[11px]">resend.dev</code> address.
+              Domain must be verified in your Resend account first.
+            </p>
+            {customDomain.trim() && (
+              <p className="text-xs text-accent font-mono">
+                From: newsletter@{customDomain.trim().toLowerCase().replace(/^https?:\/\//, '')}
+              </p>
+            )}
           </div>
 
           {error && (

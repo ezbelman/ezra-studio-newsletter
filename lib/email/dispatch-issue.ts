@@ -42,14 +42,14 @@ export async function dispatchIssue(opts: {
 
   const { data: issue } = await admin
     .from('issues')
-    .select('id, title, polished_json, newsletter_id, newsletters(name, slug, email_template, organizations(name, primary_color))')
+    .select('id, title, polished_json, newsletter_id, newsletters(name, slug, email_template, custom_sending_domain, organizations(name, primary_color))')
     .eq('id', issueId)
     .single()
 
   if (!issue)             throw new Error('Issue not found')
   if (!issue.polished_json) throw new Error('Issue has no polished content')
 
-  const nl  = issue.newsletters as unknown as { name: string; slug: string; email_template: string | null; organizations: { name: string; primary_color: string | null } } | null
+  const nl  = issue.newsletters as unknown as { name: string; slug: string; email_template: string | null; custom_sending_domain: string | null; organizations: { name: string; primary_color: string | null } } | null
   const org = nl?.organizations
 
   const { data: subscribers } = await admin
@@ -76,7 +76,10 @@ export async function dispatchIssue(opts: {
         unsubscribeUrl,
         webViewUrl,
       })
-      return { from: `${org?.name ?? 'Newsletter Studio'} <${FROM_EMAIL}>`, to: sub.email, subject, html }
+      const sendFrom = nl?.custom_sending_domain
+        ? `newsletter@${nl.custom_sending_domain}`
+        : FROM_EMAIL
+      return { from: `${org?.name ?? 'Newsletter Studio'} <${sendFrom}>`, to: sub.email, subject, html }
     })
   }
 

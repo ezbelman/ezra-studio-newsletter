@@ -18,10 +18,25 @@ export async function GET(req: NextRequest) {
     .lte('scheduled_at', new Date().toISOString())
     .limit(10)
 
+  if (!issues?.length) {
+    return NextResponse.json({ processed: 0, failed: 0 })
+  }
+
+  // When Inngest is configured, fan out one event per issue for parallel processing
+  if (process.env.INNGEST_EVENT_KEY) {
+    const { inngest } = await import('@/lib/inngest/client')
+    const eligible = issues.filter(i => i.polished_json)
+    await inngest.send(
+      eligible.map(i => ({ name: 'issue/send.scheduled' as const, data: { issueId: i.id, orgId: i.org_id } }))
+    )
+    return NextResponse.json({ fanned_out: eligible.length })
+  }
+
+  // Fallback: inline sequential processing (no Inngest configured)
   let processed = 0
   let failed    = 0
 
-  for (const issue of issues ?? []) {
+  for (const issue of issues) {
     try {
       if (!issue.polished_json) { failed++; continue }
 
@@ -31,7 +46,6 @@ export async function GET(req: NextRequest) {
       const result = await dispatchIssue({ issueId: issue.id, orgId: issue.org_id })
 
       if (result.subscriberCount === 0) {
-        // No subscribers — still mark published so it doesn't loop
         await admin.from('issues').update({
           status:       'published',
           published_at: new Date().toISOString(),

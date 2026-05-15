@@ -19,12 +19,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const resendKey = await getPlatformSetting('RESEND_API_KEY')
-  if (!resendKey) {
-    return NextResponse.json({ error: 'Resend key not configured' }, { status: 500 })
-  }
-  const resend = new Resend(resendKey)
-
   const admin = createAdminClient()
 
   const { data: enrollments, error } = await admin
@@ -38,7 +32,7 @@ export async function GET(req: NextRequest) {
         id,
         name,
         steps,
-        newsletters ( name, slug, org_id, organizations ( name, primary_color ) )
+        newsletters ( name, slug, org_id, custom_sending_domain, organizations ( name, primary_color ) )
       ),
       subscribers ( email, name )
     `)
@@ -50,17 +44,35 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  if (!enrollments?.length) {
+    return NextResponse.json({ processed: 0, failed: 0 })
+  }
+
+  // When Inngest is configured, fan out one event per enrollment for parallel processing
+  if (process.env.INNGEST_EVENT_KEY) {
+    const { inngest } = await import('@/lib/inngest/client')
+    await inngest.send(
+      enrollments.map(e => ({ name: 'automation/step.due' as const, data: { enrollmentId: e.id } }))
+    )
+    return NextResponse.json({ fanned_out: enrollments.length })
+  }
+
+  // Fallback: inline sequential processing (no Inngest configured)
+  const resendKey = await getPlatformSetting('RESEND_API_KEY')
+  if (!resendKey) {
+    return NextResponse.json({ error: 'Resend key not configured' }, { status: 500 })
+  }
+  const resend = new Resend(resendKey)
+
   let processed = 0
   let failed    = 0
-
-  // Per-org throttle: track emails sent per org in this cron run
   const orgSentCount = new Map<string, number>()
 
-  for (const enrollment of enrollments ?? []) {
+  for (const enrollment of enrollments) {
     try {
       const automation   = enrollment.automations as unknown as {
         id: string; name: string; steps: AutomationStep[]
-        newsletters: { name: string; slug: string; org_id: string; organizations: { name: string; primary_color: string | null } } | null
+        newsletters: { name: string; slug: string; org_id: string; custom_sending_domain: string | null; organizations: { name: string; primary_color: string | null } } | null
       } | null
       const subscriber   = enrollment.subscribers as unknown as {
         email: string; name: string | null
@@ -68,16 +80,13 @@ export async function GET(req: NextRequest) {
 
       if (!automation || !subscriber) { failed++; continue }
 
-      // Enforce per-org send cap
-      const orgId = automation.newsletters?.org_id ?? ''
+      const orgId   = automation.newsletters?.org_id ?? ''
       const orgCount = orgSentCount.get(orgId) ?? 0
-      if (orgId && orgCount >= ORG_EMAIL_CAP_PER_RUN) {
-        continue // Skip silently — will be picked up in next cron run
-      }
+      if (orgId && orgCount >= ORG_EMAIL_CAP_PER_RUN) continue
 
-      const steps       = automation.steps ?? []
-      const stepIndex   = enrollment.current_step
-      const step        = steps[stepIndex]
+      const steps     = automation.steps ?? []
+      const stepIndex = enrollment.current_step
+      const step      = steps[stepIndex]
 
       if (!step) {
         await admin.from('automation_enrollments')
@@ -87,11 +96,11 @@ export async function GET(req: NextRequest) {
       }
 
       const newsletter = automation.newsletters
-      const orgName    = newsletter?.organizations?.name ?? 'Newsletter'
-      const fromName   = newsletter?.name ?? orgName
-      const fromEmail  = `newsletter@${newsletter?.slug ?? 'mail'}.resend.dev`
-
-      const unsubUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(subscriber.email)}`
+      const fromName   = newsletter?.name ?? newsletter?.organizations?.name ?? 'Newsletter'
+      const fromEmail  = newsletter?.custom_sending_domain
+        ? `newsletter@${newsletter.custom_sending_domain}`
+        : `newsletter@${newsletter?.slug ?? 'mail'}.resend.dev`
+      const unsubUrl   = `${APP_URL}/unsubscribe?email=${encodeURIComponent(subscriber.email)}`
 
       const html = `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
