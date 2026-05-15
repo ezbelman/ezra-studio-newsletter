@@ -1,4 +1,4 @@
-﻿import { HelpCircle, BookOpen, MessageCircle, ExternalLink, Search, Keyboard } from 'lucide-react'
+﻿import { BookOpen, MessageCircle, ExternalLink, Search, Keyboard } from 'lucide-react'
 
 export const metadata = { title: 'Help & Docs' }
 

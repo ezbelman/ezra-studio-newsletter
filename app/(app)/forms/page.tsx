@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { FileText, Plus, Copy, ExternalLink, BarChart2 } from 'lucide-react'
+import Link from 'next/link'
+import { FileText, Plus, Copy, ExternalLink } from 'lucide-react'
 
 export const metadata = { title: 'Forms' }
 
@@ -22,8 +23,6 @@ export default async function FormsPage() {
         .eq('org_id', membership.org_id)
         .eq('status', 'active')
     : { data: [] }
-
-  const orgSlug = (membership?.organizations as { slug: string } | null)?.slug
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl">
@@ -76,14 +75,14 @@ export default async function FormsPage() {
                     <Copy className="h-3.5 w-3.5" />
                     Embed
                   </button>
-                  <a
+                  <Link
                     href={`/s/${nl.slug}`}
                     target="_blank"
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line text-xs text-ink/50 hover:text-ink hover:border-accent/40 transition-colors"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     View
-                  </a>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -94,13 +93,13 @@ export default async function FormsPage() {
           <FileText className="h-10 w-10 text-ink/15 mx-auto mb-3" />
           <p className="text-sm font-500 text-ink/40 mb-1">No newsletters yet</p>
           <p className="text-xs text-ink/30 mb-4">Create a newsletter first to get a subscribe page</p>
-          <a
+          <Link
             href="/newsletters"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg gradient-accent text-white text-sm font-500 hover:opacity-90 transition-opacity"
           >
             <Plus className="h-4 w-4" />
             Create Newsletter
-          </a>
+          </Link>
         </div>
       )}
 

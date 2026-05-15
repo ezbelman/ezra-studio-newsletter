@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { CreditCard, CheckCircle2, Zap, Users, Mail, BarChart2 } from 'lucide-react'
+import { CreditCard, CheckCircle2, Zap, Users, Mail } from 'lucide-react'
 
 export const metadata = { title: 'Billing' }
 

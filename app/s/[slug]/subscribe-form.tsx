@@ -42,7 +42,7 @@ export function SubscribeForm({ newsletterId, newsletterName }: Props) {
     return (
       <div className="bg-success/10 border border-success/30 rounded-xl p-6 text-center animate-scale-in">
         <CheckCircle2 className="h-8 w-8 text-success mx-auto mb-3" />
-        <p className="text-sm font-600 text-ink mb-1">You're subscribed!</p>
+        <p className="text-sm font-600 text-ink mb-1">You&apos;re subscribed!</p>
         <p className="text-xs text-ink/50">
           Welcome to {newsletterName}. Check your inbox for a confirmation.
         </p>

@@ -95,13 +95,13 @@ export default async function CalendarPage({
           <h1 className="text-2xl font-600 text-ink">Calendar</h1>
           <p className="text-ink/50 text-sm mt-0.5">Schedule and track all newsletter issues</p>
         </div>
-        <a
+        <Link
           href="/newsletters"
           className="flex items-center gap-2 px-4 py-2 rounded-lg gradient-accent text-white text-sm font-500 hover:opacity-90 transition-opacity"
         >
           <Plus className="h-4 w-4" />
           New Issue
-        </a>
+        </Link>
       </div>
 
       {/* Month nav */}

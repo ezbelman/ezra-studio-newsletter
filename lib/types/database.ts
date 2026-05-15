@@ -5,7 +5,7 @@ export type IssueStatus = 'draft' | 'pending_approval' | 'needs_revision' | 'app
 export type SubscriberStatus = 'active' | 'unsubscribed' | 'bounced'
 export type Plan = 'trial' | 'starter' | 'pro' | 'enterprise'
 
-type Relationship = {
+export type Relationship = {
   foreignKeyName: string
   columns: string[]
   isOneToOne: boolean
@@ -513,6 +513,28 @@ export interface Database {
         }
         Relationships: [
           { foreignKeyName: 'org_usage_org_id_fkey'; columns: ['org_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] }
+        ]
+      }
+      platform_settings: {
+        Row: {
+          key:        string
+          value:      string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          key:         string
+          value:       string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          value?:      string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          { foreignKeyName: 'platform_settings_updated_by_fkey'; columns: ['updated_by']; isOneToOne: false; referencedRelation: 'profiles'; referencedColumns: ['id'] }
         ]
       }
       notifications: {

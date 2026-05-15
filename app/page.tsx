@@ -186,7 +186,7 @@ export default async function MarketingPage() {
             <h2 className="text-3xl sm:text-4xl font-display font-bold text-[#0A2540] mb-3">
               Three steps to publish
             </h2>
-            <p className="text-slate-500 text-lg">From raw notes to your subscribers' inbox.</p>
+            <p className="text-slate-500 text-lg">From raw notes to your subscribers&apos; inbox.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
             {steps.map(s => (

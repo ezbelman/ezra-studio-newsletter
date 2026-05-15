@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { Building2, Users, Mail, FileText, Send, Plus, Settings, Shield, ArrowRight } from 'lucide-react'
+import { Building2, Users, FileText, Send, Settings, Shield, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { CreateUserForm } from './create-user-form'
 import { CreateOrgForm } from './create-org-form'

@@ -1,6 +1,6 @@
 ﻿import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Code2, Plus, Copy, Trash2, ExternalLink, Activity, Key, Webhook } from 'lucide-react'
+import { Code2, Plus, ExternalLink, Activity, Key, Webhook } from 'lucide-react'
 
 export const metadata = { title: 'Developers' }
 

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Building2, ChevronDown, Users, Crown, Shield, Pen, Eye } from 'lucide-react'
 
-type Role = 'owner' | 'admin' | 'editor' | 'viewer'
 
 interface MemberRow {
   user_id:  string

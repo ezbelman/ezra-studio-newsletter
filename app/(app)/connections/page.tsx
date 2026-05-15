@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { CheckCircle2, AlertCircle, ExternalLink, Settings } from 'lucide-react'
+import { CheckCircle2, ExternalLink, Settings } from 'lucide-react'
 
 export const metadata = { title: 'Connections' }
 

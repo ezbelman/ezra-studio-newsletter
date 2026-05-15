@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Building2, Crown, Shield, Pen, Eye,
-  Newspaper, FileText, Activity, Users,
+  Newspaper, FileText, Users,
 } from 'lucide-react'
 
 const PLAN_CLS: Record<string, string> = {

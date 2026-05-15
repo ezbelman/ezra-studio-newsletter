@@ -77,9 +77,9 @@ export default async function AcceptInvitePage({ searchParams }: Props) {
           <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">✉️</span>
           </div>
-          <h1 className="text-lg font-700 text-ink mb-2">You're invited!</h1>
+          <h1 className="text-lg font-700 text-ink mb-2">You&apos;re invited!</h1>
           <p className="text-sm text-ink/50 mb-1">
-            You've been invited to join
+            You&apos;ve been invited to join
           </p>
           <p className="text-sm font-600 text-ink mb-1">{orgName}</p>
           <p className="text-xs text-ink/40 mb-6">

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 
-export function NewNewsletterForm({ orgId: _ }: { orgId: string }) {
+export function NewNewsletterForm({ orgId: _orgId }: { orgId: string }) {
   const router = useRouter()
 
   const [name,        setName]    = useState('')

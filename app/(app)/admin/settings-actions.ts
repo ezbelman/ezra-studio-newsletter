@@ -38,12 +38,8 @@ const ALLOWED_KEYS: SettingKey[] = [
   'INNGEST_SIGNING_KEY',
 ]
 
-// platform_settings is a new table not yet in generated DB types — cast via unknown
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function settingsTable() {
-  return (createAdminClient() as unknown as {
-    from: (t: string) => any
-  }).from('platform_settings')
+  return createAdminClient().from('platform_settings')
 }
 
 export async function getSettingsStatus(): Promise<
@@ -53,7 +49,7 @@ export async function getSettingsStatus(): Promise<
 
   const { data: rows } = await settingsTable()
     .select('key, value')
-    .in('key', ALLOWED_KEYS) as { data: { key: string; value: string }[] | null }
+    .in('key', ALLOWED_KEYS)
 
   const dbMap = Object.fromEntries((rows ?? []).map(r => [r.key, r.value]))
 
@@ -89,7 +85,7 @@ export async function savePlatformSetting(key: SettingKey, value: string) {
   }
 
   const { error } = await settingsTable()
-    .upsert({ key, value: encrypted, updated_at: new Date().toISOString(), updated_by: user.id }) as { error: { message: string } | null }
+    .upsert({ key, value: encrypted, updated_at: new Date().toISOString(), updated_by: user.id })
 
   if (error) return { error: error.message }
 
@@ -104,7 +100,7 @@ export async function deletePlatformSetting(key: SettingKey) {
 
   const { error } = await settingsTable()
     .delete()
-    .eq('key', key) as { error: { message: string } | null }
+    .eq('key', key)
 
   if (error) return { error: error.message }
 

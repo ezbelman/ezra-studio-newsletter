@@ -55,7 +55,7 @@ export function InviteForm() {
           <div className="space-y-4">
             <div className="rounded-lg bg-lime/10 border border-lime/20 p-4">
               <p className="text-xs font-600 text-lime mb-2">Invite link created</p>
-              <p className="text-xs text-ink-muted mb-3">Share this link with the person you're inviting:</p>
+              <p className="text-xs text-ink-muted mb-3">Share this link with the person you&apos;re inviting:</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs font-mono bg-elevated border border-line rounded px-3 py-2 truncate text-ink">
                   {inviteLink}
