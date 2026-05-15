@@ -4,6 +4,12 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export type NotificationType = 'issue_submitted' | 'issue_approved' | 'issue_needs_revision'
 
+// Notifications table is not yet in generated types — cast for compatibility
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function notificationsTable() {
+  return (createAdminClient() as unknown as { from: (t: string) => any }).from('notifications')
+}
+
 export interface NotificationPayload {
   issue_id:    string
   issue_title: string
@@ -44,8 +50,8 @@ export async function createNotificationsForIssueTransition(
 
     if (!approvers?.length) return
 
-    await admin.from('notifications').insert(
-      approvers.map(m => ({
+    await notificationsTable().insert(
+      approvers.map((m: { user_id: string }) => ({
         org_id:  orgId,
         user_id: m.user_id,
         type:    'issue_submitted' as NotificationType,
@@ -64,7 +70,7 @@ export async function createNotificationsForIssueTransition(
 
   if (!type) return
 
-  await admin.from('notifications').insert({
+  await notificationsTable().insert({
     org_id:  orgId,
     user_id: createdBy,
     type,

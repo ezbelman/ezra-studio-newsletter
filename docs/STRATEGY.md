@@ -465,7 +465,7 @@ export async function POST(req: NextRequest, ...) {
 | P5-2 | Onboarding checklist on dashboard | HIGH | ✅ | `OnboardingChecklist` — derives state from DB, localStorage dismiss |
 | P5-3 | `/issues` cross-newsletter view | MEDIUM | ✅ | Newsletter + status filters; added to sidebar nav |
 | P5-4 | Custom domain sending (Resend domain API) | HIGH | 🔲 | Requires Resend domain API setup |
-| P5-5 | Inngest integration (replace automation + scheduled-send cron) | MEDIUM | 🔲 | Requires Inngest account setup |
+| P5-5 | Inngest integration (replace automation + scheduled-send cron) | MEDIUM | 🔲 | Keys configurable in Admin → Platform Settings; serve route + functions pending |
 | P5-6 | `unstable_cache` for org-level reads | MEDIUM | ✅ | `getCachedMembership`, `getCachedProfile`, `getCachedNewsletters` |
 | P5-7 | Supabase type codegen in CI | LOW | ✅ | `.github/workflows/ci.yml` — typecheck + lint on push |
 | P5-8 | Personal AI keys for owners (Anthropic / OpenAI / Google) | HIGH | ✅ | DB migration, server actions, `PersonalAIForm` with live test button |

@@ -28,12 +28,11 @@ interface Props {
 
 function KeyFieldWithTest({
   name, label, placeholder, isSet, maskedValue,
-  show, onToggleShow, onTest, providerKey,
+  show, onToggleShow, providerKey,
 }: {
   name: string; label: string; placeholder: string
   isSet: boolean; maskedValue: string
   show: boolean; onToggleShow: () => void
-  onTest: (key: string) => void
   providerKey: 'anthropic' | 'openai' | 'gemini'
 }) {
   const [editing, setEditing]   = useState(false)
@@ -214,7 +213,6 @@ export function PersonalAIForm({
                   maskedValue={anthropicKeyMasked}
                   show={showKeys}
                   onToggleShow={() => setShowKeys(s => !s)}
-                  onTest={() => {}}
                   providerKey="anthropic"
                 />
               )}
@@ -227,7 +225,6 @@ export function PersonalAIForm({
                   maskedValue={openaiKeyMasked}
                   show={showKeys}
                   onToggleShow={() => setShowKeys(s => !s)}
-                  onTest={() => {}}
                   providerKey="openai"
                 />
               )}
@@ -240,7 +237,6 @@ export function PersonalAIForm({
                   maskedValue={geminiKeyMasked}
                   show={showKeys}
                   onToggleShow={() => setShowKeys(s => !s)}
-                  onTest={() => {}}
                   providerKey="gemini"
                 />
               )}

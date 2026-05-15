@@ -1,6 +1,6 @@
 # Newsletter Studio
 
-Multi-tenant newsletter platform with AI-powered content editing, team collaboration, and multi-channel distribution. Built on Next.js, Supabase, and the Anthropic API.
+Multi-tenant newsletter SaaS with AI-powered content editing, team collaboration, automated sequences, and multi-provider email delivery. Built on Next.js, Supabase, and Resend.
 
 ---
 
@@ -11,8 +11,10 @@ Multi-tenant newsletter platform with AI-powered content editing, team collabora
 | Framework | Next.js 16 (App Router, Server Actions) |
 | Database & Auth | Supabase (PostgreSQL + RLS + Auth) |
 | Styling | Tailwind CSS v3 + Radix UI |
-| AI | Anthropic Claude (platform key or bring your own) |
-| Email delivery | Resend |
+| AI | Anthropic Claude · OpenAI GPT-4o · Google Gemini |
+| Email delivery | Resend (batch send, A/B testing, webhooks) |
+| Job queue | Inngest (automation fan-out, scheduled sends) |
+| Billing | Stripe |
 | Icons | Lucide React |
 | Language | TypeScript |
 
@@ -24,7 +26,7 @@ Multi-tenant newsletter platform with AI-powered content editing, team collabora
 
 - Node.js 20+
 - A [Supabase](https://supabase.com) project
-- A [Resend](https://resend.com) account (for email delivery)
+- A [Resend](https://resend.com) account
 
 ### 1. Install dependencies
 
@@ -34,7 +36,7 @@ npm install
 
 ### 2. Set environment variables
 
-Copy the example below into a `.env.local` file at the project root:
+Copy into `.env.local`:
 
 ```env
 # Supabase
@@ -42,15 +44,30 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# Email delivery (Resend)
-RESEND_API_KEY=re_...
+# App URL (used in email links)
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
 
-# AI — platform shared key (Claude)
-PLATFORM_ANTHROPIC_API_KEY=sk-ant-...
+# Encryption key for secrets stored in the DB (32 bytes, hex)
+# Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+SETTINGS_ENCRYPTION_KEY=your_32_byte_hex_key
 
-# Encryption key for storing org API keys at rest (32 random bytes, hex)
-ENCRYPTION_KEY=your_32_byte_hex_key
+# Cron auth (set the same value in Vercel cron config)
+CRON_SECRET=your_cron_secret
 ```
+
+Additional keys can be set via environment variables **or** configured in the Admin → Platform Settings UI (encrypted at rest):
+
+| Key | Description |
+|---|---|
+| `RESEND_API_KEY` | Resend API key for sending emails |
+| `FROM_EMAIL` | Verified sender address (e.g. `hello@yourdomain.com`) |
+| `RESEND_WEBHOOK_SECRET` | Verifies bounce/open/click webhooks from Resend |
+| `PLATFORM_ANTHROPIC_API_KEY` | Shared Claude key for all orgs on the platform plan |
+| `STRIPE_SECRET_KEY` | Stripe secret key for billing |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for the upgrade page |
+| `STRIPE_WEBHOOK_SECRET` | Verifies Stripe webhook events |
+| `INNGEST_EVENT_KEY` | Sends events to Inngest (job queue) |
+| `INNGEST_SIGNING_KEY` | Verifies Inngest webhook calls to `/api/inngest` |
 
 ### 3. Run the dev server
 
@@ -66,54 +83,62 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```
 app/
-├── (app)/                  Authenticated app shell
-│   ├── dashboard/          Overview dashboard
-│   ├── newsletters/        Newsletter & issue management
+├── (app)/                    Authenticated app shell
+│   ├── dashboard/            Overview + onboarding checklist
+│   ├── issues/               Cross-newsletter issue view (all orgs)
+│   ├── newsletters/          Newsletter & issue management
 │   │   └── [id]/
-│   │       ├── issues/     Issue editor (+ version history)
-│   │       └── settings/   Per-newsletter settings
-│   ├── subscribers/        Subscriber list, CSV import, date-added column
-│   ├── segments/           Audience segments — rule builder CRUD
-│   ├── automations/        Trigger-based email sequences CRUD
-│   ├── templates/          Platform templates + My Templates CRUD
-│   ├── analytics/          Analytics dashboard
-│   ├── calendar/           Content calendar
-│   ├── connections/        Multi-channel connections
-│   ├── forms/              Subscribe forms & landing pages
-│   ├── team/               Team members & invitations
-│   ├── settings/           Org & AI provider settings
-│   ├── billing/            Billing (Stripe — Phase 2)
-│   ├── developers/         API keys & webhooks (Phase 3)
-│   └── admin/              Platform admin (superadmin only)
-├── (auth)/                 Unauthenticated auth pages
-│   ├── login/
-│   ├── signup/
-│   ├── forgot-password/
-│   └── reset-password/
-├── api/                    API routes
-│   ├── ai/polish/          AI content polish endpoint
-│   ├── issues/[id]/send/   Issue send endpoint (Resend + A/B)
-│   ├── webhooks/resend/    Bounce/open/click tracking
-│   └── subscribe/          Public subscribe endpoint
-├── invite/accept/          Invitation acceptance
-├── s/[slug]/               Public subscribe page & web archive
-└── unsubscribe/            One-click unsubscribe
+│   │       ├── issues/       Issue editor (+ version history, AI polish)
+│   │       └── settings/     Per-newsletter settings (template, embed)
+│   ├── subscribers/          Subscriber list, CSV import, date-added column
+│   ├── segments/             Audience segments — rule builder CRUD
+│   ├── automations/          Trigger-based email sequences CRUD
+│   ├── templates/            Platform templates + My Templates CRUD
+│   ├── analytics/            Analytics dashboard
+│   ├── calendar/             Content calendar
+│   ├── connections/          Multi-channel connections
+│   ├── forms/                Subscribe forms & embed widgets
+│   ├── team/                 Team members & invitations
+│   ├── settings/             Org · branding · AI provider · personal AI keys
+│   ├── billing/              Stripe billing & plan management
+│   ├── developers/           API keys & webhooks
+│   └── admin/                Platform admin — orgs, users, settings, permissions
+├── (auth)/                   Auth pages (login, signup, password reset)
+├── api/
+│   ├── ai/polish/            AI content polish (streaming-ready)
+│   ├── cron/
+│   │   ├── automations/      Automation enrollment runner (every 5 min)
+│   │   └── scheduled-sends/  Scheduled issue dispatch (every 5 min)
+│   ├── inngest/              Inngest job queue webhook
+│   ├── issues/[id]/send/     Issue send (Resend batch + A/B)
+│   ├── notifications/        In-app notification feed (GET + PATCH mark-read)
+│   ├── webhooks/resend/      Bounce / open / click tracking
+│   └── subscribe/            Public subscribe endpoint
+├── invite/accept/            Invitation acceptance
+├── s/[slug]/                 Public subscribe page & web archive
+└── unsubscribe/              One-click unsubscribe
 
 components/
-├── app/                    App-specific components (sidebar, editor, theme)
-└── ui/                     Design system primitives (button, badge, input…)
+├── app/                      App shell (sidebar, notification bell, onboarding checklist, editor)
+└── ui/                       Design system primitives (button, badge, input…)
 
 lib/
-├── actions/                Shared server actions
-│   ├── automation-actions  Create/toggle/delete automations + enrollment engine
-│   ├── segment-actions     Create/delete segments
-│   └── template-actions    Create/delete org templates
-├── ai/                     AI provider abstraction (Anthropic / OpenAI / Gemini)
-├── data/                   Data access helpers
-├── email/                  Email template renderer & unsubscribe token utilities
-├── supabase/               Supabase client factories (server, client, admin)
-├── types/                  TypeScript types & display helpers
-└── utils.ts                Shared utilities
+├── actions/                  Shared server actions (issues, automations, segments, templates, notifications)
+├── ai/                       AI provider abstraction — Anthropic · OpenAI · Gemini
+├── auth/                     Permission helpers (assertPermission, issue state machine)
+├── billing/                  Plan limits & usage tracking
+├── crypto/                   AES-256-GCM encryption for secrets
+├── data/                     Data access helpers + unstable_cache wrappers
+├── email/                    Template renderer, batch dispatch, unsubscribe tokens
+├── platform/                 Platform settings (DB-stored, encrypted, env-var fallback)
+├── supabase/                 Client factories (server, browser, admin)
+├── types/                    TypeScript types & display helpers
+└── utils.ts                  Shared utilities
+
+supabase/migrations/          All DB migrations in chronological order
+docs/
+├── STRATEGY.md               Full product strategy, audit, and phase roadmap
+└── PRD.md                    Product requirements document
 ```
 
 ---
@@ -131,9 +156,7 @@ lib/
 
 ## Design System
 
-The app uses a **dark-first** design system. The `:root` defines dark colors and the `.light` class overrides them for light mode.
-
-Key Tailwind tokens:
+Dark-first design. `:root` defines dark tokens; `.light` class overrides for light mode.
 
 | Token | Color | Usage |
 |---|---|---|
@@ -152,91 +175,125 @@ Key Tailwind tokens:
 
 ## Roles & Permissions
 
-| Action | Owner | Admin | Editor | Viewer |
-|---|---|---|---|---|
-| View newsletters & issues | ✅ | ✅ | ✅ | ✅ |
-| Create & edit issues | ✅ | ✅ | ✅ | ❌ |
-| Approve issues | ✅ | ✅ | ❌ | ❌ |
-| Publish & send | ✅ | ✅ | ❌ | ❌ |
-| Manage subscribers | ✅ | ✅ | ✅ | ❌ |
-| Manage team | ✅ | ✅ | ❌ | ❌ |
-| Rename organization | ✅ | ✅ | ❌ | ❌ |
-| Configure AI provider | ✅ | ✅ | ❌ | ❌ |
-| Manage billing | ✅ | ❌ | ❌ | ❌ |
+```
+owner (5) > admin (4) > editor (3) > reviewer (2) > contributor (1) > viewer (0)
+```
+
+| Action | viewer | contributor | reviewer | editor | admin | owner |
+|---|---|---|---|---|---|---|
+| Read issues | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Create / edit issues | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Submit for review | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Approve / reject | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ |
+| Delete issues | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Send emails | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Manage subscribers | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Manage automations | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Invite / remove members | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Org AI & branding settings | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Personal AI keys | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Billing | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
-## AI Provider Configuration
+## AI Configuration
 
-Organizations can choose their AI backend in **Settings → AI Provider**:
+### Organization AI (Admin + Owner)
+
+Set in **Settings → Organization AI Provider**. The selected key is shared across all team members for newsletter polish.
 
 | Option | Description |
 |---|---|
 | Platform AI | Shared Claude key (rate-limited, no config needed) |
-| Own Anthropic key | Unlimited via your Anthropic account |
-| Own OpenAI key | Uses GPT-4o, billed to your OpenAI account |
-| Own Gemini key | Uses Gemini 1.5 Pro, billed to your Google account |
+| Own Anthropic key | Unlimited via your Anthropic account (Claude Sonnet) |
+| Own OpenAI key | GPT-4o, billed to your OpenAI account |
+| Own Gemini key | Gemini 1.5 Pro, billed to your Google account |
 
-Keys are stored AES-256 encrypted server-side and never returned to the browser.
+### Personal AI Keys (Owner only)
+
+Set in **Settings → Personal AI Keys**. Independent from the org — for personal workflows outside newsletter polish. Includes a live connection test button per provider.
 
 ---
 
 ## Issue Lifecycle
 
 ```
-draft → pending_approval → approved → published
-                ↑               |
-                └───────────────┘  (back to draft)
+draft ──────────────────────────────────────► sent
+  │                                             ▲
+  ▼                                             │
+pending_approval ──(approve)──► approved ──(send / schedule)
+  │
+  ▼
+needs_revision ──(resubmit)──► pending_approval
 ```
+
+Server-side transition validation via `lib/auth/issue-state.ts` blocks invalid state jumps.
+
+---
+
+## Notifications
+
+In-app notification bell (sidebar + mobile bar). Polls `/api/notifications` every 30 seconds.
+
+Events that generate notifications:
+
+| Event | Who is notified |
+|---|---|
+| Issue submitted for review | All reviewers, admins, owners in the org |
+| Issue approved | Issue author |
+| Issue needs revision | Issue author |
+
+---
+
+## Cron Jobs
+
+Configured in `vercel.json`, running every 5 minutes:
+
+| Route | Purpose |
+|---|---|
+| `/api/cron/automations` | Process due automation enrollment steps |
+| `/api/cron/scheduled-sends` | Dispatch issues with a past `scheduled_at` timestamp |
+
+Secure with `CRON_SECRET` — Vercel sets the `Authorization: Bearer` header automatically.
 
 ---
 
 ## Phased Roadmap
 
-### Phase 1 — Core Loop ✅ Complete
-- [x] Auth, onboarding, org management
-- [x] Newsletters & issues with AI polish
-- [x] Team roles & invitations
-- [x] Settings (org rename, AI provider)
-- [x] Public subscribe page & unsubscribe flow
-- [x] Email send via Resend (batch, with A/B subject line testing)
-- [x] Subscriber management CRUD + CSV import + date-added column
-- [x] Invite accept flow
-- [x] Bounce / open / click webhook handler
-- [x] Issue version history
+### Phase 1 — Core Loop ✅
+Auth, onboarding, org management, newsletters, issues with AI polish, team roles & invitations, public subscribe/unsubscribe, Resend batch send + A/B testing, subscriber CRUD + CSV import, bounce/open/click webhooks, issue version history.
 
-### Phase 2 — Growth & Multi-Channel (in progress)
-- [x] Segments — rule-based CRUD with dynamic/static support
-- [x] Automations — trigger-based sequences CRUD + enrollment engine
-- [x] Templates — platform library + My Templates CRUD
-- [ ] Analytics dashboard (charts, heatmap, channel comparison)
-- [ ] Content calendar
-- [ ] Connections: Telegram, WhatsApp, LinkedIn
-- [ ] Billing (Stripe integration)
-- [ ] CRM (contact records, engagement scoring, notes)
-- [ ] Referral system (subscriber + creator acquisition)
-- [ ] White-label branding (logo, colors, font per org)
-- [ ] Platform Admin KPI dashboard
+### Phase 2 — Growth & Multi-Channel ✅
+Segments (rule-based CRUD), automations (trigger-based sequences + enrollment engine), My Templates CRUD, global search (⌘K), analytics dashboard, content calendar, white-label branding (logo, colors).
 
-### Phase 3 — Scale & Enterprise
-- [ ] Connections: Instagram, X/Twitter
-- [ ] Sponsorship & Ads (admin campaign manager, revenue share)
-- [ ] Developer API & webhooks
-- [ ] MFA (TOTP)
-- [ ] SOC 2 Type II audit
+### Phase 3 — Scale & Developer Platform ✅
+RBAC enforcement (`assertPermission`), AES-256-GCM encryption for secrets, issue state machine validation, rate limiting on public subscribe endpoint, GIN trigram indexes, platform admin panel (orgs, users, permissions, activity log), Stripe settings.
+
+### Phase 4 — Security & Authorization ✅
+Full permission matrix wired into all server actions and API routes, `assertValidTransition` on issue status, Zod validation at API boundaries, subscriber email normalization.
+
+### Phase 5 — Growth Infrastructure ✅
+In-app notifications (bell + dropdown, 30s polling, mark read), onboarding checklist on dashboard (4 steps, collapsible, localStorage dismiss), `/issues` cross-newsletter view with filters, `unstable_cache` for org-level reads, GitHub Actions CI (typecheck + lint), personal AI keys for owners (Anthropic / OpenAI / Gemini, live test button), Inngest keys in Admin → Platform Settings.
+
+### Phase 6 — Developer Platform (planned)
+Personal API keys, public API v1 (`/api/v1/subscribers`, `/api/v1/issues`), outbound webhooks, GDPR data export + deletion.
+
+### Phase 7 — Engagement & Virality (planned)
+Engagement scoring, win-back automation template, referral program, subscriber growth chart.
+
+### Phase 8 — AI Intelligence Layer (planned)
+Streaming AI polish (SSE), content topic tagging, subscriber interest profiles, AI-generated segment suggestions.
 
 ---
 
 ## Security
 
-- All authorization enforced via Supabase Row-Level Security at the database level
+- Authorization enforced via `assertPermission()` in all server actions + Supabase RLS at the DB level
+- All org and personal API keys stored AES-256-GCM encrypted; never returned to the browser
 - Session cookies: HttpOnly, Secure, SameSite=Strict
-- API keys shown once on creation, stored as bcrypt hashes
-- Org AI keys encrypted AES-256-GCM at rest
+- Public subscribe endpoint rate-limited (Upstash)
 - All user input validated with Zod at API boundaries
-- Issue HTML sanitized with DOMPurify before send/render
-
-See `PRD.md` Section 9 for the full security architecture.
+- Issue HTML sanitized before send/render
 
 ---
 
