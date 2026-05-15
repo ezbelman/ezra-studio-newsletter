@@ -7,12 +7,13 @@ import {
   LayoutDashboard, Newspaper, Users, Settings, BarChart2,
   LogOut, Shield, Sun, Moon, Calendar, Zap, Tag,
   Layout, Link2, CreditCard, Code2, HelpCircle, ChevronDown,
-  FileText, Menu, X, Search,
+  FileText, Menu, X, Search, Layers,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useTheme } from './theme-provider'
 import { SearchModal } from './search-modal'
+import { NotificationBell } from './notification-bell'
 
 interface SidebarProps {
   orgName:      string
@@ -24,6 +25,7 @@ interface SidebarProps {
 const navMain = [
   { label: 'Dashboard',   href: '/dashboard',   icon: LayoutDashboard },
   { label: 'Newsletters', href: '/newsletters',  icon: Newspaper },
+  { label: 'Issues',      href: '/issues',       icon: Layers },
   { label: 'Calendar',    href: '/calendar',     icon: Calendar },
   { label: 'Automations', href: '/automations',  icon: Zap },
 ]
@@ -119,12 +121,13 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
         >
           <Menu className="h-5 w-5" />
         </button>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-1">
           <div className="h-6 w-6 rounded-md gradient-accent flex items-center justify-center shrink-0">
             <span className="text-white font-black text-[10px] tracking-tight">NS</span>
           </div>
           <span className="text-ink font-600 text-sm">Newsletter Studio</span>
         </div>
+        <NotificationBell />
       </div>
 
       {/* Backdrop — mobile only */}
@@ -238,6 +241,7 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
             <div className="flex-1 min-w-0">
               <p className="text-ink text-sm font-500 truncate">{userFullName}</p>
             </div>
+            <NotificationBell />
             <button
               onClick={handleSignOut}
               className="text-ink/20 hover:text-danger transition-colors p-1 rounded"

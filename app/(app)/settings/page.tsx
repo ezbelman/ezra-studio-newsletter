@@ -6,6 +6,7 @@ import { maskKey, isKeySet } from '@/lib/ai/providers'
 import { SettingsForm } from './settings-form'
 import { OrgSettingsForm } from './org-settings-form'
 import { BrandingForm } from './branding-form'
+import { PersonalAIForm, type PersonalProvider } from './personal-ai-form'
 
 export const metadata = { title: 'Settings' }
 
@@ -18,20 +19,35 @@ export default async function SettingsPage() {
   if (!orgId) redirect('/onboarding')
 
   const admin = createAdminClient()
-  const { data: org } = await admin
-    .from('organizations')
-    .select('name, slug, logo_url, primary_color, accent_color, ai_provider, anthropic_api_key, openai_api_key, gemini_api_key')
-    .eq('id', orgId)
-    .single()
+  const [{ data: org }, { data: membership }, { data: profile }] = await Promise.all([
+    admin
+      .from('organizations')
+      .select('name, slug, logo_url, primary_color, accent_color, ai_provider, anthropic_api_key, openai_api_key, gemini_api_key')
+      .eq('id', orgId)
+      .single(),
+    supabase
+      .from('org_members')
+      .select('role')
+      .eq('org_id', orgId)
+      .eq('user_id', user.id)
+      .single(),
+    admin
+      .from('profiles')
+      .select('personal_ai_provider, personal_anthropic_api_key, personal_openai_api_key, personal_gemini_api_key')
+      .eq('id', user.id)
+      .single(),
+  ])
 
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('role')
-    .eq('org_id', orgId)
-    .eq('user_id', user.id)
-    .single()
+  const role    = membership?.role ?? ''
+  const canEdit = ['owner', 'admin'].includes(role)
+  const isOwner = role === 'owner'
 
-  const canEdit = ['owner', 'admin'].includes(membership?.role ?? '')
+  const personalProfile = profile as {
+    personal_ai_provider:       string | null
+    personal_anthropic_api_key: string | null
+    personal_openai_api_key:    string | null
+    personal_gemini_api_key:    string | null
+  } | null
 
   return (
     <div className="min-h-screen bg-bg">
@@ -56,6 +72,7 @@ export default async function SettingsPage() {
             currentAccent={org?.accent_color ?? '#4F8EF7'}
           />
 
+          {/* Org-level AI keys (admin + owner) */}
           <SettingsForm
             canEdit={canEdit}
             provider={org?.ai_provider ?? 'platform'}
@@ -66,6 +83,19 @@ export default async function SettingsPage() {
             geminiKeyMasked={maskKey(org?.gemini_api_key)}
             geminiKeySet={isKeySet(org?.gemini_api_key)}
           />
+
+          {/* Personal AI keys (owner only) */}
+          {isOwner && (
+            <PersonalAIForm
+              currentProvider={(personalProfile?.personal_ai_provider ?? 'none') as PersonalProvider}
+              anthropicKeySet={isKeySet(personalProfile?.personal_anthropic_api_key)}
+              anthropicKeyMasked={maskKey(personalProfile?.personal_anthropic_api_key)}
+              openaiKeySet={isKeySet(personalProfile?.personal_openai_api_key)}
+              openaiKeyMasked={maskKey(personalProfile?.personal_openai_api_key)}
+              geminiKeySet={isKeySet(personalProfile?.personal_gemini_api_key)}
+              geminiKeyMasked={maskKey(personalProfile?.personal_gemini_api_key)}
+            />
+          )}
         </div>
       </div>
     </div>

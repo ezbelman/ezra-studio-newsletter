@@ -108,9 +108,10 @@ export function SettingsForm({
   return (
     <div className="rounded-xl border border-line bg-surface">
       <div className="border-b border-line px-6 py-5">
-        <h3 className="text-base font-700 text-ink">AI Provider</h3>
+        <h3 className="text-base font-700 text-ink">Organization AI Provider</h3>
         <p className="text-xs text-ink-muted mt-1">
-          Choose how newsletter AI polish is powered. Keys are stored encrypted and never exposed in the browser.
+          Shared AI key used for newsletter polish across all team members. Only admins and owners can manage this.
+          Keys are stored server-side and never exposed in the browser.
         </p>
       </div>
       <div className="px-6 py-5">

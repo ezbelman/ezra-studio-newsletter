@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { OrgNameEditor } from './org-name-editor'
+import { OnboardingChecklist } from '@/components/app/onboarding-checklist'
 import {
   Plus, ArrowRight, Newspaper, Send, Users,
   Clock, Sparkles, UserPlus, Settings,
@@ -51,7 +52,7 @@ export default async function DashboardPage() {
   const name    = profileRes.data?.full_name ?? user.email ?? 'there'
   const canEdit = ['owner', 'admin'].includes(membershipRes.data.role)
 
-  const [newslettersRes, subscribersRes, publishedRes, inProgressRes, recentRes] = await Promise.all([
+  const [newslettersRes, subscribersRes, publishedRes, inProgressRes, recentRes, membersRes] = await Promise.all([
     supabase.from('newsletters').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
     supabase.from('subscribers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('status', 'active'),
     supabase.from('issues').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('status', 'published'),
@@ -62,6 +63,7 @@ export default async function DashboardPage() {
       .eq('org_id', orgId)
       .order('created_at', { ascending: false })
       .limit(7),
+    supabase.from('org_members').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
   ])
 
   const totalNewsletters = newslettersRes.count ?? 0
@@ -69,7 +71,15 @@ export default async function DashboardPage() {
   const totalPublished   = publishedRes.count     ?? 0
   const totalInProgress  = inProgressRes.count    ?? 0
   const recentIssues     = recentRes.data         ?? []
+  const totalMembers     = membersRes.count        ?? 0
   const isEmpty          = totalNewsletters === 0
+
+  const checklistState = {
+    createdNewsletter: totalNewsletters > 0,
+    invitedMember:     totalMembers > 1,
+    addedSubscriber:   totalSubscribers > 0,
+    sentFirstIssue:    totalPublished > 0,
+  }
 
   const stats = [
     { label: 'Subscribers',  value: totalSubscribers.toLocaleString(), sub: 'Active',          icon: Users,     dark: true  },
@@ -166,6 +176,9 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <>
+            {/* ── Onboarding checklist ────────────── */}
+            <OnboardingChecklist state={checklistState} />
+
             {/* ── Stats ───────────────────────────── */}
             <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               {stats.map((s, i) => {

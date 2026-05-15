@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { checkOrgLimit } from '@/lib/billing/check-limit'
 import { slugify } from '@/lib/utils'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 const Schema = z.object({
@@ -47,6 +48,8 @@ export async function createNewsletter(formData: FormData) {
     .single()
 
   if (error) return { error: error.message }
+
+  revalidatePath('/newsletters', 'page')
 
   await admin.from('activity_logs').insert({
     org_id:        membership.org_id,
