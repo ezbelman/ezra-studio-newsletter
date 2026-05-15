@@ -93,11 +93,11 @@ export async function togglePlatformAdmin(userId: string, makeAdmin: boolean) {
   if (error) return { error: error.message }
 
   const { revalidatePath } = await import('next/cache')
-  revalidatePath('/admin')
+  revalidatePath('/admin', 'layout')
   return { success: true }
 }
 
-export async function setOrgMemberRole(orgId: string, userId: string, role: 'owner' | 'admin' | 'editor' | 'viewer') {
+export async function setOrgMemberRole(orgId: string, userId: string, role: 'owner' | 'admin' | 'editor' | 'reviewer' | 'contributor' | 'viewer') {
   await assertPlatformAdmin()
 
   const admin = createAdminClient()
@@ -110,7 +110,7 @@ export async function setOrgMemberRole(orgId: string, userId: string, role: 'own
   if (error) return { error: error.message }
 
   const { revalidatePath } = await import('next/cache')
-  revalidatePath('/admin')
+  revalidatePath('/admin', 'layout')
   return { success: true }
 }
 
@@ -127,6 +127,6 @@ export async function removeOrgMember(orgId: string, userId: string) {
   if (error) return { error: error.message }
 
   const { revalidatePath } = await import('next/cache')
-  revalidatePath('/admin')
+  revalidatePath('/admin', 'layout')
   return { success: true }
 }

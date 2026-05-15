@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { Shield, ShieldOff, Loader2, ChevronDown, Trash2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { togglePlatformAdmin, setOrgMemberRole, removeOrgMember } from './actions'
 
-type Role = 'owner' | 'admin' | 'editor' | 'viewer'
+type Role = 'owner' | 'admin' | 'editor' | 'reviewer' | 'contributor' | 'viewer'
 
 interface UserRow {
   id:                string
@@ -27,10 +27,12 @@ interface OrgRow {
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  owner:  'text-amber-500  bg-amber-500/10  border-amber-500/20',
-  admin:  'text-accent     bg-accent/10     border-accent/20',
-  editor: 'text-cyan       bg-cyan/10       border-cyan/20',
-  viewer: 'text-ink-muted  bg-elevated      border-line',
+  owner:       'text-amber-500   bg-amber-500/10   border-amber-500/20',
+  admin:       'text-accent      bg-accent/10      border-accent/20',
+  editor:      'text-cyan        bg-cyan/10        border-cyan/20',
+  reviewer:    'text-amber-600   bg-amber-50       border-amber-200',
+  contributor: 'text-purple-600  bg-purple-50      border-purple-200',
+  viewer:      'text-ink-muted   bg-elevated       border-line',
 }
 
 function PlatformAdminToggle({ user, currentUserId }: { user: UserRow; currentUserId: string }) {
@@ -142,7 +144,7 @@ function OrgMemberRow({ member, orgId }: { member: MemberRow; orgId: string }) {
           disabled={pending}
           className={`appearance-none pl-2 pr-6 py-0.5 rounded-full text-[10px] font-700 border cursor-pointer focus:outline-none disabled:opacity-50 ${ROLE_COLORS[member.role] ?? ROLE_COLORS.viewer}`}
         >
-          {(['owner', 'admin', 'editor', 'viewer'] as Role[]).map(r => (
+          {(['owner', 'admin', 'editor', 'reviewer', 'contributor', 'viewer'] as Role[]).map(r => (
             <option key={r} value={r}>{r}</option>
           ))}
         </select>

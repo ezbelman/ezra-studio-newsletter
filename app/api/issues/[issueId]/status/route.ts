@@ -6,6 +6,7 @@ import { Resend } from 'resend'
 import { z } from 'zod'
 
 const APPROVER_ONLY_STATUSES = ['approved', 'needs_revision']
+const APPROVER_ROLES = ['owner', 'admin', 'reviewer']
 
 const StatusSchema = z.object({
   status:  z.enum(['draft', 'pending_approval', 'needs_revision', 'approved', 'scheduled']),
@@ -38,8 +39,8 @@ export async function PATCH(
 
   if (!membership) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (APPROVER_ONLY_STATUSES.includes(next) && !['owner', 'admin'].includes(membership.role)) {
-    return NextResponse.json({ error: 'Only admins can approve issues.' }, { status: 403 })
+  if (APPROVER_ONLY_STATUSES.includes(next) && !APPROVER_ROLES.includes(membership.role)) {
+    return NextResponse.json({ error: 'Only admins and reviewers can approve issues.' }, { status: 403 })
   }
 
   const { error } = await supabase
@@ -75,7 +76,7 @@ async function notifyApprovers(issueId: string, orgId: string, submittedById: st
     admin.from('org_members')
       .select('user_id, profiles(full_name)')
       .eq('org_id', orgId)
-      .in('role', ['owner', 'admin'])
+      .in('role', ['owner', 'admin', 'reviewer'])
       .neq('user_id', submittedById),
     admin.from('profiles').select('full_name').eq('id', submittedById).single(),
   ])

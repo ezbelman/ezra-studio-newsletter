@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
 
-export type Role = 'owner' | 'admin' | 'editor' | 'viewer' | 'reader'
+export type Role = 'owner' | 'admin' | 'editor' | 'reviewer' | 'contributor' | 'viewer'
 export type IssueStatus = 'draft' | 'pending_approval' | 'needs_revision' | 'approved' | 'scheduled' | 'published'
 export type SubscriberStatus = 'active' | 'unsubscribed' | 'bounced'
 export type Plan = 'trial' | 'starter' | 'pro' | 'enterprise'
@@ -242,6 +242,7 @@ export interface Database {
           email: string
           name: string | null
           status: SubscriberStatus
+          tags: string[]
           subscribed_at: string
           unsubscribed_at: string | null
         }
@@ -252,10 +253,12 @@ export interface Database {
           email: string
           name?: string | null
           status?: SubscriberStatus
+          tags?: string[]
         }
         Update: {
           name?: string | null
           status?: SubscriberStatus
+          tags?: string[]
           unsubscribed_at?: string | null
         }
         Relationships: [

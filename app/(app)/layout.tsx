@@ -15,6 +15,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .eq('id', user.id)
     .single()
 
+  const pathname = (await headers()).get('x-pathname') ?? ''
+
+  // Platform admins on any /admin route: AdminLayout provides the shell — skip app sidebar
+  if (profile?.is_platform_admin && pathname.startsWith('/admin')) {
+    return <>{children}</>
+  }
+
   const { data: membership } = await supabase
     .from('org_members')
     .select('role, organizations(name, slug)')
@@ -24,13 +31,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .single()
 
   if (!membership) {
-    const pathname = (await headers()).get('x-pathname') ?? ''
-
-    // Platform admins skip onboarding — admin layout handles the shell
-    if (profile?.is_platform_admin) {
-      if (!pathname.startsWith('/admin')) redirect('/admin')
-      return <>{children}</>
-    }
+    // Platform admins without an org go to admin panel
+    if (profile?.is_platform_admin) redirect('/admin')
 
     if (pathname !== '/onboarding') redirect('/onboarding')
     return (

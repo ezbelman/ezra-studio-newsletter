@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation'
 import { UserCircle, MoreHorizontal, Trash2, Shield, Clock } from 'lucide-react'
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
-  owner:  { label: 'Owner',  color: 'text-cyan bg-cyan/10'        },
-  admin:  { label: 'Admin',  color: 'text-ink bg-ink/8'           },
-  editor: { label: 'Editor', color: 'text-ink-muted bg-bg'        },
-  viewer: { label: 'Viewer', color: 'text-ink-muted/70 bg-bg'     },
+  owner:       { label: 'Owner',       color: 'text-cyan bg-cyan/10'          },
+  admin:       { label: 'Admin',       color: 'text-ink bg-ink/8'             },
+  editor:      { label: 'Editor',      color: 'text-ink-muted bg-bg'          },
+  reviewer:    { label: 'Reviewer',    color: 'text-amber-600 bg-amber-50'    },
+  contributor: { label: 'Contributor', color: 'text-purple-600 bg-purple-50'  },
+  viewer:      { label: 'Viewer',      color: 'text-ink-muted/70 bg-bg'       },
 }
 
 function initials(name: string | null | undefined): string {
@@ -44,10 +46,16 @@ export function MemberList({
 }) {
   const router  = useRouter()
   const [, startTransition] = useTransition()
-  const [openMenu, setOpenMenu]   = useState<string | null>(null)
-  const [error,    setError]      = useState<string | null>(null)
+  const [openMenu,      setOpenMenu]      = useState<string | null>(null)
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
+  const [error,         setError]         = useState<string | null>(null)
 
   function handleRemove(memberId: string) {
+    if (confirmRemove !== memberId) {
+      setConfirmRemove(memberId)
+      return
+    }
+    setConfirmRemove(null)
     setOpenMenu(null)
     startTransition(async () => {
       const res = await removeMember(memberId)
@@ -111,7 +119,7 @@ export function MemberList({
                   {openMenu === m.id && (
                     <div className="absolute right-0 top-8 z-10 bg-elevated rounded-lg border border-line shadow-lg py-1 w-44" onMouseLeave={() => setOpenMenu(null)}>
                       <p className="px-3 py-1.5 text-xs font-700 uppercase tracking-widest text-ink-muted">Change role</p>
-                      {['admin', 'editor', 'viewer'].map(r => (
+                      {['admin', 'editor', 'reviewer', 'contributor', 'viewer'].map(r => (
                         <button
                           key={r}
                           onClick={() => handleRoleChange(m.id, r)}
@@ -125,10 +133,15 @@ export function MemberList({
                       <div className="border-t border-line my-1" />
                       <button
                         onClick={() => handleRemove(m.id)}
-                        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        onBlur={() => setConfirmRemove(null)}
+                        className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
+                          confirmRemove === m.id
+                            ? 'text-white bg-red-600 font-600'
+                            : 'text-red-600 hover:bg-red-50'
+                        }`}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                        Remove from team
+                        {confirmRemove === m.id ? 'Confirm remove' : 'Remove from team'}
                       </button>
                     </div>
                   )}

@@ -74,7 +74,7 @@ export async function savePlatformSetting(key: SettingKey, value: string) {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/admin')
+  revalidatePath('/admin', 'layout')
   return { success: true }
 }
 
@@ -89,7 +89,7 @@ export async function deletePlatformSetting(key: SettingKey) {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/admin')
+  revalidatePath('/admin', 'layout')
   return { success: true }
 }
 

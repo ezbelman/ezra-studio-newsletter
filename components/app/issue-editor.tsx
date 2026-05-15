@@ -1,10 +1,11 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Sparkles, Loader2, ChevronRight, Send, Users, X, History, FlaskConical, Wand2, Clock, Eye, Monitor } from 'lucide-react'
+import { ArrowLeft, Sparkles, Loader2, ChevronRight, Send, Users, X, History, FlaskConical, Wand2, Clock, Eye, Monitor, Trash2 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { issueStatusBadgeVariant, issueStatusLabel } from '@/lib/types/display'
 import type { IssueStatus, Json } from '@/lib/types/database'
@@ -58,6 +59,7 @@ const STATUS_ACTIONS: Partial<Record<IssueStatus, { label: string; next: IssueSt
 }
 
 export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName }: Props) {
+  const router = useRouter()
   // useMemo keeps the same Supabase client instance across renders so useCallback deps stay stable
   const supabase = useMemo(() => createClient(), [])
 
@@ -83,6 +85,8 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
   const [isLoadingPreview,     setIsLoadingPreview]     = useState(false)
   const [isSendingTest,        setIsSendingTest]        = useState(false)
   const [testSentTo,           setTestSentTo]           = useState('')
+  const [showDeleteConfirm,    setShowDeleteConfirm]    = useState(false)
+  const [isDeleting,           setIsDeleting]           = useState(false)
 
   const initialNotes = useMemo(
     () => (initialIssue.raw_notes as unknown as { text: string } | null)?.text ?? '',
@@ -94,7 +98,19 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
   const notesSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const polished = issue.polished_json as unknown as PolishedContent | null
-  const actions      = STATUS_ACTIONS[issue.status] ?? []
+  const actions  = STATUS_ACTIONS[issue.status] ?? []
+
+  const readTime = useMemo(() => {
+    if (!polished) return 0
+    const words = [
+      polished.title,
+      ...(polished.stories ?? []).flatMap(s => [s.headline, ...s.bullets, s.takeaway]),
+      ...(polished.prompts ?? []),
+      polished.hot_take,
+    ].filter(Boolean).join(' ').split(/\s+/).filter(Boolean).length
+    return Math.max(1, Math.ceil(words / 200))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [issue.polished_json])
 
   async function handlePreview() {
     setIsLoadingPreview(true)
@@ -308,6 +324,22 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
     }
   }
 
+  async function handleDeleteIssue() {
+    setIsDeleting(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/issues/${issue.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Delete failed'); setShowDeleteConfirm(false); return }
+      router.push(`/newsletters/${newsletterId}`)
+    } catch {
+      setError('Network error.')
+      setShowDeleteConfirm(false)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   async function handleCancelSchedule() {
     setIsSaving(true)
     setError('')
@@ -400,6 +432,17 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Delete issue */}
+          {issue.status !== 'published' && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="inline-flex items-center gap-1.5 text-xs text-ink/30 hover:text-danger px-2.5 py-1.5 rounded-lg border border-line hover:border-danger/30 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </button>
+          )}
+
           {/* Version history link */}
           <Link
             href={`/newsletters/${newsletterId}/issues/${issue.id}/versions`}
@@ -487,6 +530,10 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
         <div className="lg:col-span-3 space-y-4 animate-fade-up delay-150">
           {polished ? (
             <>
+              <div className="flex items-center gap-1.5 text-[11px] text-ink/30 mb-3">
+                <Clock className="h-3 w-3" />
+                <span>{readTime} min read</span>
+              </div>
               {polished.stories?.map((story, i) => (
                 <div key={i} className="rounded-lg border border-line bg-surface p-5">
                   <h3 className="font-display font-700 text-ink mb-3">{story.headline}</h3>
@@ -747,6 +794,45 @@ export function IssueEditor({ issue: initialIssue, newsletterId, newsletterName 
       )}
 
       {/* Request Changes dialog */}
+      {/* Delete confirmation dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => !isDeleting && setShowDeleteConfirm(false)}
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-xl border border-line bg-surface shadow-lg animate-scale-in">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <h2 className="text-sm font-700 text-ink">Delete issue</h2>
+              {!isDeleting && (
+                <button onClick={() => setShowDeleteConfirm(false)} className="text-ink-muted hover:text-ink transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-sm text-ink/70">
+                Are you sure you want to delete <strong className="text-ink">&quot;{issue.title ?? 'Untitled Issue'}&quot;</strong>?
+                This cannot be undone.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  disabled={isDeleting}
+                  onClick={handleDeleteIssue}
+                >
+                  {isDeleting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Deleting…</> : <><Trash2 className="h-3.5 w-3.5" /> Delete issue</>}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showRevisionPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div

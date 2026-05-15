@@ -107,21 +107,21 @@ Features to turn Newsletter Studio into a competitive SaaS product.
 
 ---
 
-## Phase 2 — Editor & Content Quality
+## Phase 2 — Editor & Content Quality ✅ Complete
 
 > Target: Weeks 3–4. Polish the issue creation and approval workflow.
 
-| # | Task | Priority | Status |
-|---|------|----------|--------|
-| P2-1 | Issue version history viewer — UI for `issue_versions` table + restore | M-4 | 🔲 |
-| P2-2 | Subscriber tag UI — inline chip editor + tag filter in segments | HIGH-4 | 🔲 |
-| P2-3 | Expanded role model — add `reviewer` + `contributor` roles | HIGH-3 | 🔲 |
-| P2-4 | Confirmation dialogs — delete issue, remove member, delete newsletter | M-5 | 🔲 |
-| P2-5 | Bulk subscriber actions — bulk tag, bulk unsubscribe, bulk delete | M-6 | 🔲 |
-| P2-6 | A/B test results split in analytics `/analytics/[sendId]` | M-8 | 🔲 |
-| P2-7 | Read-time estimate in issue editor (words ÷ 200 wpm) | M-10 | 🔲 |
-| P2-8 | Styled invitation emails with org branding | M-2 | 🔲 |
-| P2-9 | Activity log pagination — infinite scroll beyond 200 entries | M-3 | 🔲 |
+| # | Task | Priority | Status | Notes |
+|---|------|----------|--------|-------|
+| P2-1 | Issue version history viewer — UI for `issue_versions` table + restore | M-4 | ✅ | `/newsletters/[id]/issues/[issueId]/versions` + `restoreVersion` action |
+| P2-2 | Subscriber tag UI — inline chip editor + tag filter in segments | HIGH-4 | ✅ | `TagChipEditor` inline chip editor, `20260516_subscriber_tags.sql` migration, `bulkAddTag` action |
+| P2-3 | Expanded role model — add `reviewer` + `contributor` roles | HIGH-3 | ✅ | New roles in DB, invite form, member-list, status route allows reviewers to approve |
+| P2-4 | Confirmation dialogs — delete issue, remove member, delete newsletter | M-5 | ✅ | Delete issue modal, confirm-remove for members, archive newsletter already had confirm |
+| P2-5 | Bulk subscriber actions — bulk tag, bulk unsubscribe, bulk delete | M-6 | ✅ | `BulkSubscriberTable` with checkbox selection + toolbar |
+| P2-6 | A/B test results split in analytics `/analytics/[sendId]` | M-8 | ✅ | Side-by-side variant comparison with `FunnelStats` component |
+| P2-7 | Read-time estimate in issue editor (words ÷ 200 wpm) | M-10 | ✅ | Derived from `polished_json` word count, shown above polished content |
+| P2-8 | Styled invitation emails with org branding | M-2 | ✅ | Branded HTML email sent on invite creation via Resend |
+| P2-9 | Activity log pagination — beyond 200 entries | M-3 | ✅ | 50-per-page with prev/next links, `?page=N` URL param |
 
 ---
 

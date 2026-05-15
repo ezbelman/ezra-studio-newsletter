@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Copy, Check, UserPlus, X } from 'lucide-react'
 
 const ROLES = [
-  { value: 'editor', label: 'Editor',  desc: 'Create and edit issues' },
-  { value: 'admin',  label: 'Admin',   desc: 'Manage team and settings' },
-  { value: 'viewer', label: 'Viewer',  desc: 'Read-only access' },
+  { value: 'admin',       label: 'Admin',       desc: 'Manage team and settings' },
+  { value: 'editor',      label: 'Editor',      desc: 'Create and edit issues' },
+  { value: 'reviewer',    label: 'Reviewer',    desc: 'Approve and request changes on issues' },
+  { value: 'contributor', label: 'Contributor', desc: 'Submit content for editor review' },
+  { value: 'viewer',      label: 'Viewer',      desc: 'Read-only access' },
 ]
 
 export function InviteForm() {
