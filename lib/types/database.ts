@@ -22,6 +22,10 @@ export interface Database {
           full_name: string | null
           avatar_url: string | null
           is_platform_admin: boolean
+          personal_ai_provider: string
+          personal_anthropic_api_key: string | null
+          personal_openai_api_key: string | null
+          personal_gemini_api_key: string | null
           created_at: string
           updated_at: string
         }
@@ -30,11 +34,19 @@ export interface Database {
           full_name?: string | null
           avatar_url?: string | null
           is_platform_admin?: boolean
+          personal_ai_provider?: string
+          personal_anthropic_api_key?: string | null
+          personal_openai_api_key?: string | null
+          personal_gemini_api_key?: string | null
         }
         Update: {
           full_name?: string | null
           avatar_url?: string | null
           is_platform_admin?: boolean
+          personal_ai_provider?: string
+          personal_anthropic_api_key?: string | null
+          personal_openai_api_key?: string | null
+          personal_gemini_api_key?: string | null
         }
         Relationships: []
       }
@@ -148,6 +160,7 @@ export interface Database {
           description: string | null
           slug: string
           template: string
+          email_template: string
           status: string
           created_at: string
         }
@@ -158,6 +171,7 @@ export interface Database {
           description?: string | null
           slug: string
           template?: string
+          email_template?: string
           status?: string
         }
         Update: {
@@ -165,6 +179,7 @@ export interface Database {
           description?: string | null
           slug?: string
           template?: string
+          email_template?: string
           status?: string
         }
         Relationships: [
@@ -498,6 +513,32 @@ export interface Database {
         }
         Relationships: [
           { foreignKeyName: 'org_usage_org_id_fkey'; columns: ['org_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] }
+        ]
+      }
+      notifications: {
+        Row: {
+          id:         string
+          org_id:     string
+          user_id:    string
+          type:       string
+          payload:    Json
+          read_at:    string | null
+          created_at: string
+        }
+        Insert: {
+          id?:        string
+          org_id:     string
+          user_id:    string
+          type:       string
+          payload?:   Json
+          read_at?:   string | null
+        }
+        Update: {
+          read_at?:   string | null
+        }
+        Relationships: [
+          { foreignKeyName: 'notifications_org_id_fkey'; columns: ['org_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] },
+          { foreignKeyName: 'notifications_user_id_fkey'; columns: ['user_id']; isOneToOne: false; referencedRelation: 'profiles'; referencedColumns: ['id'] }
         ]
       }
     }

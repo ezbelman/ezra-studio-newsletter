@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
         steps,
         newsletters ( name, slug, org_id, organizations ( name, primary_color ) )
       ),
-      subscribers ( email, first_name, last_name )
+      subscribers ( email, name )
     `)
     .eq('status', 'in_progress')
     .lte('next_step_at', new Date().toISOString())
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
         newsletters: { name: string; slug: string; org_id: string; organizations: { name: string; primary_color: string | null } } | null
       } | null
       const subscriber   = enrollment.subscribers as unknown as {
-        email: string; first_name: string | null; last_name: string | null
+        email: string; name: string | null
       } | null
 
       if (!automation || !subscriber) { failed++; continue }

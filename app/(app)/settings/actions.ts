@@ -117,7 +117,7 @@ export async function savePersonalAISettings(formData: FormData) {
   const geminiKey    = (formData.get('personal_gemini_api_key')    as string) || ''
 
   // Only overwrite a key if the user typed a new value (not the masked placeholder)
-  const updates: Record<string, unknown> = { personal_ai_provider: provider }
+  const updates: Database['public']['Tables']['profiles']['Update'] = { personal_ai_provider: provider }
   if (anthropicKey && !anthropicKey.includes('•')) updates.personal_anthropic_api_key = anthropicKey.trim() || null
   if (openaiKey    && !openaiKey.includes('•'))    updates.personal_openai_api_key    = openaiKey.trim()    || null
   if (geminiKey    && !geminiKey.includes('•'))    updates.personal_gemini_api_key    = geminiKey.trim()    || null
@@ -125,7 +125,7 @@ export async function savePersonalAISettings(formData: FormData) {
   const admin = createAdminClient()
   const { error } = await admin
     .from('profiles')
-    .update(updates as unknown as Database['public']['Tables']['profiles']['Update'])
+    .update(updates)
     .eq('id', user.id)
   if (error) return { error: error.message }
 
@@ -144,7 +144,7 @@ export async function clearPersonalAPIKey(provider: 'anthropic' | 'openai' | 'ge
   const admin = createAdminClient()
   const { error } = await admin
     .from('profiles')
-    .update({ [key]: null } as unknown as Database['public']['Tables']['profiles']['Update'])
+    .update({ [key]: null } as Database['public']['Tables']['profiles']['Update'])
     .eq('id', user.id)
   if (error) return { error: error.message }
 

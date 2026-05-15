@@ -85,9 +85,10 @@ export default async function AdminOrgDetailPage({ params }: { params: Promise<{
         .in('newsletter_id', nlIds).order('created_at', { ascending: false }).limit(30)
     : { data: [] }
 
-  const issuesByNl = (issues ?? []).reduce<Record<string, typeof issues>>((acc, i) => {
+  type IssueRow = { id: string; title: string | null; status: string; created_at: string; newsletter_id: string }
+  const issuesByNl = (issues ?? []).reduce<Record<string, IssueRow[]>>((acc, i) => {
     acc[i.newsletter_id] = acc[i.newsletter_id] ?? []
-    acc[i.newsletter_id]!.push(i)
+    acc[i.newsletter_id]!.push(i as IssueRow)
     return acc
   }, {})
 

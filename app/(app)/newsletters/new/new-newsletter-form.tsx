@@ -31,7 +31,7 @@ export function NewNewsletterForm({ orgId: _ }: { orgId: string }) {
 
     const result = await createNewsletter(fd)
     if ('error' in result) {
-      setError(result.error)
+      setError(result.error ?? '')
       setLoading(false)
       return
     }

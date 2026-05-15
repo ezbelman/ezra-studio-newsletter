@@ -8,7 +8,7 @@ const schema = z.object({
   invitationId: z.string().uuid(),
   orgId:        z.string().uuid(),
   userId:       z.string().uuid(),
-  role:         z.enum(['owner', 'admin', 'editor', 'viewer', 'reader']),
+  role:         z.enum(['owner', 'admin', 'editor', 'reviewer', 'contributor', 'viewer']),
 })
 
 export async function POST(request: NextRequest) {

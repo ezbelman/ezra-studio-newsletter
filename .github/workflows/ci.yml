@@ -7,11 +7,11 @@ on:
     branches: [main, master]
 
 env:
-  # Required for Next.js build — Supabase public vars don't need secrets
   NEXT_PUBLIC_SUPABASE_URL:      ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-  # Dummy values so build doesn't fail on missing optional env vars
-  ENCRYPTION_KEY:                ${{ secrets.ENCRYPTION_KEY || 'ci-dummy-32-byte-encryption-key1' }}
+  NEXT_PUBLIC_APP_URL:           https://localhost:3000
+  # 64-char hex key (32 bytes) required by lib/crypto/encrypt.ts
+  SETTINGS_ENCRYPTION_KEY:       ${{ secrets.SETTINGS_ENCRYPTION_KEY || '0000000000000000000000000000000000000000000000000000000000000000' }}
 
 jobs:
   typecheck:
@@ -30,11 +30,13 @@ jobs:
         run: npm ci
 
       - name: Generate Supabase types
-        if: ${{ env.NEXT_PUBLIC_SUPABASE_URL != '' }}
+        # Runs only when both URL and access token are available as secrets.
+        # Writes directly to lib/types/database.ts (the file the project imports).
+        if: ${{ env.NEXT_PUBLIC_SUPABASE_URL != '' && secrets.SUPABASE_ACCESS_TOKEN != '' }}
         run: |
           npx supabase gen types typescript \
             --project-id "$(echo $NEXT_PUBLIC_SUPABASE_URL | sed 's|https://||; s|\.supabase\.co.*||')" \
-            > lib/supabase/database.types.ts
+            > lib/types/database.ts
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
