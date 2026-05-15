@@ -1,5 +1,6 @@
 'use server'
 
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
@@ -7,6 +8,8 @@ import { revalidatePath } from 'next/cache'
 import { encryptSetting, decryptSetting } from '@/lib/crypto/encrypt'
 import { maskSecret } from '@/lib/platform/settings'
 import type { SettingKey } from '@/lib/platform/settings'
+
+const PlatformSettingValueSchema = z.string().min(1, 'Value cannot be empty').max(4096).trim()
 
 async function assertPlatformAdmin() {
   const supabase = await createClient()
@@ -74,12 +77,12 @@ export async function savePlatformSetting(key: SettingKey, value: string) {
 
   if (!ALLOWED_KEYS.includes(key)) return { error: 'Unknown setting key' }
 
-  const trimmed = value.trim()
-  if (!trimmed) return { error: 'Value cannot be empty' }
+  const parsed = PlatformSettingValueSchema.safeParse(value)
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid value' }
 
   let encrypted: string
   try {
-    encrypted = encryptSetting(trimmed)
+    encrypted = encryptSetting(parsed.data)
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Encryption failed'
     return { error: msg }

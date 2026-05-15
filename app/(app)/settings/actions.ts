@@ -1,5 +1,6 @@
 'use server'
 
+import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { requireOwnerOrAdmin } from '@/lib/data/require-org-access'
@@ -8,18 +9,50 @@ import type { Database } from '@/lib/types/database'
 
 type OrgUpdate = Database['public']['Tables']['organizations']['Update']
 
+const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/
+const URL_OR_EMPTY  = z.string().max(2048).url().or(z.literal('')).nullable()
+
+const BrandingSchema = z.object({
+  logo_url:      URL_OR_EMPTY,
+  primary_color: z.string().regex(HEX_COLOR_RE, 'Must be a valid hex color').default('#7B5CF0'),
+  accent_color:  z.string().regex(HEX_COLOR_RE, 'Must be a valid hex color').default('#4F8EF7'),
+})
+
+const OrgNameSchema = z.object({
+  name: z.string().min(1, 'Organization name is required.').max(120).trim(),
+})
+
+const AI_PROVIDERS = ['platform', 'anthropic', 'openai', 'gemini'] as const
+const AiSettingsSchema = z.object({
+  provider:        z.enum(AI_PROVIDERS).default('platform'),
+  anthropic_api_key: z.string().max(200).optional(),
+  openai_api_key:    z.string().max(200).optional(),
+  gemini_api_key:    z.string().max(200).optional(),
+})
+
+const PERSONAL_AI_PROVIDERS = ['none', 'anthropic', 'openai', 'gemini'] as const
+const PersonalAiSettingsSchema = z.object({
+  personal_provider:          z.enum(PERSONAL_AI_PROVIDERS).default('none'),
+  personal_anthropic_api_key: z.string().max(200).optional(),
+  personal_openai_api_key:    z.string().max(200).optional(),
+  personal_gemini_api_key:    z.string().max(200).optional(),
+})
+
 export async function saveBrandingSettings(formData: FormData) {
   const { orgId, error: authError } = await requireOwnerOrAdmin()
   if (authError || !orgId) return { error: authError ?? 'Unauthorized' }
 
-  const logo_url      = (formData.get('logo_url')      as string)?.trim() || null
-  const primary_color = (formData.get('primary_color') as string)?.trim() || '#7B5CF0'
-  const accent_color  = (formData.get('accent_color')  as string)?.trim() || '#4F8EF7'
+  const parsed = BrandingSchema.safeParse({
+    logo_url:      formData.get('logo_url') || null,
+    primary_color: formData.get('primary_color') || undefined,
+    accent_color:  formData.get('accent_color')  || undefined,
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
 
   const admin = createAdminClient()
   const { error } = await admin
     .from('organizations')
-    .update({ logo_url, primary_color, accent_color })
+    .update(parsed.data)
     .eq('id', orgId)
   if (error) return { error: error.message }
 
@@ -30,11 +63,11 @@ export async function saveOrgSettings(formData: FormData) {
   const { orgId, error: authError } = await requireOwnerOrAdmin()
   if (authError || !orgId) return { error: authError ?? 'Unauthorized' }
 
-  const name = (formData.get('name') as string)?.trim()
-  if (!name) return { error: 'Organization name is required.' }
+  const parsed = OrgNameSchema.safeParse({ name: formData.get('name') })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
 
   const admin = createAdminClient()
-  const { error } = await admin.from('organizations').update({ name }).eq('id', orgId)
+  const { error } = await admin.from('organizations').update(parsed.data).eq('id', orgId)
   if (error) return { error: error.message }
 
   return { success: true }
@@ -44,23 +77,21 @@ export async function saveAISettings(formData: FormData) {
   const { orgId, error: authError } = await requireOwnerOrAdmin()
   if (authError || !orgId) return { error: authError ?? 'Unauthorized' }
 
-  const provider     = (formData.get('provider')          as string) || 'platform'
-  const anthropicKey = (formData.get('anthropic_api_key') as string) || ''
-  const openaiKey    = (formData.get('openai_api_key')    as string) || ''
-  const geminiKey    = (formData.get('gemini_api_key')    as string) || ''
+  const parsed = AiSettingsSchema.safeParse({
+    provider:          formData.get('provider')          || undefined,
+    anthropic_api_key: formData.get('anthropic_api_key') || undefined,
+    openai_api_key:    formData.get('openai_api_key')    || undefined,
+    gemini_api_key:    formData.get('gemini_api_key')    || undefined,
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
 
-  // Build typed update — only overwrite a key if user typed a new one (no • mask chars)
+  const { provider, anthropic_api_key, openai_api_key, gemini_api_key } = parsed.data
+
+  // Only overwrite a key if user typed a new one (no • mask chars)
   const updates: OrgUpdate = { ai_provider: provider }
-
-  if (anthropicKey && !anthropicKey.includes('•')) {
-    updates.anthropic_api_key = anthropicKey.trim() || null
-  }
-  if (openaiKey && !openaiKey.includes('•')) {
-    updates.openai_api_key = openaiKey.trim() || null
-  }
-  if (geminiKey && !geminiKey.includes('•')) {
-    updates.gemini_api_key = geminiKey.trim() || null
-  }
+  if (anthropic_api_key && !anthropic_api_key.includes('•')) updates.anthropic_api_key = anthropic_api_key.trim() || null
+  if (openai_api_key    && !openai_api_key.includes('•'))    updates.openai_api_key    = openai_api_key.trim()    || null
+  if (gemini_api_key    && !gemini_api_key.includes('•'))    updates.gemini_api_key    = gemini_api_key.trim()    || null
 
   const admin = createAdminClient()
   const { error } = await admin.from('organizations').update(updates).eq('id', orgId)
@@ -111,16 +142,20 @@ export async function savePersonalAISettings(formData: FormData) {
   const { user, error: authError } = await requireOwner()
   if (authError || !user) return { error: authError ?? 'Unauthorized' }
 
-  const provider     = (formData.get('personal_provider')          as string) || 'none'
-  const anthropicKey = (formData.get('personal_anthropic_api_key') as string) || ''
-  const openaiKey    = (formData.get('personal_openai_api_key')    as string) || ''
-  const geminiKey    = (formData.get('personal_gemini_api_key')    as string) || ''
+  const parsed = PersonalAiSettingsSchema.safeParse({
+    personal_provider:          formData.get('personal_provider')          || undefined,
+    personal_anthropic_api_key: formData.get('personal_anthropic_api_key') || undefined,
+    personal_openai_api_key:    formData.get('personal_openai_api_key')    || undefined,
+    personal_gemini_api_key:    formData.get('personal_gemini_api_key')    || undefined,
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
 
-  // Only overwrite a key if the user typed a new value (not the masked placeholder)
-  const updates: Database['public']['Tables']['profiles']['Update'] = { personal_ai_provider: provider }
-  if (anthropicKey && !anthropicKey.includes('•')) updates.personal_anthropic_api_key = anthropicKey.trim() || null
-  if (openaiKey    && !openaiKey.includes('•'))    updates.personal_openai_api_key    = openaiKey.trim()    || null
-  if (geminiKey    && !geminiKey.includes('•'))    updates.personal_gemini_api_key    = geminiKey.trim()    || null
+  const { personal_provider, personal_anthropic_api_key, personal_openai_api_key, personal_gemini_api_key } = parsed.data
+
+  const updates: Database['public']['Tables']['profiles']['Update'] = { personal_ai_provider: personal_provider }
+  if (personal_anthropic_api_key && !personal_anthropic_api_key.includes('•')) updates.personal_anthropic_api_key = personal_anthropic_api_key.trim() || null
+  if (personal_openai_api_key    && !personal_openai_api_key.includes('•'))    updates.personal_openai_api_key    = personal_openai_api_key.trim()    || null
+  if (personal_gemini_api_key    && !personal_gemini_api_key.includes('•'))    updates.personal_gemini_api_key    = personal_gemini_api_key.trim()    || null
 
   const admin = createAdminClient()
   const { error } = await admin
