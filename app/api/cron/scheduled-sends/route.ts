@@ -9,6 +9,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // When Inngest is configured its own scheduler handles every-5-min runs — skip here
+  if (process.env.INNGEST_EVENT_KEY) {
+    return NextResponse.json({ skipped: 'inngest scheduler active' })
+  }
+
   const admin = createAdminClient()
 
   const { data: issues } = await admin
@@ -22,17 +27,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ processed: 0, failed: 0 })
   }
 
-  // When Inngest is configured, fan out one event per issue for parallel processing
-  if (process.env.INNGEST_EVENT_KEY) {
-    const { inngest } = await import('@/lib/inngest/client')
-    const eligible = issues.filter(i => i.polished_json)
-    await inngest.send(
-      eligible.map(i => ({ name: 'issue/send.scheduled' as const, data: { issueId: i.id, orgId: i.org_id } }))
-    )
-    return NextResponse.json({ fanned_out: eligible.length })
-  }
-
-  // Fallback: inline sequential processing (no Inngest configured)
+  // Inline sequential processing (Inngest not configured)
   let processed = 0
   let failed    = 0
 

@@ -19,6 +19,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // When Inngest is configured its own scheduler handles every-5-min runs — skip here
+  if (process.env.INNGEST_EVENT_KEY) {
+    return NextResponse.json({ skipped: 'inngest scheduler active' })
+  }
+
   const admin = createAdminClient()
 
   const { data: enrollments, error } = await admin
@@ -48,16 +53,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ processed: 0, failed: 0 })
   }
 
-  // When Inngest is configured, fan out one event per enrollment for parallel processing
-  if (process.env.INNGEST_EVENT_KEY) {
-    const { inngest } = await import('@/lib/inngest/client')
-    await inngest.send(
-      enrollments.map(e => ({ name: 'automation/step.due' as const, data: { enrollmentId: e.id } }))
-    )
-    return NextResponse.json({ fanned_out: enrollments.length })
-  }
-
-  // Fallback: inline sequential processing (no Inngest configured)
+  // Inline sequential processing (Inngest not configured)
   const resendKey = await getPlatformSetting('RESEND_API_KEY')
   if (!resendKey) {
     return NextResponse.json({ error: 'Resend key not configured' }, { status: 500 })
