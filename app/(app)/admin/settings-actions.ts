@@ -31,6 +31,8 @@ const ALLOWED_KEYS: SettingKey[] = [
   'STRIPE_SECRET_KEY',
   'STRIPE_PUBLISHABLE_KEY',
   'STRIPE_WEBHOOK_SECRET',
+  'INNGEST_EVENT_KEY',
+  'INNGEST_SIGNING_KEY',
 ]
 
 // platform_settings is a new table not yet in generated DB types — cast via unknown

@@ -92,6 +92,26 @@ const GROUPS: SettingGroup[] = [
       },
     ],
   },
+  {
+    title:       'Inngest',
+    description: 'Job queue for automation processing and scheduled sends. Get keys at app.inngest.com → your app → Manage.',
+    fields: [
+      {
+        key:         'INNGEST_EVENT_KEY',
+        label:       'Inngest Event Key',
+        description: 'Used to send events (trigger jobs) from the app to Inngest.',
+        placeholder: 'evt-••••••••••••••••',
+        type:        'secret',
+      },
+      {
+        key:         'INNGEST_SIGNING_KEY',
+        label:       'Inngest Signing Key',
+        description: 'Used by Inngest to verify webhook calls to your /api/inngest endpoint.',
+        placeholder: 'signkey-prod-••••••••••••••••',
+        type:        'secret',
+      },
+    ],
+  },
 ]
 
 
