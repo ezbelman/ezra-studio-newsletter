@@ -7,11 +7,12 @@ import {
   LayoutDashboard, Newspaper, Users, Settings, BarChart2,
   LogOut, Shield, Sun, Moon, Calendar, Zap, Tag,
   Layout, Link2, CreditCard, Code2, HelpCircle, ChevronDown,
-  FileText, Menu, X,
+  FileText, Menu, X, Search,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useTheme } from './theme-provider'
+import { SearchModal } from './search-modal'
 
 interface SidebarProps {
   orgName:      string
@@ -107,6 +108,8 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
 
   return (
     <>
+      <SearchModal />
+
       {/* Mobile top bar — visible only below md */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center gap-3 px-4 bg-surface border-b border-line">
         <button
@@ -169,6 +172,18 @@ export function Sidebar({ orgName, orgSlug, userFullName, isAdmin }: SidebarProp
               <p className="text-ink/30 text-[11px] truncate">{orgSlug}</p>
             </div>
             <ChevronDown className="h-3.5 w-3.5 text-ink/20 shrink-0 group-hover:text-ink/40 transition-colors" />
+          </button>
+        </div>
+
+        {/* Search trigger */}
+        <div className="px-3 pt-2 pb-1">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('search:open'))}
+            className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink/30 hover:text-ink/60 hover:bg-elevated border border-line/60 hover:border-line transition-colors"
+          >
+            <Search className="h-3.5 w-3.5 shrink-0" />
+            <span className="flex-1 text-left text-xs">Search…</span>
+            <kbd className="text-[9px] font-mono opacity-50 hidden md:inline">⌘K</kbd>
           </button>
         </div>
 

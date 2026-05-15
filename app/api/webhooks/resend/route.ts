@@ -3,6 +3,21 @@ import { createHmac, timingSafeEqual } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPlatformSetting } from '@/lib/platform/settings'
 
+async function withRetry<T>(fn: () => Promise<T>, maxAttempts = 3): Promise<T> {
+  let lastError: unknown
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await fn()
+    } catch (e) {
+      lastError = e
+      if (attempt < maxAttempts - 1) {
+        await new Promise(r => setTimeout(r, 150 * (attempt + 1)))
+      }
+    }
+  }
+  throw lastError
+}
+
 function verifySignature(payload: string, signature: string, secret: string): boolean {
   try {
     const expected    = createHmac('sha256', secret).update(payload).digest('hex')
@@ -19,10 +34,13 @@ async function incrementSendMetric(
   resendId: string,
   field: 'delivered_count' | 'opened_count' | 'clicked_count'
 ) {
-  const supabase = createAdminClient()
-  await (supabase as ReturnType<typeof createAdminClient> & {
-    rpc: (fn: string, args?: Record<string, unknown>) => Promise<unknown>
-  }).rpc('increment_send_metric', { p_resend_id: resendId, p_field: field })
+  await withRetry(async () => {
+    const supabase = createAdminClient()
+    const { error } = await (supabase as ReturnType<typeof createAdminClient> & {
+      rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ error: { message: string } | null }>
+    }).rpc('increment_send_metric', { p_resend_id: resendId, p_field: field })
+    if (error) throw new Error(error.message)
+  })
 }
 
 export async function POST(request: NextRequest) {
@@ -50,19 +68,22 @@ export async function POST(request: NextRequest) {
       const email = (event.data.to as string | undefined)?.toLowerCase()
       const resendId = event.data.email_id as string | undefined
       if (email && resendId) {
-        // Scope to the subscriber linked to this specific send to avoid cross-org updates
-        const { data: send } = await supabase
-          .from('email_sends')
-          .select('org_id')
-          .eq('resend_batch_id', resendId)
-          .single()
-        if (send?.org_id) {
-          await supabase
-            .from('subscribers')
-            .update({ status: 'bounced' })
-            .eq('email', email)
-            .eq('org_id', send.org_id)
-        }
+        await withRetry(async () => {
+          // Scope to the subscriber linked to this specific send to avoid cross-org updates
+          const { data: send } = await supabase
+            .from('email_sends')
+            .select('org_id')
+            .eq('resend_batch_id', resendId)
+            .single()
+          if (send?.org_id) {
+            const { error } = await supabase
+              .from('subscribers')
+              .update({ status: 'bounced' })
+              .eq('email', email)
+              .eq('org_id', send.org_id)
+            if (error) throw new Error(error.message)
+          }
+        })
       }
       break
     }
@@ -71,18 +92,21 @@ export async function POST(request: NextRequest) {
       const email = (event.data.to as string | undefined)?.toLowerCase()
       const resendId = event.data.email_id as string | undefined
       if (email && resendId) {
-        const { data: send } = await supabase
-          .from('email_sends')
-          .select('org_id')
-          .eq('resend_batch_id', resendId)
-          .single()
-        if (send?.org_id) {
-          await supabase
-            .from('subscribers')
-            .update({ status: 'unsubscribed', unsubscribed_at: new Date().toISOString() })
-            .eq('email', email)
-            .eq('org_id', send.org_id)
-        }
+        await withRetry(async () => {
+          const { data: send } = await supabase
+            .from('email_sends')
+            .select('org_id')
+            .eq('resend_batch_id', resendId)
+            .single()
+          if (send?.org_id) {
+            const { error } = await supabase
+              .from('subscribers')
+              .update({ status: 'unsubscribed', unsubscribed_at: new Date().toISOString() })
+              .eq('email', email)
+              .eq('org_id', send.org_id)
+            if (error) throw new Error(error.message)
+          }
+        })
       }
       break
     }

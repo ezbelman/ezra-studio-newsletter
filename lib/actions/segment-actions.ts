@@ -6,6 +6,54 @@ import { getCurrentOrgId } from '@/lib/data/org'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
+type SegmentRule = { field: string; value: string }
+
+export async function previewSegmentCount(
+  rules: SegmentRule[]
+): Promise<{ count: number } | { error: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const orgId = await getCurrentOrgId(supabase, user.id)
+  if (!orgId) return { error: 'No organization found' }
+
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = admin
+    .from('subscribers')
+    .select('id', { count: 'exact', head: true })
+    .eq('org_id', orgId)
+
+  for (const rule of rules) {
+    if (!rule.field || !rule.value) continue
+    switch (rule.field) {
+      case 'status':
+        query = query.eq('status', rule.value)
+        break
+      case 'tag':
+        query = query.contains('tags', [rule.value])
+        break
+      case 'subscribed_since': {
+        const days = parseInt(rule.value)
+        if (!isNaN(days) && days > 0) {
+          const since = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString()
+          query = query.gte('subscribed_at', since)
+        }
+        break
+      }
+      case 'never_opened':
+        // Complex to evaluate without open-rate data on subscriber row — show full active count
+        query = query.eq('status', 'active')
+        break
+    }
+  }
+
+  const { count, error } = await query
+  if (error) return { error: error.message }
+  return { count: count ?? 0 }
+}
+
 const ruleSchema = z.object({
   field: z.string().min(1),
   value: z.string().min(1),

@@ -4,6 +4,7 @@ import { getPlatformSetting } from '@/lib/platform/settings'
 import { Resend } from 'resend'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
+const ORG_EMAIL_CAP_PER_RUN = 200
 
 type AutomationStep = {
   type:        'email'
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
         id,
         name,
         steps,
-        newsletters ( name, slug, organizations ( name, primary_color ) )
+        newsletters ( name, slug, org_id, organizations ( name, primary_color ) )
       ),
       subscribers ( email, first_name, last_name )
     `)
@@ -52,17 +53,27 @@ export async function GET(req: NextRequest) {
   let processed = 0
   let failed    = 0
 
+  // Per-org throttle: track emails sent per org in this cron run
+  const orgSentCount = new Map<string, number>()
+
   for (const enrollment of enrollments ?? []) {
     try {
       const automation   = enrollment.automations as unknown as {
         id: string; name: string; steps: AutomationStep[]
-        newsletters: { name: string; slug: string; organizations: { name: string; primary_color: string | null } } | null
+        newsletters: { name: string; slug: string; org_id: string; organizations: { name: string; primary_color: string | null } } | null
       } | null
       const subscriber   = enrollment.subscribers as unknown as {
         email: string; first_name: string | null; last_name: string | null
       } | null
 
       if (!automation || !subscriber) { failed++; continue }
+
+      // Enforce per-org send cap
+      const orgId = automation.newsletters?.org_id ?? ''
+      const orgCount = orgSentCount.get(orgId) ?? 0
+      if (orgId && orgCount >= ORG_EMAIL_CAP_PER_RUN) {
+        continue // Skip silently — will be picked up in next cron run
+      }
 
       const steps       = automation.steps ?? []
       const stepIndex   = enrollment.current_step
@@ -80,8 +91,7 @@ export async function GET(req: NextRequest) {
       const fromName   = newsletter?.name ?? orgName
       const fromEmail  = `newsletter@${newsletter?.slug ?? 'mail'}.resend.dev`
 
-      const recipientName = [subscriber.first_name, subscriber.last_name].filter(Boolean).join(' ') || subscriber.email
-      const unsubUrl      = `${APP_URL}/unsubscribe?email=${encodeURIComponent(subscriber.email)}`
+      const unsubUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(subscriber.email)}`
 
       const html = `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
@@ -114,6 +124,7 @@ export async function GET(req: NextRequest) {
           .eq('id', enrollment.id)
       }
 
+      orgSentCount.set(orgId, orgCount + 1)
       processed++
     } catch {
       failed++

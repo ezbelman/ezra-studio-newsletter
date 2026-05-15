@@ -125,19 +125,19 @@ Features to turn Newsletter Studio into a competitive SaaS product.
 
 ---
 
-## Phase 3 — Growth & Discovery
+## Phase 3 — Growth & Discovery ✅ Complete
 
 > Target: Weeks 5–6. Make the product sticky and discoverable.
 
-| # | Task | Priority | Status |
-|---|------|----------|--------|
-| P3-1 | Global search modal (Cmd+K) — issues, subscribers, newsletters | HIGH-2 | 🔲 |
-| P3-2 | Automation step drag-and-drop reorder | M-7 | 🔲 |
-| P3-3 | Segment live count preview (real-time subscriber count for rule set) | — | 🔲 |
-| P3-4 | Per-org send rate throttle | M-9 | 🔲 |
-| P3-5 | Webhook retry for failed open/click events | M-11 | 🔲 |
-| P3-6 | Multi-template email layout library | HIGH-5 | 🔲 |
-| P3-7 | Public subscriber widget / embed code | M-14 | 🔲 |
+| # | Task | Priority | Status | Notes |
+|---|------|----------|--------|-------|
+| P3-1 | Global search modal (Cmd+K) — issues, subscribers, newsletters | HIGH-2 | ✅ | `/api/search` + `SearchModal` wired in Sidebar |
+| P3-2 | Automation step drag-and-drop reorder | M-7 | ✅ | HTML5 native drag API in `new-automation-dialog.tsx` |
+| P3-3 | Segment live count preview (real-time subscriber count for rule set) | — | ✅ | `previewSegmentCount` action + debounced display |
+| P3-4 | Per-org send rate throttle | M-9 | ✅ | 200 emails/run cap in automation cron |
+| P3-5 | Webhook retry for failed open/click events | M-11 | ✅ | `withRetry` wrapper (3 attempts) in webhook handler |
+| P3-6 | Multi-template email layout library | HIGH-5 | ✅ | `dark` / `light` / `minimal` layouts; template picker in newsletter settings |
+| P3-7 | Public subscriber widget / embed code | M-14 | ✅ | `/embed/[slug]` iframe page; embed snippet in newsletter settings |
 
 ---
 

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, X, Loader2, Trash2, ChevronDown } from 'lucide-react'
+import { Plus, X, Loader2, Trash2, ChevronDown, GripVertical } from 'lucide-react'
 import { createAutomation } from '@/lib/actions/automation-actions'
 
 interface Newsletter { id: string; name: string }
@@ -29,6 +29,8 @@ export function NewAutomationDialog({ newsletters }: { newsletters: Newsletter[]
   const [error, setError] = useState('')
   const [steps, setSteps] = useState<Step[]>(WELCOME_SERIES)
   const [expandedStep, setExpandedStep] = useState<number | null>(0)
+  const dragIdx = useRef<number | null>(null)
+  const [overIdx, setOverIdx] = useState<number | null>(null)
 
   function addStep() {
     setSteps(prev => [...prev, { type: 'email', delay_hours: 24, subject: '', body: '' }])
@@ -42,6 +44,34 @@ export function NewAutomationDialog({ newsletters }: { newsletters: Newsletter[]
 
   function updateStep(idx: number, key: keyof Step, val: string | number) {
     setSteps(prev => prev.map((s, i) => i === idx ? { ...s, [key]: val } : s))
+  }
+
+  function handleDragStart(idx: number) {
+    dragIdx.current = idx
+  }
+
+  function handleDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault()
+    setOverIdx(idx)
+  }
+
+  function handleDrop(idx: number) {
+    const from = dragIdx.current
+    if (from === null || from === idx) { setOverIdx(null); return }
+    setSteps(prev => {
+      const copy = [...prev]
+      const [removed] = copy.splice(from, 1)
+      copy.splice(idx, 0, removed)
+      return copy
+    })
+    if (expandedStep === from) setExpandedStep(idx)
+    dragIdx.current = null
+    setOverIdx(null)
+  }
+
+  function handleDragEnd() {
+    dragIdx.current = null
+    setOverIdx(null)
   }
 
   function handleClose() {
@@ -138,12 +168,25 @@ export function NewAutomationDialog({ newsletters }: { newsletters: Newsletter[]
 
                 <div className="space-y-2">
                   {steps.map((step, idx) => (
-                    <div key={idx} className="border border-line rounded-lg overflow-hidden">
+                    <div
+                      key={idx}
+                      draggable
+                      onDragStart={() => handleDragStart(idx)}
+                      onDragOver={e => handleDragOver(e, idx)}
+                      onDrop={() => handleDrop(idx)}
+                      onDragEnd={handleDragEnd}
+                      className={`border rounded-lg overflow-hidden transition-colors ${
+                        overIdx === idx && dragIdx.current !== idx
+                          ? 'border-accent bg-accent/5'
+                          : 'border-line'
+                      }`}
+                    >
                       <button
                         type="button"
                         onClick={() => setExpandedStep(expandedStep === idx ? null : idx)}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-elevated transition-colors text-left"
                       >
+                        <GripVertical className="h-3.5 w-3.5 text-ink/20 shrink-0 cursor-grab active:cursor-grabbing" />
                         <span className="h-5 w-5 rounded-full bg-accent/10 text-accent text-[10px] font-700 flex items-center justify-center shrink-0">
                           {idx + 1}
                         </span>

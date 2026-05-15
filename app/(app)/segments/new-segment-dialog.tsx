@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, X, Loader2, Trash2 } from 'lucide-react'
-import { createSegment } from '@/lib/actions/segment-actions'
+import { Plus, X, Loader2, Trash2, Users } from 'lucide-react'
+import { createSegment, previewSegmentCount } from '@/lib/actions/segment-actions'
 
 interface Newsletter { id: string; name: string }
 
@@ -23,12 +23,37 @@ const RULE_VALUE_HINTS: Record<string, string> = {
   never_opened:     'true',
 }
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay)
+    return () => clearTimeout(t)
+  }, [value, delay])
+  return debounced
+}
+
 export function NewSegmentDialog({ newsletters }: { newsletters: Newsletter[] }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const [rules, setRules] = useState<Rule[]>([{ field: 'subscribed_since', value: '30d' }])
+  const [liveCount, setLiveCount] = useState<number | null>(null)
+  const [countLoading, setCountLoading] = useState(false)
+  const debouncedRules = useDebounce(rules, 500)
+
+  useEffect(() => {
+    if (!open) return
+    const validRules = debouncedRules.filter(r => r.field && r.value)
+    if (validRules.length === 0) { setLiveCount(null); return }
+    setCountLoading(true)
+    previewSegmentCount(debouncedRules)
+      .then(res => {
+        if ('count' in res) setLiveCount(res.count)
+        setCountLoading(false)
+      })
+      .catch(() => setCountLoading(false))
+  }, [debouncedRules, open])
 
   function addRule() {
     setRules(prev => [...prev, { field: 'subscribed_since', value: '' }])
@@ -153,6 +178,22 @@ export function NewSegmentDialog({ newsletters }: { newsletters: Newsletter[] })
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Live count preview */}
+              <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-elevated border border-line">
+                {countLoading
+                  ? <Loader2 className="h-3.5 w-3.5 text-ink/30 animate-spin" />
+                  : <Users className="h-3.5 w-3.5 text-ink/30" />
+                }
+                <span className="text-xs text-ink/50">
+                  {countLoading
+                    ? 'Counting…'
+                    : liveCount === null
+                      ? 'Add rules to preview subscriber count'
+                      : <><span className="font-700 text-ink">{liveCount.toLocaleString()}</span> subscriber{liveCount !== 1 ? 's' : ''} match these rules</>
+                  }
+                </span>
               </div>
 
               {error && (

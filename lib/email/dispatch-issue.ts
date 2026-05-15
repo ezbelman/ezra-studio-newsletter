@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPlatformSetting } from '@/lib/platform/settings'
-import { renderEmailHtml } from '@/lib/email/template'
+import { renderWithTemplate } from '@/lib/email/template'
 import { generateUnsubscribeToken } from '@/lib/email/unsubscribe-token'
 import { incrementUsage } from '@/lib/billing/check-limit'
 import { Resend } from 'resend'
@@ -42,14 +42,14 @@ export async function dispatchIssue(opts: {
 
   const { data: issue } = await admin
     .from('issues')
-    .select('id, title, polished_json, newsletter_id, newsletters(name, slug, organizations(name, primary_color))')
+    .select('id, title, polished_json, newsletter_id, newsletters(name, slug, email_template, organizations(name, primary_color))')
     .eq('id', issueId)
     .single()
 
   if (!issue)             throw new Error('Issue not found')
   if (!issue.polished_json) throw new Error('Issue has no polished content')
 
-  const nl  = issue.newsletters as unknown as { name: string; slug: string; organizations: { name: string; primary_color: string | null } } | null
+  const nl  = issue.newsletters as unknown as { name: string; slug: string; email_template: string | null; organizations: { name: string; primary_color: string | null } } | null
   const org = nl?.organizations
 
   const { data: subscribers } = await admin
@@ -61,13 +61,14 @@ export async function dispatchIssue(opts: {
 
   const subscriberCount = subscribers?.length ?? 0
   const issueTitle      = issue.title ?? 'Newsletter'
-  const polishedJson    = issue.polished_json as unknown as Parameters<typeof renderEmailHtml>[0]['polishedJson']
+  const polishedJson    = issue.polished_json as unknown as Parameters<typeof renderWithTemplate>[1]['polishedJson']
+  const emailTemplate   = nl?.email_template ?? 'dark'
 
   function buildEmails(subs: { id: string; email: string; newsletter_id: string }[], subject: string): EmailPayload[] {
     return subs.map(sub => {
       const unsubscribeUrl = `${APP_URL}/unsubscribe?token=${generateUnsubscribeToken(sub.id, sub.newsletter_id)}`
       const webViewUrl     = nl?.slug ? `${APP_URL}/s/${nl.slug}/${issueId}` : undefined
-      const html           = renderEmailHtml({
+      const html           = renderWithTemplate(emailTemplate, {
         orgName:      org?.name ?? 'Newsletter',
         primaryColor: org?.primary_color ?? '#7B5CF0',
         issueTitle,
