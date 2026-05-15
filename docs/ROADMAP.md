@@ -141,14 +141,19 @@ Features to turn Newsletter Studio into a competitive SaaS product.
 
 ---
 
-## Phase 4 — Platform & Scale
+## Phase 4 — Security & Authorization 🔄 In Progress
 
-> Target: Weeks 7–8. External integrations and compliance.
+> Target: Weeks 7–8. RBAC enforcement, encryption, state machine, search performance.
 
 | # | Task | Priority | Status | Notes |
 |---|------|----------|--------|-------|
-| P4-1 | Stripe billing integration — plan upgrades, payment method, invoices | D1 | 🔲 | External Stripe setup required |
-| P4-2 | Custom domain sending — per-org FROM address via Resend domain API | D5 | 🔲 | Resend domain setup required |
-| P4-3 | GDPR data export + deletion request flow | D9 | 🔲 | Complex compliance scope |
-| P4-4 | Rate limiting via Redis/Upstash (replace DB-based throttle) | — | 🔲 | For scale beyond ~1k orgs |
-| P4-5 | Webhook retry infrastructure | — | 🔲 | Queue-backed retry with exponential backoff |
+| P4-1 | `lib/auth/permissions.ts` — `checkPermission()` + `assertPermission()` + role hierarchy | BLOCKER | ✅ | `ROLE_RANK`: viewer(0)→owner(5) |
+| P4-2 | `lib/auth/issue-state.ts` — `validateTransition()` + `transitionMinRole()` | HIGH | ✅ | State machine: draft→pending→approved→sent |
+| P4-3 | Wire `checkPermission('editor')` into all server actions | BLOCKER | ✅ | automation, segment, template, issue-versions, subscriber, bulk, tag actions |
+| P4-4 | State machine validation in `/api/issues/[issueId]/status` route | HIGH | ✅ | Replaces ad-hoc APPROVER_ROLES check |
+| P4-5 | `lib/crypto/encrypt.ts` — AES-256-GCM encryption for platform settings | BLOCKER | ✅ | `enc:iv:tag:ciphertext` format, backward-compat with plain-text |
+| P4-6 | Stripe keys in admin settings (encrypted at rest) | HIGH | ✅ | `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` |
+| P4-7 | GIN trigram indexes for search performance | HIGH | ✅ | `20260518_search_indexes.sql` — issues, subscribers, newsletters |
+| P4-8 | Stripe billing integration — plan upgrades, payment method, invoices | D1 | 🔲 | External Stripe setup required |
+| P4-9 | Custom domain sending — per-org FROM address via Resend domain API | D5 | 🔲 | Resend domain setup required |
+| P4-10 | GDPR data export + deletion request flow | D9 | 🔲 | Complex compliance scope |

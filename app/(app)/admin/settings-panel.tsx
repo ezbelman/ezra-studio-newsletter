@@ -18,36 +18,82 @@ interface SettingField {
   type:        'secret' | 'text'
 }
 
-const FIELDS: SettingField[] = [
+type SettingGroup = {
+  title:       string
+  description: string
+  fields:      SettingField[]
+}
+
+const GROUPS: SettingGroup[] = [
   {
-    key:         'RESEND_API_KEY',
-    label:       'Resend API Key',
-    description: 'Required to send newsletters. Get it at resend.com → API Keys.',
-    placeholder: 're_••••••••••••••••',
-    type:        'secret',
+    title:       'Email',
+    description: 'Resend integration for sending newsletters and transactional emails.',
+    fields: [
+      {
+        key:         'RESEND_API_KEY',
+        label:       'Resend API Key',
+        description: 'Required to send newsletters. Get it at resend.com → API Keys.',
+        placeholder: 're_••••••••••••••••',
+        type:        'secret',
+      },
+      {
+        key:         'FROM_EMAIL',
+        label:       'From Email Address',
+        description: 'The sender address shown on all outgoing emails. Must be verified in Resend.',
+        placeholder: 'newsletter@yourdomain.com',
+        type:        'text',
+      },
+      {
+        key:         'RESEND_WEBHOOK_SECRET',
+        label:       'Resend Webhook Secret',
+        description: 'Verifies incoming bounce and complaint webhooks from Resend.',
+        placeholder: 'whsec_••••••••••••••••',
+        type:        'secret',
+      },
+    ],
   },
   {
-    key:         'FROM_EMAIL',
-    label:       'From Email Address',
-    description: 'The sender address shown on all outgoing emails. Must be verified in Resend.',
-    placeholder: 'newsletter@yourdomain.com',
-    type:        'text',
+    title:       'Stripe',
+    description: 'Billing and subscription management. All keys are AES-256-GCM encrypted at rest.',
+    fields: [
+      {
+        key:         'STRIPE_SECRET_KEY',
+        label:       'Stripe Secret Key',
+        description: 'Server-side key for charging customers and managing subscriptions. Never exposed to the browser. Get it at dashboard.stripe.com → Developers → API Keys.',
+        placeholder: 'sk_live_••••••••••••••••',
+        type:        'secret',
+      },
+      {
+        key:         'STRIPE_PUBLISHABLE_KEY',
+        label:       'Stripe Publishable Key',
+        description: 'Client-side key used to initialize Stripe.js and Elements on the upgrade page.',
+        placeholder: 'pk_live_••••••••••••••••',
+        type:        'secret',
+      },
+      {
+        key:         'STRIPE_WEBHOOK_SECRET',
+        label:       'Stripe Webhook Secret',
+        description: 'Signing secret to verify Stripe webhook events (e.g. subscription.updated, invoice.paid). Find it in Stripe → Developers → Webhooks.',
+        placeholder: 'whsec_••••••••••••••••',
+        type:        'secret',
+      },
+    ],
   },
   {
-    key:         'PLATFORM_ANTHROPIC_API_KEY',
-    label:       'Anthropic API Key (Platform)',
-    description: 'Powers AI polishing for all users on platform plan. Get it at console.anthropic.com.',
-    placeholder: 'sk-ant-••••••••••••••••',
-    type:        'secret',
-  },
-  {
-    key:         'RESEND_WEBHOOK_SECRET',
-    label:       'Resend Webhook Secret',
-    description: 'Verifies incoming bounce and complaint webhooks from Resend.',
-    placeholder: 'whsec_••••••••••••••••',
-    type:        'secret',
+    title:       'AI',
+    description: 'Anthropic integration powering AI content polish for all orgs on the platform plan.',
+    fields: [
+      {
+        key:         'PLATFORM_ANTHROPIC_API_KEY',
+        label:       'Anthropic API Key (Platform)',
+        description: 'Powers AI polishing for all users on platform plan. Get it at console.anthropic.com.',
+        placeholder: 'sk-ant-••••••••••••••••',
+        type:        'secret',
+      },
+    ],
   },
 ]
+
 
 function SourceBadge({ source }: { source: 'env' | 'db' | 'unset' }) {
   if (source === 'env') return (
@@ -196,9 +242,19 @@ interface Props {
 
 export function SettingsPanel({ statuses }: Props) {
   return (
-    <div className="rounded-xl border border-line bg-surface overflow-hidden">
-      {FIELDS.map(field => (
-        <SettingRow key={field.key} field={field} status={statuses[field.key]} />
+    <div className="space-y-8">
+      {GROUPS.map(group => (
+        <div key={group.title}>
+          <div className="mb-3">
+            <h2 className="text-sm font-700 text-ink">{group.title}</h2>
+            <p className="text-xs text-ink/40 mt-0.5">{group.description}</p>
+          </div>
+          <div className="rounded-xl border border-line bg-surface overflow-hidden">
+            {group.fields.map(field => (
+              <SettingRow key={field.key} field={field} status={statuses[field.key]} />
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   )

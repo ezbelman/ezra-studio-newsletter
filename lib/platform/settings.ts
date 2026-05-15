@@ -1,10 +1,14 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { decryptSetting } from '@/lib/crypto/encrypt'
 
 export type SettingKey =
   | 'RESEND_API_KEY'
   | 'FROM_EMAIL'
   | 'PLATFORM_ANTHROPIC_API_KEY'
   | 'RESEND_WEBHOOK_SECRET'
+  | 'STRIPE_SECRET_KEY'
+  | 'STRIPE_PUBLISHABLE_KEY'
+  | 'STRIPE_WEBHOOK_SECRET'
 
 // platform_settings is a new table not yet in generated DB types — cast via unknown
 function settingsTable() {
@@ -21,7 +25,8 @@ export async function getPlatformSetting(key: SettingKey): Promise<string | null
     .eq('key', key)
     .single() as { data: { value: string } | null }
 
-  return data?.value ?? null
+  if (!data?.value) return null
+  return decryptSetting(data.value)
 }
 
 export function maskSecret(value: string): string {

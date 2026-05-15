@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPlatformSetting } from '@/lib/platform/settings'
+import { ROLE_RANK } from '@/lib/auth/permissions'
+import { validateTransition, transitionMinRole } from '@/lib/auth/issue-state'
 import { Resend } from 'resend'
 import { z } from 'zod'
-
-const APPROVER_ONLY_STATUSES = ['approved', 'needs_revision']
-const APPROVER_ROLES = ['owner', 'admin', 'reviewer']
 
 const StatusSchema = z.object({
   status:  z.enum(['draft', 'pending_approval', 'needs_revision', 'approved', 'scheduled']),
@@ -39,8 +38,27 @@ export async function PATCH(
 
   if (!membership) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (APPROVER_ONLY_STATUSES.includes(next) && !APPROVER_ROLES.includes(membership.role)) {
-    return NextResponse.json({ error: 'Only admins and reviewers can approve issues.' }, { status: 403 })
+  // Fetch current issue state to validate the transition
+  const { data: issue } = await supabase
+    .from('issues')
+    .select('id, status')
+    .eq('id', issueId)
+    .eq('org_id', membership.org_id)
+    .single()
+
+  if (!issue) return NextResponse.json({ error: 'Issue not found' }, { status: 404 })
+
+  // State machine check
+  const transitionError = validateTransition(issue.status, next)
+  if (transitionError) return NextResponse.json({ error: transitionError }, { status: 400 })
+
+  // Role check — minimum role depends on the target status
+  const minRole = transitionMinRole(next)
+  if ((ROLE_RANK[membership.role] ?? 0) < ROLE_RANK[minRole]) {
+    return NextResponse.json(
+      { error: `This action requires ${minRole} role or higher. Your role: ${membership.role}` },
+      { status: 403 }
+    )
   }
 
   const { error } = await supabase
@@ -90,7 +108,6 @@ async function notifyApprovers(issueId: string, orgId: string, submittedById: st
   const resend   = new Resend(resendKey)
   const from     = `Newsletter Studio <${fromEmail ?? 'onboarding@resend.dev'}>`
 
-  // Fetch auth emails for each approver via admin auth API
   const emailTargets = await Promise.all(
     approvers.map(async m => {
       const { data: authUser } = await admin.auth.admin.getUserById(m.user_id)
@@ -149,9 +166,9 @@ async function notifyAuthor(issueId: string, orgId: string, reviewerId: string, 
 
   const { data: authorProfile } = await admin.from('profiles').select('full_name').eq('id', authorId).single()
 
-  const APP_URL     = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
-  const orgName     = org?.name ?? 'your organization'
-  const issTitle    = (issue as { title: string | null } | null)?.title ?? 'Untitled Issue'
+  const APP_URL      = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
+  const orgName      = org?.name ?? 'your organization'
+  const issTitle     = (issue as { title: string | null } | null)?.title ?? 'Untitled Issue'
   const reviewerName = (reviewer as { full_name: string | null } | null)?.full_name ?? 'A reviewer'
   const authorName   = (authorProfile as { full_name: string | null } | null)?.full_name ?? 'there'
   const resend       = new Resend(resendKey)

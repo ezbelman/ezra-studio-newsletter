@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentOrgId } from '@/lib/data/org'
+import { checkPermission } from '@/lib/auth/permissions'
 
 export async function updateSubscriberTags(
   subscriberId: string,
@@ -14,6 +15,9 @@ export async function updateSubscriberTags(
 
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
+
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
 
   const cleanTags = [...new Set(tags.map(t => t.trim().toLowerCase()).filter(Boolean))]
 

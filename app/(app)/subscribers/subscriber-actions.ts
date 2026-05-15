@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentOrgId } from '@/lib/data/org'
+import { checkPermission } from '@/lib/auth/permissions'
 import { enrollSubscriberInAutomations } from '@/lib/actions/automation-actions'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -20,6 +21,9 @@ export async function addSubscriber(formData: FormData) {
 
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
+
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
 
   const parsed = addSchema.safeParse({
     email:         formData.get('email'),
@@ -59,6 +63,9 @@ export async function unsubscribeSubscriber(subscriberId: string) {
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
 
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
+
   const admin = createAdminClient()
   const { error } = await admin
     .from('subscribers')
@@ -81,6 +88,9 @@ export async function importSubscribers(
 
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
+
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
 
   if (rows.length === 0) return { error: 'No valid rows to import' }
   if (rows.length > 5000) return { error: 'Maximum 5,000 rows per import' }

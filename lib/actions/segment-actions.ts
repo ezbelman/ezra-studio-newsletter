@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentOrgId } from '@/lib/data/org'
+import { checkPermission } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -74,6 +75,9 @@ export async function createSegment(formData: FormData) {
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
 
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
+
   let rules: unknown[]
   try {
     rules = JSON.parse(formData.get('rules') as string)
@@ -112,6 +116,9 @@ export async function deleteSegment(segmentId: string) {
 
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
+
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
 
   const admin = createAdminClient()
   const { error } = await admin

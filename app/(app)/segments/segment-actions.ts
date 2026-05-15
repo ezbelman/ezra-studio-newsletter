@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentOrgId } from '@/lib/data/org'
+import { checkPermission } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
 
 export type SegmentRule = {
@@ -21,6 +22,9 @@ export async function createSegment(data: {
 
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
+
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
 
   const name = data.name.trim()
   if (!name) return { error: 'Segment name is required' }
@@ -51,6 +55,9 @@ export async function updateSegment(segmentId: string, data: {
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
 
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
+
   const name = data.name.trim()
   if (!name) return { error: 'Segment name is required' }
 
@@ -77,6 +84,9 @@ export async function deleteSegment(segmentId: string) {
 
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
+
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
 
   const { error } = await supabase
     .from('segments')

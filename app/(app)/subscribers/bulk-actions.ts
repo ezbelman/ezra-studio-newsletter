@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentOrgId } from '@/lib/data/org'
+import { checkPermission } from '@/lib/auth/permissions'
 
 export async function bulkUnsubscribe(ids: string[]): Promise<{ success?: boolean; error?: string }> {
   if (!ids.length) return { error: 'No subscribers selected.' }
@@ -13,6 +14,9 @@ export async function bulkUnsubscribe(ids: string[]): Promise<{ success?: boolea
 
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
+
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
 
   const admin = createAdminClient()
   const { error } = await admin
@@ -35,6 +39,9 @@ export async function bulkAddTag(ids: string[], tag: string): Promise<{ success?
 
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
+
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
 
   const cleanTag = tag.trim().toLowerCase()
   const admin = createAdminClient()
@@ -77,17 +84,8 @@ export async function bulkDelete(ids: string[]): Promise<{ success?: boolean; er
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
 
-  // Only owner/admin can bulk delete
-  const { data: membership } = await supabase
-    .from('org_members')
-    .select('role')
-    .eq('org_id', orgId)
-    .eq('user_id', user.id)
-    .single()
-
-  if (!['owner', 'admin'].includes(membership?.role ?? '')) {
-    return { error: 'Only admins can delete subscribers.' }
-  }
+  const permError2 = await checkPermission(supabase, user.id, orgId, 'admin')
+  if (permError2) return { error: 'Only admins can delete subscribers.' }
 
   const admin = createAdminClient()
   const { error } = await admin

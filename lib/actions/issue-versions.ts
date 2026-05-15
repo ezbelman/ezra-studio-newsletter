@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentOrgId } from '@/lib/data/org'
+import { checkPermission } from '@/lib/auth/permissions'
 import { revalidatePath } from 'next/cache'
 
 export async function saveIssueVersion(issueId: string): Promise<{ success?: boolean; versionNumber?: number; error?: string }> {
@@ -12,6 +13,9 @@ export async function saveIssueVersion(issueId: string): Promise<{ success?: boo
 
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
+
+  const permError = await checkPermission(supabase, user.id, orgId, 'contributor')
+  if (permError) return { error: permError }
 
   const { data: issue } = await supabase
     .from('issues')
@@ -55,6 +59,9 @@ export async function restoreVersion(
 
   const orgId = await getCurrentOrgId(supabase, user.id)
   if (!orgId) return { error: 'No organization found' }
+
+  const permError = await checkPermission(supabase, user.id, orgId, 'editor')
+  if (permError) return { error: permError }
 
   const { data: version } = await supabase
     .from('issue_versions')
