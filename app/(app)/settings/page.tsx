@@ -3,10 +3,15 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentOrgId } from '@/lib/data/org'
 import { maskKey, isKeySet } from '@/lib/ai/providers'
+import { listApiKeys } from '@/lib/actions/api-key-actions'
+import { listWebhooks } from '@/lib/actions/webhook-actions'
 import { SettingsForm } from './settings-form'
 import { OrgSettingsForm } from './org-settings-form'
 import { BrandingForm } from './branding-form'
 import { PersonalAIForm, type PersonalProvider } from './personal-ai-form'
+import { ApiKeysPanel } from './api-keys-panel'
+import { WebhooksPanel } from './webhooks-panel'
+import { GdprPanel } from './gdpr-panel'
 
 export const metadata = { title: 'Settings' }
 
@@ -41,6 +46,11 @@ export default async function SettingsPage() {
   const role    = membership?.role ?? ''
   const canEdit = ['owner', 'admin'].includes(role)
   const isOwner = role === 'owner'
+
+  const [initialKeys, initialWebhooks] = await Promise.all([
+    listApiKeys(orgId),
+    listWebhooks(orgId),
+  ])
 
   const personalProfile = profile as {
     personal_ai_provider:       string | null
@@ -96,6 +106,20 @@ export default async function SettingsPage() {
               geminiKeyMasked={maskKey(personalProfile?.personal_gemini_api_key)}
             />
           )}
+
+          <ApiKeysPanel
+            orgId={orgId}
+            canEdit={canEdit}
+            initialKeys={initialKeys}
+          />
+
+          <WebhooksPanel
+            orgId={orgId}
+            canEdit={canEdit}
+            initialWebhooks={initialWebhooks}
+          />
+
+          <GdprPanel />
         </div>
       </div>
     </div>

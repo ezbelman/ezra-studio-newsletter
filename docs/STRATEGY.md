@@ -470,15 +470,15 @@ export async function POST(req: NextRequest, ...) {
 | P5-7 | Supabase type codegen in CI | LOW | ✅ | `.github/workflows/ci.yml` — typecheck + lint on push |
 | P5-8 | Personal AI keys for owners (Anthropic / OpenAI / Google) | HIGH | ✅ | DB migration, server actions, `PersonalAIForm` with live test button |
 
-### Phase 6 — Developer Platform (3 weeks)
+### Phase 6 — Developer Platform ✅ Complete
 
-| # | Task | Priority | Effort |
-|---|------|----------|--------|
-| P6-1 | Personal API keys (create/revoke, scoped to org) | HIGH | 3d |
-| P6-2 | Public API v1 — `/api/v1/subscribers`, `/api/v1/issues` | HIGH | 5d |
-| P6-3 | Outbound webhooks (org configures URL for events) | MEDIUM | 3d |
-| P6-4 | API docs (auto-generated from route schemas) | MEDIUM | 2d |
-| P6-5 | GDPR data export + deletion flow | MEDIUM | 3d |
+| # | Task | Priority | Status | Notes |
+|---|------|----------|--------|-------|
+| P6-1 | Personal API keys (create/revoke, scoped to org) | HIGH | ✅ | `api_keys` table + `lib/actions/api-key-actions.ts`; `ApiKeysPanel` in settings; keys prefixed `nsk_`, hashed SHA-256 |
+| P6-2 | Public API v1 — `/api/v1/subscribers`, `/api/v1/issues` | HIGH | ✅ | Bearer-token-authenticated routes under `/api/v1/newsletters/[slug]/`; added to proxy PUBLIC_PREFIXES |
+| P6-3 | Outbound webhooks (org configures URL for events) | MEDIUM | ✅ | `webhooks` table + `lib/webhooks/dispatch.ts` HMAC-SHA256 signing; `WebhooksPanel` in settings; wired into subscribe + dispatchIssue |
+| P6-4 | API docs (auto-generated from route schemas) | MEDIUM | ✅ | `/developers` page — auth guide, endpoint table, curl examples, webhook verification, rate limits |
+| P6-5 | GDPR data export + deletion flow | MEDIUM | ✅ | `GET /api/account/export` JSON download; `GdprPanel` in settings; `deleteAccount()` server action handles cascade + `auth.admin.deleteUser` |
 
 ### Phase 7 — Engagement & Virality (3 weeks)
 

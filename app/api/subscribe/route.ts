@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { dispatchWebhook } from '@/lib/webhooks/dispatch'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -56,6 +57,11 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: 'Could not subscribe. Please try again.' }, { status: 500 })
   }
+
+  dispatchWebhook(nl.org_id, 'subscriber.created', {
+    email,
+    newsletter_id,
+  })
 
   return NextResponse.json({ success: true })
 }

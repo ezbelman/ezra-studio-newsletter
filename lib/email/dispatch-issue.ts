@@ -3,6 +3,7 @@ import { getPlatformSetting } from '@/lib/platform/settings'
 import { renderWithTemplate } from '@/lib/email/template'
 import { generateUnsubscribeToken } from '@/lib/email/unsubscribe-token'
 import { incrementUsage } from '@/lib/billing/check-limit'
+import { dispatchWebhook } from '@/lib/webhooks/dispatch'
 import { Resend } from 'resend'
 
 const APP_URL    = process.env.NEXT_PUBLIC_APP_URL ?? 'https://localhost:3000'
@@ -154,6 +155,8 @@ export async function dispatchIssue(opts: {
       resource_id:   issueId,
       metadata:      { recipient_count: totalSent, ab_subject_b: abSubjectB },
     })
+
+    dispatchWebhook(orgId, 'issue.published', { issue_id: issueId, title: issueTitle })
   } else {
     const result = await sendBatches(buildEmails(subscribers!, issueTitle))
     totalSent    = result.totalSent
@@ -183,6 +186,8 @@ export async function dispatchIssue(opts: {
       resource_id:   issueId,
       metadata:      { recipient_count: totalSent },
     })
+
+    dispatchWebhook(orgId, 'issue.published', { issue_id: issueId, title: issueTitle })
   }
 
   await incrementUsage(orgId, 'sends', totalSent)

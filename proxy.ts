@@ -17,6 +17,7 @@ const PUBLIC_PREFIXES = [
   '/api/subscribe', // public subscribe endpoint
   '/api/webhooks/', // Resend webhooks — use their own signing secret
   '/api/cron/',     // Vercel cron — uses CRON_SECRET header
+  '/api/v1/',       // public API — uses Bearer token auth
   '/s/',            // public newsletter/issue viewer
   '/unsubscribe',   // one-click opt-out
   '/invite/',       // invite accept flow

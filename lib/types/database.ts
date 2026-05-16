@@ -566,6 +566,30 @@ export interface Database {
           { foreignKeyName: 'notifications_user_id_fkey'; columns: ['user_id']; isOneToOne: false; referencedRelation: 'profiles'; referencedColumns: ['id'] }
         ]
       }
+      api_keys: {
+        Row: {
+          id: string; org_id: string; user_id: string; name: string
+          key_hash: string; key_prefix: string
+          last_used_at: string | null; created_at: string; revoked_at: string | null
+        }
+        Insert: { id?: string; org_id: string; user_id: string; name: string; key_hash: string; key_prefix: string }
+        Update: { last_used_at?: string | null; revoked_at?: string | null }
+        Relationships: [
+          { foreignKeyName: 'api_keys_org_id_fkey'; columns: ['org_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] },
+          { foreignKeyName: 'api_keys_user_id_fkey'; columns: ['user_id']; isOneToOne: false; referencedRelation: 'profiles'; referencedColumns: ['id'] }
+        ]
+      }
+      webhooks: {
+        Row: {
+          id: string; org_id: string; url: string; events: string[]
+          secret: string; enabled: boolean; created_by: string | null; created_at: string
+        }
+        Insert: { id?: string; org_id: string; url: string; events?: string[]; secret: string; enabled?: boolean; created_by?: string | null }
+        Update: { url?: string; events?: string[]; enabled?: boolean }
+        Relationships: [
+          { foreignKeyName: 'webhooks_org_id_fkey'; columns: ['org_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] }
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: {
