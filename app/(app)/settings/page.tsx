@@ -48,8 +48,8 @@ export default async function SettingsPage() {
   const isOwner = role === 'owner'
 
   const [initialKeys, initialWebhooks] = await Promise.all([
-    listApiKeys(orgId),
-    listWebhooks(orgId),
+    listApiKeys(),
+    listWebhooks(),
   ])
 
   const personalProfile = profile as {

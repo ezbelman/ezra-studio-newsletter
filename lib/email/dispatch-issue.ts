@@ -156,7 +156,7 @@ export async function dispatchIssue(opts: {
       metadata:      { recipient_count: totalSent, ab_subject_b: abSubjectB },
     })
 
-    dispatchWebhook(orgId, 'issue.published', { issue_id: issueId, title: issueTitle })
+    await dispatchWebhook(orgId, 'issue.published', { issue_id: issueId, title: issueTitle })
   } else {
     const result = await sendBatches(buildEmails(subscribers!, issueTitle))
     totalSent    = result.totalSent
@@ -187,7 +187,7 @@ export async function dispatchIssue(opts: {
       metadata:      { recipient_count: totalSent },
     })
 
-    dispatchWebhook(orgId, 'issue.published', { issue_id: issueId, title: issueTitle })
+    await dispatchWebhook(orgId, 'issue.published', { issue_id: issueId, title: issueTitle })
   }
 
   await incrementUsage(orgId, 'sends', totalSent)

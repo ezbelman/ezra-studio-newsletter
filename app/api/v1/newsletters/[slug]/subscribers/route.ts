@@ -2,7 +2,8 @@ import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveApiKey } from '@/lib/api/auth'
-import { apiOk, apiError } from '@/lib/api/response'
+import { apiOk, apiCreated, apiError } from '@/lib/api/response'
+import { dispatchWebhook } from '@/lib/webhooks/dispatch'
 
 const AddSchema = z.object({
   email: z.string().email(),
@@ -86,5 +87,10 @@ export async function POST(
     return apiError(error.message, 500)
   }
 
-  return apiOk(data, undefined)
+  await dispatchWebhook(ctx.orgId, 'subscriber.created', {
+    email: parsed.data.email.toLowerCase().trim(),
+    newsletter_id: newsletterId,
+  })
+
+  return apiCreated(data)
 }

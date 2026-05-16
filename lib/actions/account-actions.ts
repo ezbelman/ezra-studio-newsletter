@@ -35,6 +35,7 @@ export async function deleteAccount() {
   }
 
   await admin.from('profiles').delete().eq('id', user.id)
+  await supabase.auth.signOut()
   const { error } = await admin.auth.admin.deleteUser(user.id)
   if (error) return { error: error.message }
 

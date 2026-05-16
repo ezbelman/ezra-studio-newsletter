@@ -48,7 +48,14 @@ export async function revokeApiKey(keyId: string) {
   return { success: true }
 }
 
-export async function listApiKeys(orgId: string) {
+export async function listApiKeys() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const orgId = await getCurrentOrgId(supabase, user.id)
+  if (!orgId) return []
+
   const admin = createAdminClient()
   const { data } = await admin
     .from('api_keys')

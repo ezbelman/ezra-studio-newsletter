@@ -58,10 +58,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Could not subscribe. Please try again.' }, { status: 500 })
   }
 
-  dispatchWebhook(nl.org_id, 'subscriber.created', {
-    email,
-    newsletter_id,
-  })
+  await dispatchWebhook(nl.org_id, 'subscriber.created', { email, newsletter_id })
 
   return NextResponse.json({ success: true })
 }

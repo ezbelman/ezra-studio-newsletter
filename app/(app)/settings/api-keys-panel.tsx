@@ -23,13 +23,14 @@ function formatDate(iso: string | null) {
 }
 
 export function ApiKeysPanel({ canEdit, initialKeys }: Props) {
-  const [keys, setKeys]         = useState<ApiKey[]>(initialKeys)
-  const [showForm, setShowForm] = useState(false)
-  const [name, setName]         = useState('')
-  const [creating, setCreating] = useState(false)
-  const [newKey, setNewKey]     = useState<string | null>(null)
-  const [copied, setCopied]     = useState(false)
-  const [error, setError]       = useState<string | null>(null)
+  const [keys, setKeys]             = useState<ApiKey[]>(initialKeys)
+  const [showForm, setShowForm]     = useState(false)
+  const [name, setName]             = useState('')
+  const [creating, setCreating]     = useState(false)
+  const [newKey, setNewKey]         = useState<string | null>(null)
+  const [copied, setCopied]         = useState(false)
+  const [error, setError]           = useState<string | null>(null)
+  const [confirmRevoke, setConfirmRevoke] = useState<string | null>(null)
 
   async function handleCreate() {
     if (!name.trim()) return
@@ -47,6 +48,7 @@ export function ApiKeysPanel({ canEdit, initialKeys }: Props) {
   async function handleRevoke(id: string) {
     await revokeApiKey(id)
     setKeys(prev => prev.filter(k => k.id !== id))
+    setConfirmRevoke(null)
   }
 
   async function handleCopy() {
@@ -152,13 +154,30 @@ export function ApiKeysPanel({ canEdit, initialKeys }: Props) {
                 <p className="text-xs text-ink/50">{formatDate(k.created_at)}</p>
               </div>
               {canEdit && (
-                <button
-                  onClick={() => handleRevoke(k.id)}
-                  className="p-1.5 rounded-md hover:bg-red-500/10 text-ink/30 hover:text-red-500 transition-colors"
-                  title="Revoke key"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                confirmRevoke === k.id ? (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleRevoke(k.id)}
+                      className="px-2 py-1 rounded-md bg-red-500 text-white text-xs font-500 hover:bg-red-600 transition-colors"
+                    >
+                      Revoke
+                    </button>
+                    <button
+                      onClick={() => setConfirmRevoke(null)}
+                      className="px-2 py-1 rounded-md border border-line text-xs text-ink/50 hover:text-ink transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmRevoke(k.id)}
+                    className="p-1.5 rounded-md hover:bg-red-500/10 text-ink/30 hover:text-red-500 transition-colors"
+                    title="Revoke key"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )
               )}
             </div>
           ))}

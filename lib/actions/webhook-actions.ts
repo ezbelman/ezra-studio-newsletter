@@ -13,7 +13,7 @@ export const WEBHOOK_EVENTS = [
 ] as const
 
 const WebhookSchema = z.object({
-  url:    z.string().url().max(500),
+  url:    z.string().url().max(500).refine(u => u.startsWith('https://'), 'Webhook URL must use HTTPS'),
   events: z.array(z.enum(WEBHOOK_EVENTS)).min(1),
 })
 
@@ -52,7 +52,14 @@ export async function deleteWebhook(webhookId: string) {
   return { success: true }
 }
 
-export async function listWebhooks(orgId: string) {
+export async function listWebhooks() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const orgId = await getCurrentOrgId(supabase, user.id)
+  if (!orgId) return []
+
   const admin = createAdminClient()
   const { data } = await admin
     .from('webhooks')
