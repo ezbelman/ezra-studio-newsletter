@@ -4,7 +4,8 @@ import type { Metadata } from 'next'
 import { EmbedSubscribeForm } from './embed-form'
 
 interface Props {
-  params: Promise<{ slug: string }>
+  params:       Promise<{ slug: string }>
+  searchParams: Promise<{ ref?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -18,8 +19,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: nl?.name ? `Subscribe to ${nl.name}` : 'Subscribe' }
 }
 
-export default async function EmbedPage({ params }: Props) {
-  const { slug } = await params
+export default async function EmbedPage({ params, searchParams }: Props) {
+  const { slug }  = await params
+  const { ref }   = await searchParams
   const supabase = createAdminClient()
 
   const { data: nl } = await supabase
@@ -43,6 +45,7 @@ export default async function EmbedPage({ params }: Props) {
         newsletterId={nl.id}
         newsletterName={nl.name}
         primaryColor={color}
+        referralCode={ref}
       />
     </div>
   )

@@ -30,19 +30,20 @@ export const winBackScheduler = inngest.createFunction(
 
       const enrolledIds = new Set(enrolled?.map(e => e.subscriber_id) ?? [])
 
-      // Cold subscribers: active, subscribed before the inactivity window,
-      // haven't opened in daysInactive days (or never)
+      // Cold subscribers: active, subscribed before the inactivity window.
+      // Fetch last_opened_at and filter client-side to avoid PostgREST OR-timestamp parsing edge cases.
       const { data: candidates } = await admin
         .from('subscribers')
-        .select('id')
+        .select('id, last_opened_at')
         .eq('newsletter_id', automation.newsletter_id)
         .eq('org_id', automation.org_id)
         .eq('status', 'active')
         .lt('subscribed_at', cutoff)
-        .or(`last_opened_at.is.null,last_opened_at.lt.${cutoff}`)
         .limit(500)
 
-      const toEnroll = (candidates ?? []).filter(s => !enrolledIds.has(s.id))
+      const toEnroll = (candidates ?? [])
+        .filter(s => !s.last_opened_at || s.last_opened_at < cutoff)
+        .filter(s => !enrolledIds.has(s.id))
       if (!toEnroll.length) continue
 
       const now         = new Date().toISOString()

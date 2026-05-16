@@ -62,7 +62,7 @@ export function SubscriberGrowthChart({ data, total, added }: Props) {
           </p>
         </div>
         {added > 0 && (
-          <span className="text-[11px] font-600 text-green-500">+{added} this month</span>
+          <span className="text-[11px] font-600 text-green-500">+{added} last 30d</span>
         )}
       </div>
       <p className="font-display text-3xl font-700 leading-none text-ink mb-3">

@@ -41,6 +41,11 @@ CREATE INDEX IF NOT EXISTS idx_sub_events_subscriber ON subscriber_events(subscr
 CREATE INDEX IF NOT EXISTS idx_sub_events_issue      ON subscriber_events(issue_id, event_type);
 CREATE INDEX IF NOT EXISTS idx_sub_events_org        ON subscriber_events(org_id, created_at DESC);
 
+-- Prevents race-condition double-opens: only one 'opened' row per subscriber per issue
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sub_events_unique_open
+  ON subscriber_events(subscriber_id, issue_id)
+  WHERE event_type = 'opened';
+
 -- ─── Atomic recording functions ───────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION record_subscriber_open(
   p_subscriber_id uuid,
@@ -48,16 +53,17 @@ CREATE OR REPLACE FUNCTION record_subscriber_open(
   p_org_id        uuid,
   p_newsletter_id uuid
 ) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  rows_inserted integer;
 BEGIN
-  IF EXISTS (
-    SELECT 1 FROM subscriber_events
-    WHERE subscriber_id = p_subscriber_id
-      AND issue_id      = p_issue_id
-      AND event_type    = 'opened'
-  ) THEN RETURN false; END IF;
-
+  -- INSERT ... ON CONFLICT DO NOTHING exploits the unique partial index,
+  -- making the dedup atomic without a separate EXISTS round-trip.
   INSERT INTO subscriber_events (org_id, newsletter_id, subscriber_id, issue_id, event_type)
-  VALUES (p_org_id, p_newsletter_id, p_subscriber_id, p_issue_id, 'opened');
+  VALUES (p_org_id, p_newsletter_id, p_subscriber_id, p_issue_id, 'opened')
+  ON CONFLICT (subscriber_id, issue_id) WHERE event_type = 'opened' DO NOTHING;
+
+  GET DIAGNOSTICS rows_inserted = ROW_COUNT;
+  IF rows_inserted = 0 THEN RETURN false; END IF;
 
   UPDATE subscribers SET
     total_opens      = total_opens + 1,

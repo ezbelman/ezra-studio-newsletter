@@ -20,21 +20,26 @@ export async function GET(req: NextRequest) {
     return new NextResponse('Invalid redirect', { status: 400 })
   }
 
-  const admin = createAdminClient()
-  const { data: sub } = await admin
-    .from('subscribers')
-    .select('org_id, newsletter_id')
-    .eq('id', ctx.subscriberId)
-    .single()
+  // Record click but always redirect — tracking failure must not block the user
+  try {
+    const admin = createAdminClient()
+    const { data: sub } = await admin
+      .from('subscribers')
+      .select('org_id, newsletter_id')
+      .eq('id', ctx.subscriberId)
+      .single()
 
-  if (sub) {
-    await admin.rpc('record_subscriber_click', {
-      p_subscriber_id: ctx.subscriberId,
-      p_issue_id:      ctx.issueId,
-      p_org_id:        sub.org_id,
-      p_newsletter_id: sub.newsletter_id,
-      p_link_url:      ctx.url,
-    })
+    if (sub) {
+      await admin.rpc('record_subscriber_click', {
+        p_subscriber_id: ctx.subscriberId,
+        p_issue_id:      ctx.issueId,
+        p_org_id:        sub.org_id,
+        p_newsletter_id: sub.newsletter_id,
+        p_link_url:      ctx.url,
+      })
+    }
+  } catch {
+    // Silently ignore — tracking failure must not block the redirect
   }
 
   return NextResponse.redirect(destination.href)

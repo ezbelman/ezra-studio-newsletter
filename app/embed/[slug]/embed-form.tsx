@@ -6,9 +6,10 @@ interface Props {
   newsletterId:   string
   newsletterName: string
   primaryColor:   string
+  referralCode?:  string
 }
 
-export function EmbedSubscribeForm({ newsletterId, newsletterName, primaryColor }: Props) {
+export function EmbedSubscribeForm({ newsletterId, newsletterName, primaryColor, referralCode }: Props) {
   const [email, setEmail]   = useState('')
   const [name, setName]     = useState('')
   const [state, setState]   = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -22,7 +23,12 @@ export function EmbedSubscribeForm({ newsletterId, newsletterName, primaryColor 
       const res = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), name: name.trim() || null, newsletter_id: newsletterId }),
+        body: JSON.stringify({
+          email:         email.trim(),
+          name:          name.trim() || null,
+          newsletter_id: newsletterId,
+          ...(referralCode ? { ref: referralCode } : {}),
+        }),
       })
       const json = await res.json()
       if (!res.ok) {
