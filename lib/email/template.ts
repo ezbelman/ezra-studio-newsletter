@@ -22,12 +22,15 @@ interface PolishedJson {
 }
 
 interface TemplateOptions {
-  orgName:      string
-  primaryColor: string
-  issueTitle:   string
-  polishedJson: PolishedJson
-  unsubscribeUrl: string
-  webViewUrl?:  string
+  orgName:          string
+  primaryColor:     string
+  issueTitle:       string
+  polishedJson:     PolishedJson
+  unsubscribeUrl:   string
+  webViewUrl?:      string
+  trackingPixelUrl?: string
+  wrapClickUrl?:    (url: string) => string
+  referralUrl?:     string
 }
 
 export function renderWithTemplate(templateId: string | null | undefined, opts: TemplateOptions): string {
@@ -39,8 +42,11 @@ export function renderWithTemplate(templateId: string | null | undefined, opts: 
 }
 
 export function renderEmailHtml(opts: TemplateOptions): string {
-  const { orgName, primaryColor, issueTitle, polishedJson, unsubscribeUrl, webViewUrl } = opts
+  const { orgName, primaryColor, issueTitle, polishedJson, unsubscribeUrl, webViewUrl,
+          trackingPixelUrl, wrapClickUrl, referralUrl } = opts
   const color = primaryColor || '#7B5CF0'
+
+  const linkHref = (url: string) => escapeHtml(wrapClickUrl ? wrapClickUrl(url) : url)
 
   const storiesHtml = (polishedJson.stories ?? []).map(story => {
     const bodyContent = story.body
@@ -60,7 +66,7 @@ export function renderEmailHtml(opts: TemplateOptions): string {
         ${bodyContent}
         ${takeawayHtml}
         ${story.url ? `
-        <a href="${escapeHtml(story.url)}"
+        <a href="${linkHref(story.url)}"
            style="display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 600; color: ${color}; text-decoration: none;">
           Read more →
         </a>` : ''}
@@ -180,6 +186,17 @@ export function renderEmailHtml(opts: TemplateOptions): string {
           <!-- Footer -->
           <tr>
             <td style="padding: 24px 40px 32px; border-top: 1px solid #2A2A38;">
+              ${referralUrl ? `
+              <p style="margin: 0 0 12px 0; font-size: 12px; color: #8888A0; text-align: center; line-height: 1.6;">
+                Enjoying this newsletter? <a href="${escapeHtml(referralUrl)}" style="color: ${color}; text-decoration: none; font-weight: 600;">Share your referral link →</a>
+              </p>` : ''}
+              ${webViewUrl ? `
+              <p style="margin: 0 0 10px 0; font-size: 12px; color: #55556A; text-align: center;">
+                Share:&nbsp;
+                <a href="https://twitter.com/intent/tweet?url=${encodeURIComponent(webViewUrl)}&amp;text=${encodeURIComponent(issueTitle)}" style="color: #55556A; text-decoration: underline;">Twitter</a>
+                &nbsp;·&nbsp;
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(webViewUrl)}" style="color: #55556A; text-decoration: underline;">LinkedIn</a>
+              </p>` : ''}
               <p style="margin: 0 0 6px 0; font-size: 12px; color: #55556A; text-align: center; line-height: 1.6;">
                 You are receiving this because you subscribed to ${escapeHtml(orgName)}.
               </p>
@@ -189,6 +206,7 @@ export function renderEmailHtml(opts: TemplateOptions): string {
                   Unsubscribe
                 </a>
               </p>
+              ${trackingPixelUrl ? `<img src="${escapeHtml(trackingPixelUrl)}" width="1" height="1" alt="" style="display:block;border:0;" />` : ''}
             </td>
           </tr>
 
@@ -213,8 +231,10 @@ function escapeHtml(str: string): string {
 }
 
 export function renderLightEmail(opts: TemplateOptions): string {
-  const { orgName, primaryColor, issueTitle, polishedJson, unsubscribeUrl, webViewUrl } = opts
+  const { orgName, primaryColor, issueTitle, polishedJson, unsubscribeUrl, webViewUrl,
+          trackingPixelUrl, wrapClickUrl, referralUrl } = opts
   const color = primaryColor || '#7B5CF0'
+  const linkHref = (url: string) => escapeHtml(wrapClickUrl ? wrapClickUrl(url) : url)
 
   const storiesHtml = (polishedJson.stories ?? []).map(story => {
     const bodyContent = story.body
@@ -229,7 +249,7 @@ export function renderLightEmail(opts: TemplateOptions): string {
     <tr><td style="padding:0 0 28px 0;">
       <h2 style="margin:0 0 10px;font-size:18px;font-weight:600;color:#111;line-height:1.4;">${escapeHtml(story.headline)}</h2>
       ${bodyContent}${takeawayHtml}
-      ${story.url ? `<a href="${escapeHtml(story.url)}" style="display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:${color};text-decoration:none;">Read more →</a>` : ''}
+      ${story.url ? `<a href="${linkHref(story.url)}" style="display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:${color};text-decoration:none;">Read more →</a>` : ''}
     </td></tr>`
   }).join('')
 
@@ -272,8 +292,11 @@ export function renderLightEmail(opts: TemplateOptions): string {
           </table>
         </td></tr>
         <tr><td style="padding:20px 40px 28px;border-top:1px solid #f0f0f0;">
+          ${referralUrl ? `<p style="margin:0 0 10px;font-size:12px;color:#374151;text-align:center;">Enjoying this? <a href="${escapeHtml(referralUrl)}" style="color:${color};text-decoration:none;font-weight:600;">Share your referral link →</a></p>` : ''}
+          ${webViewUrl ? `<p style="margin:0 0 10px;font-size:12px;color:#9ca3af;text-align:center;">Share:&nbsp;<a href="https://twitter.com/intent/tweet?url=${encodeURIComponent(webViewUrl)}&amp;text=${encodeURIComponent(issueTitle)}" style="color:#9ca3af;text-decoration:underline;">Twitter</a>&nbsp;·&nbsp;<a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(webViewUrl)}" style="color:#9ca3af;text-decoration:underline;">LinkedIn</a></p>` : ''}
           <p style="margin:0 0 4px;font-size:12px;color:#9ca3af;text-align:center;">You are receiving this because you subscribed to ${escapeHtml(orgName)}.</p>
           <p style="margin:0;font-size:12px;text-align:center;"><a href="${escapeHtml(unsubscribeUrl)}" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a></p>
+          ${trackingPixelUrl ? `<img src="${escapeHtml(trackingPixelUrl)}" width="1" height="1" alt="" style="display:block;border:0;" />` : ''}
         </td></tr>
       </table>
     </td></tr>
@@ -282,8 +305,10 @@ export function renderLightEmail(opts: TemplateOptions): string {
 }
 
 export function renderMinimalEmail(opts: TemplateOptions): string {
-  const { orgName, primaryColor, issueTitle, polishedJson, unsubscribeUrl } = opts
+  const { orgName, primaryColor, issueTitle, polishedJson, unsubscribeUrl, webViewUrl,
+          trackingPixelUrl, wrapClickUrl, referralUrl } = opts
   const color = primaryColor || '#7B5CF0'
+  const linkHref = (url: string) => escapeHtml(wrapClickUrl ? wrapClickUrl(url) : url)
 
   const storiesText = (polishedJson.stories ?? []).map((story, i) => {
     const bodyContent = story.body
@@ -296,7 +321,7 @@ export function renderMinimalEmail(opts: TemplateOptions): string {
       <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${color};">${String(i + 1).padStart(2, '0')}</p>
       <h2 style="margin:0 0 10px;font-size:17px;font-weight:700;color:#111;line-height:1.4;border-bottom:1px solid #eee;padding-bottom:8px;">${escapeHtml(story.headline)}</h2>
       ${bodyContent}
-      ${story.url ? `<a href="${escapeHtml(story.url)}" style="font-size:13px;color:${color};text-decoration:none;font-weight:600;">Read more →</a>` : ''}
+      ${story.url ? `<a href="${linkHref(story.url)}" style="font-size:13px;color:${color};text-decoration:none;font-weight:600;">Read more →</a>` : ''}
     </td></tr>`
   }).join('')
 
@@ -318,9 +343,12 @@ export function renderMinimalEmail(opts: TemplateOptions): string {
           <p style="margin:0;font-size:16px;color:#555;line-height:1.7;font-style:italic;padding-left:16px;border-left:3px solid ${color};">"${escapeHtml(polishedJson.hot_take)}"</p>
         </td></tr>` : ''}
         <tr><td style="padding:20px 0;border-top:1px solid #eee;">
+          ${referralUrl ? `<p style="margin:0 0 8px;font-size:11px;color:#666;font-family:-apple-system,sans-serif;">Know someone who'd enjoy this? <a href="${escapeHtml(referralUrl)}" style="color:${color};text-decoration:none;font-weight:600;">Share your link →</a></p>` : ''}
+          ${webViewUrl ? `<p style="margin:0 0 8px;font-size:11px;color:#aaa;font-family:-apple-system,sans-serif;">Share: <a href="https://twitter.com/intent/tweet?url=${encodeURIComponent(webViewUrl)}&amp;text=${encodeURIComponent(issueTitle)}" style="color:#aaa;text-decoration:underline;">Twitter</a> · <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(webViewUrl)}" style="color:#aaa;text-decoration:underline;">LinkedIn</a></p>` : ''}
           <p style="margin:0;font-size:11px;color:#aaa;font-family:-apple-system,sans-serif;">
             Sent by ${escapeHtml(orgName)} · <a href="${escapeHtml(unsubscribeUrl)}" style="color:#aaa;text-decoration:underline;">Unsubscribe</a>
           </p>
+          ${trackingPixelUrl ? `<img src="${escapeHtml(trackingPixelUrl)}" width="1" height="1" alt="" style="display:block;border:0;" />` : ''}
         </td></tr>
       </table>
     </td></tr>

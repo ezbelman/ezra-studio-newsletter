@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getPlatformSetting } from '@/lib/platform/settings'
 import { renderWithTemplate } from '@/lib/email/template'
 import { generateUnsubscribeToken } from '@/lib/email/unsubscribe-token'
+import { generateOpenToken, generateClickToken } from '@/lib/email/tracking-token'
 import { incrementUsage } from '@/lib/billing/check-limit'
 import { dispatchWebhook } from '@/lib/webhooks/dispatch'
 import { Resend } from 'resend'
@@ -55,7 +56,7 @@ export async function dispatchIssue(opts: {
 
   const { data: subscribers } = await admin
     .from('subscribers')
-    .select('id, email, newsletter_id')
+    .select('id, email, newsletter_id, referral_code')
     .eq('newsletter_id', issue.newsletter_id)
     .eq('org_id', orgId)
     .eq('status', 'active')
@@ -65,21 +66,33 @@ export async function dispatchIssue(opts: {
   const polishedJson    = issue.polished_json as unknown as Parameters<typeof renderWithTemplate>[1]['polishedJson']
   const emailTemplate   = nl?.email_template ?? 'dark'
 
-  function buildEmails(subs: { id: string; email: string; newsletter_id: string }[], subject: string): EmailPayload[] {
+  function buildEmails(
+    subs: { id: string; email: string; newsletter_id: string; referral_code: string | null }[],
+    subject: string,
+  ): EmailPayload[] {
     return subs.map(sub => {
-      const unsubscribeUrl = `${APP_URL}/unsubscribe?token=${generateUnsubscribeToken(sub.id, sub.newsletter_id)}`
-      const webViewUrl     = nl?.slug ? `${APP_URL}/s/${nl.slug}/${issueId}` : undefined
-      const html           = renderWithTemplate(emailTemplate, {
+      const unsubscribeUrl   = `${APP_URL}/unsubscribe?token=${generateUnsubscribeToken(sub.id, sub.newsletter_id)}`
+      const webViewUrl       = nl?.slug ? `${APP_URL}/s/${nl.slug}/${issueId}` : undefined
+      const trackingPixelUrl = `${APP_URL}/api/track/pixel?t=${generateOpenToken(sub.id, issueId)}`
+      const wrapClickUrl     = (url: string) =>
+        `${APP_URL}/api/track/click?t=${generateClickToken(sub.id, issueId, url)}`
+      const referralUrl      = sub.referral_code && nl?.slug
+        ? `${APP_URL}/s/${nl.slug}?ref=${sub.referral_code}`
+        : undefined
+      const sendFrom = nl?.custom_sending_domain
+        ? `newsletter@${nl.custom_sending_domain}`
+        : FROM_EMAIL
+      const html = renderWithTemplate(emailTemplate, {
         orgName:      org?.name ?? 'Newsletter',
         primaryColor: org?.primary_color ?? '#7B5CF0',
         issueTitle,
         polishedJson,
         unsubscribeUrl,
         webViewUrl,
+        trackingPixelUrl,
+        wrapClickUrl,
+        referralUrl,
       })
-      const sendFrom = nl?.custom_sending_domain
-        ? `newsletter@${nl.custom_sending_domain}`
-        : FROM_EMAIL
       return { from: `${org?.name ?? 'Newsletter Studio'} <${sendFrom}>`, to: sub.email, subject, html }
     })
   }

@@ -263,6 +263,13 @@ export interface Database {
           tags: string[]
           subscribed_at: string
           unsubscribed_at: string | null
+          engagement_score: number
+          last_opened_at: string | null
+          last_clicked_at: string | null
+          total_opens: number
+          total_clicks: number
+          referral_code: string | null
+          referred_by_code: string | null
         }
         Insert: {
           id?: string
@@ -272,15 +279,48 @@ export interface Database {
           name?: string | null
           status?: SubscriberStatus
           tags?: string[]
+          referred_by_code?: string | null
         }
         Update: {
           name?: string | null
           status?: SubscriberStatus
           tags?: string[]
           unsubscribed_at?: string | null
+          engagement_score?: number
+          last_opened_at?: string | null
+          last_clicked_at?: string | null
+          total_opens?: number
+          total_clicks?: number
+          referral_code?: string | null
+          referred_by_code?: string | null
         }
         Relationships: [
           { foreignKeyName: 'subscribers_newsletter_id_fkey'; columns: ['newsletter_id']; isOneToOne: false; referencedRelation: 'newsletters'; referencedColumns: ['id'] }
+        ]
+      }
+      subscriber_events: {
+        Row: {
+          id: string
+          org_id: string
+          newsletter_id: string
+          subscriber_id: string
+          issue_id: string
+          event_type: 'opened' | 'clicked'
+          link_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          newsletter_id: string
+          subscriber_id: string
+          issue_id: string
+          event_type: 'opened' | 'clicked'
+          link_url?: string | null
+        }
+        Update: Record<string, never>
+        Relationships: [
+          { foreignKeyName: 'subscriber_events_subscriber_id_fkey'; columns: ['subscriber_id']; isOneToOne: false; referencedRelation: 'subscribers'; referencedColumns: ['id'] }
         ]
       }
       email_sends: {
@@ -607,6 +647,14 @@ export interface Database {
       increment_org_usage: {
         Args: { p_org_id: string; p_month: string; p_field: string; p_amount?: number }
         Returns: void
+      }
+      record_subscriber_open: {
+        Args: { p_subscriber_id: string; p_issue_id: string; p_org_id: string; p_newsletter_id: string }
+        Returns: boolean
+      }
+      record_subscriber_click: {
+        Args: { p_subscriber_id: string; p_issue_id: string; p_org_id: string; p_newsletter_id: string; p_link_url?: string | null }
+        Returns: boolean
       }
     }
     Enums: Record<string, never>

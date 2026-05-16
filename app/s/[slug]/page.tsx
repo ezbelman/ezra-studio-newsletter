@@ -4,7 +4,8 @@ import type { Metadata } from 'next'
 import { SubscribeForm } from './subscribe-form'
 
 interface Props {
-  params: Promise<{ slug: string }>
+  params:       Promise<{ slug: string }>
+  searchParams: Promise<{ ref?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -22,8 +23,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function SubscribePage({ params }: Props) {
-  const { slug } = await params
+export default async function SubscribePage({ params, searchParams }: Props) {
+  const { slug }  = await params
+  const { ref }   = await searchParams
   const supabase = createAdminClient()
 
   const { data: nl } = await supabase
@@ -95,7 +97,7 @@ export default async function SubscribePage({ params }: Props) {
           )}
 
           {/* Subscribe form */}
-          <SubscribeForm newsletterId={nl.id} newsletterName={nl.name} />
+          <SubscribeForm newsletterId={nl.id} newsletterName={nl.name} referralCode={ref} />
 
           <p className="text-center text-xs text-ink/25 mt-4">
             No spam. Unsubscribe any time.

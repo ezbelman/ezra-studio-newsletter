@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
 const PUBLIC_PREFIXES = [
   '/api/auth/',     // Supabase auth callback
   '/api/subscribe', // public subscribe endpoint
+  '/api/track/',    // email open/click tracking pixels (no auth)
   '/api/webhooks/', // Resend webhooks — use their own signing secret
   '/api/cron/',     // Vercel cron — uses CRON_SECRET header
   '/api/v1/',       // public API — uses Bearer token auth

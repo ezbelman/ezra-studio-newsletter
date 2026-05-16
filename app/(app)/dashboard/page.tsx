@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { OrgNameEditor } from './org-name-editor'
 import { OnboardingChecklist } from '@/components/app/onboarding-checklist'
+import { SubscriberGrowthChart } from '@/components/app/subscriber-growth-chart'
 import {
   Plus, ArrowRight, Newspaper, Send, Users,
   Clock, Sparkles, UserPlus, Settings,
@@ -52,7 +53,9 @@ export default async function DashboardPage() {
   const name    = profileRes.data?.full_name ?? user.email ?? 'there'
   const canEdit = ['owner', 'admin'].includes(membershipRes.data.role)
 
-  const [newslettersRes, subscribersRes, publishedRes, inProgressRes, recentRes, membersRes] = await Promise.all([
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const [newslettersRes, subscribersRes, publishedRes, inProgressRes, recentRes, membersRes, growthRes] = await Promise.all([
     supabase.from('newsletters').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
     supabase.from('subscribers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('status', 'active'),
     supabase.from('issues').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('status', 'published'),
@@ -64,6 +67,12 @@ export default async function DashboardPage() {
       .order('created_at', { ascending: false })
       .limit(7),
     supabase.from('org_members').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
+    supabase
+      .from('subscribers')
+      .select('subscribed_at')
+      .eq('org_id', orgId)
+      .gte('subscribed_at', thirtyDaysAgo)
+      .order('subscribed_at', { ascending: true }),
   ])
 
   const totalNewsletters = newslettersRes.count ?? 0
@@ -73,6 +82,16 @@ export default async function DashboardPage() {
   const recentIssues     = recentRes.data         ?? []
   const totalMembers     = membersRes.count        ?? 0
   const isEmpty          = totalNewsletters === 0
+
+  // Build 30-day growth data grouped by day
+  const growthRaw = growthRes.data ?? []
+  const growthMap = new Map<string, number>()
+  for (const row of growthRaw) {
+    const day = new Date(row.subscribed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    growthMap.set(day, (growthMap.get(day) ?? 0) + 1)
+  }
+  const growthData   = Array.from(growthMap.entries()).map(([label, value]) => ({ label, value }))
+  const addedThisMonth = growthRaw.length
 
   const checklistState = {
     createdNewsletter: totalNewsletters > 0,
@@ -272,6 +291,13 @@ export default async function DashboardPage() {
 
               {/* Right column */}
               <div className="lg:col-span-1 flex flex-col gap-4">
+
+                {/* Subscriber growth chart */}
+                <SubscriberGrowthChart
+                  data={growthData}
+                  total={totalSubscribers}
+                  added={addedThisMonth}
+                />
 
                 {/* Quick actions */}
                 <div className="rounded-xl border border-line bg-surface p-5">

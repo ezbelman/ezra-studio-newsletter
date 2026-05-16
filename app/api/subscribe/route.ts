@@ -7,6 +7,7 @@ const schema = z.object({
   email:         z.string().email({ message: 'Invalid email address' }),
   name:          z.string().max(100).nullable().optional(),
   newsletter_id: z.string().uuid({ message: 'Invalid newsletter' }),
+  ref:           z.string().max(20).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { email, name, newsletter_id } = parsed.data
+  const { email, name, newsletter_id, ref } = parsed.data
   const supabase = createAdminClient()
 
   const { data: nl } = await supabase
@@ -41,15 +42,17 @@ export async function POST(request: NextRequest) {
   }
 
   /* subscribers.Insert has no subscribed_at — the DB default handles it */
+  /* referral_code gets a DB default (gen_referral_code()) on new rows   */
   const { error } = await supabase
     .from('subscribers')
     .upsert(
       {
         newsletter_id,
-        org_id: nl.org_id,
-        email:  email.toLowerCase(),
-        name:   name ?? null,
-        status: 'active',
+        org_id:          nl.org_id,
+        email:           email.toLowerCase(),
+        name:            name ?? null,
+        status:          'active',
+        referred_by_code: ref ?? null,
       },
       { onConflict: 'newsletter_id,email', ignoreDuplicates: false }
     )
